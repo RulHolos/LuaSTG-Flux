@@ -110,22 +110,31 @@ void luastg::binding::BuiltInFunction::Register(lua_State* L)noexcept
 		// 窗口与交换链控制函数
 		static int ChangeVideoMode(lua_State* L)noexcept
 		{
-			uint32_t const width = (uint32_t)luaL_checkinteger(L, 1);
-			uint32_t const height = (uint32_t)luaL_checkinteger(L, 2);
-			bool const windowed = lua_toboolean(L, 3);
-			bool const vsync = lua_toboolean(L, 4);
+			lua::stack_t S(L);
+			uint32_t const width = S.get_value<uint32_t>(1);
+			uint32_t const height = S.get_value<uint32_t>(1);
+			auto const window_mode = S.get_value<std::string_view>(3);
+			bool const vsync = S.get_value<bool>(4);
 
 			auto const size = core::Vector2U(width, height);
 
-			if (windowed)
+			if (window_mode == "windowed")
 			{
 				bool const result = LAPP.SetDisplayModeWindow(size, vsync);
 				lua_pushboolean(L, result);
 			}
-			else
+			else if (window_mode == "borderless")
+			{
+				bool const result = LAPP.SetDisplayModeBorderlessFullscreen(vsync);
+				lua_pushboolean(L, result);
+			}
+			else if (window_mode == "fullscreen")
 			{
 				bool const result = LAPP.SetDisplayModeExclusiveFullscreen(size, vsync, core::Rational());
 				lua_pushboolean(L, result);
+			}
+			else {
+				return luaL_error(L, "unknown window mode.");
 			}
 
 			return 1;

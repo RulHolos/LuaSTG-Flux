@@ -421,6 +421,11 @@ namespace core {
 					assert_type_is_boolean(fullscreen, "/graphics_system/fullscreen"sv);
 					loader.graphics_system.setFullscreen(fullscreen.get<bool>());
 				}
+				if (graphics_system.contains("borderless"sv)) {
+					auto const& borderless = graphics_system.at("borderless"sv);
+					assert_type_is_boolean(borderless, "/graphics_system/borderless"sv);
+					loader.graphics_system.setBorderless(borderless.get<bool>());
+				}
 				if (graphics_system.contains("vsync"sv)) {
 					auto const& vsync = graphics_system.at("vsync"sv);
 					assert_type_is_boolean(vsync, "/graphics_system/vsync"sv);

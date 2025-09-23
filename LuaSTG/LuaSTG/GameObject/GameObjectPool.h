@@ -307,18 +307,18 @@ namespace luastg
 		/// @brief 获取对象
 		GameObject* GetPooledObject(size_t i) noexcept { return m_ObjectPool.object(i); }
 
-		// 对象更新：传统模式
+		// 对象更新:传统模式
 		// 回调 -> 运动更新 -> 回调 -> 运动更新 -> ...
 		void updateMovementsLegacy();
 
-		// 对象更新：批量模式
+		// 对象更新:批量模式
 		// 回调所有 -> 更新所有运动
 		void updateMovements();
 
-		// 对象更新：传统模式新旧帧衔接
+		// 对象更新:传统模式新旧帧衔接
 		void updateNextLegacy();
 
-		// 对象更新：新旧帧衔接
+		// 对象更新:新旧帧衔接
 		void updateNext();
 
 		// 渲染所有游戏对象
@@ -340,17 +340,17 @@ namespace luastg
 				&& y <= m_BoundTop;
 		}
 
-		// 脱离世界边界检测：传统模式
+		// 脱离世界边界检测:传统模式
 		void detectOutOfWorldBoundLegacy();
 
-		// 脱离世界边界检测：延迟模式
+		// 脱离世界边界检测:延迟模式
 		void detectOutOfWorldBound();
 
-		// 相交检测：传统模式
+		// 相交检测:传统模式
 		// 检测 -> 回调（如果相交） -> 检测 -> 回调（如果相交） -> ...
 		void detectIntersectionLegacy(uint32_t group1, uint32_t group2);
 
-		// 相交检测：批量模式
+		// 相交检测:批量模式
 		// 检测所有 -> 回调所有
 		void detectIntersection(std::pmr::vector<IntersectionDetectionGroupPair> const& group_pairs);
 
@@ -360,10 +360,10 @@ namespace luastg
 		//重置对象的各项属性，并释放资源，保留uid和id
 		void DirtResetObject(GameObject* p) noexcept;
 
-		// 修改游戏对象所在的碰撞组：从原碰撞组链表移除，插入到新碰撞组链表，并更新 group 属性
+		// 修改游戏对象所在的碰撞组:从原碰撞组链表移除，插入到新碰撞组链表，并更新 group 属性
 		void setGroup(GameObject* object, size_t group);
 
-		// 修改游戏对象渲染图层：从有序渲染链表移除，更新 layer 属性，重新插入有序渲染链表
+		// 修改游戏对象渲染图层:从有序渲染链表移除，更新 layer 属性，重新插入有序渲染链表
 		void setLayer(GameObject* object, double layer);
 
 		/// @brief 清空对象池

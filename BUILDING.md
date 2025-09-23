@@ -4,9 +4,9 @@ It is recommended to compile the project with CMake preset and workflow.
 
 ## Environment Requirement
 
-* Visual Studio 2022 (17.10)  
-* Windows SDK 10.0.26100.0  
-* CMake 3.30  
+* Visual Studio 2022 (17.10)
+* Windows SDK 10.0.26100.0
+* CMake 3.30
 
 ## x86 64-bit
 
@@ -89,7 +89,7 @@ cmake --build --preset windows-amd64-debug
 cmake --build --preset windows-amd64-release
 ```
 
-一键发行（CMake 配置、编译发行版）：  
+一键发行（CMake 配置,编译发行版）：  
 
 ```shell
 cmake --workflow --preset windows-amd64-release
@@ -112,7 +112,7 @@ cmake --build --preset windows-x86-debug
 cmake --build --preset windows-x86-release
 ```
 
-一键发行（CMake 配置、编译发行版）：  
+一键发行（CMake 配置,编译发行版）：  
 
 ```shell
 cmake --workflow --preset windows-x86-release
@@ -126,4 +126,4 @@ cmake --workflow --preset windows-x86-release
 
 接下来你就可以用 Visual Studio 2022 打开 sln 解决方案开始开发。
 
-注意：请编译 LuaSTG 项目至少一次，否则 libflac、libogg、libvorbis、zlib-ng、minizip-ng 等依赖库的头文件不存在。
+注意：请编译 LuaSTG 项目至少一次，否则 libflac,libogg,libvorbis,zlib-ng,minizip-ng 等依赖库的头文件不存在。

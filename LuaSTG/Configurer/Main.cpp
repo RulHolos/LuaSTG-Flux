@@ -11,7 +11,7 @@ enum class Language : size_t
     Chinese = 0,
     English = 1,
 };
-static Language i18n_map_index = Language::Chinese;
+static Language i18n_map_index = Language::English;
 static std::unordered_map<std::string_view, std::string_view> i18n_map[2] = {
     {
         {"window-title", "启动配置"},

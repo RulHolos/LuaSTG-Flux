@@ -101,9 +101,9 @@ int AppFrame::LoadTextFile(lua_State* L_, const char* path, const char* packname
 {
 	if (ResourceMgr::GetResourceLoadingLog()) {
 		if (packname)
-			spdlog::info("[luastg] 在资源包'{}'中读取文本文件'{}'", packname, path);
+			spdlog::info("[luastg] Reading text file '{}' in package '{}'", packname, path);
 		else
-			spdlog::info("[luastg] 读取文本文件'{}'", path);
+			spdlog::info("[luastg] Reading text file '{}'", path);
 	}
 	bool loaded = false;
 	core::SmartReference<core::IData> src;
@@ -119,7 +119,7 @@ int AppFrame::LoadTextFile(lua_State* L_, const char* path, const char* packname
 		loaded = core::FileSystemManager::readFile(path, src.put());
 	}
 	if (!loaded) {
-		spdlog::error("[luastg] 无法加载文件'{}'", path);
+		spdlog::error("[luastg] Unable to load file '{}'", path);
 		return 0;
 	}
 	lua_pushlstring(L_, (char*)src->data(), src->size());
@@ -135,10 +135,10 @@ bool AppFrame::Init()noexcept
 	assert(m_iStatus == AppStatus::NotInitialized);
 
 	spdlog::info(LUASTG_INFO);
-	spdlog::info("[luastg] 初始化引擎");
+	spdlog::info("[luastg] Initializing Engine");
 	m_iStatus = AppStatus::Initializing;
 
-	//////////////////////////////////////// 基础
+	//////////////////////////////////////// Base
 
 	// 初始化文件系统
 	if (auto const& resources = core::ConfigurationLoader::getInstance().getFileSystem().getResources(); !resources.empty()) {
@@ -161,25 +161,25 @@ bool AppFrame::Init()noexcept
 		}
 	}
 
-	//////////////////////////////////////// 游戏对象池
+	//////////////////////////////////////// Allocate space for object pools
 
 	// 为对象池分配空间
-	spdlog::info("[luastg] 初始化对象池，容量{}", LOBJPOOL_SIZE);
+	spdlog::info("[luastg] Initializing object pool with capacity: {}", LOBJPOOL_SIZE);
 	try {
 		m_GameObjectPool = std::make_unique<GameObjectPool>();
 	}
 	catch (const std::bad_alloc&) {
-		spdlog::error("[luastg] 无法为对象池分配内存");
+		spdlog::error("[luastg] Unable to allocate memory for object pool");
 		return false;
 	}
 
-	//////////////////////////////////////// Lua 引擎
+	//////////////////////////////////////// Initialize Lua
 
-	spdlog::info("[luastg] 初始化luajit引擎");
+	spdlog::info("[luastg] Initializing LuaJIT");
 
 	// 开启Lua引擎
 	if (!OnOpenLuaEngine()) {
-		spdlog::info("[luastg] 初始化luajit引擎失败");
+		spdlog::info("[luastg] Failed to initialize LuaJIT");
 		return false;
 	}
 
@@ -188,7 +188,7 @@ bool AppFrame::Init()noexcept
 		return false;
 	}
 
-	//////////////////////////////////////// 应用程序模型、窗口子系统、图形子系统、音频子系统等
+	//////////////////////////////////////// Initialize Engine
 
 	{
 		if (auto& window_config = core::ConfigurationLoader::getInstance().getWindowRef(); !window_config.hasTitle()) {
@@ -218,18 +218,18 @@ bool AppFrame::Init()noexcept
 				uint32_t cnt = m_DirectInput->count();
 				for (uint32_t i = 0; i < cnt; i += 1)
 				{
-					spdlog::info("[luastg] 检测到 {} 控制器 产品名称：{} 设备名称：{}",
+					spdlog::info("[luastg] Controller detected: {}. Product Name: {}. Device Name: {}",
 						m_DirectInput->isXInputDevice(i) ? "XInput" : "DirectInput",
 						utf8::to_string(m_DirectInput->getProductName(i)),
 						utf8::to_string(m_DirectInput->getDeviceName(i))
 					);
 				}
-				spdlog::info("[luastg] 成功创建了 {} 个控制器", cnt);
+				spdlog::info("[luastg] Controllers {} successfully initialized", cnt);
 			}
 		}
 		catch (const std::bad_alloc&)
 		{
-			spdlog::error("[luastg] 无法为 DirectInput 分配内存");
+			spdlog::error("[luastg] Unable to allocate memory for DirectInput");
 		}
 
 		// 初始化ImGui
@@ -249,7 +249,7 @@ bool AppFrame::Init()noexcept
 
 	//////////////////////////////////////// 初始化完成
 	m_iStatus = AppStatus::Initialized;
-	spdlog::info("[luastg] 初始化完成");
+	spdlog::info("[luastg] Initialization Complete");
 
 	//////////////////////////////////////// 调用GameInit
 	if (!SafeCallGlobalFunction(LuaEngine::G_CALLBACK_EngineInit)) {
@@ -265,18 +265,18 @@ void AppFrame::Shutdown()noexcept
 	}
 
 	m_GameObjectPool = nullptr;
-	spdlog::info("[luastg] 清空对象池");
+	spdlog::info("[luastg] Object pool destroyed");
 
 	if (L)
 	{
 		lua_close(L);
 		L = nullptr;
-		spdlog::info("[luastg] 关闭luajit引擎");
+		spdlog::info("[luastg] LuaJIT shutdown");
 	}
 
 	m_stRenderTargetStack.clear();
 	m_ResourceMgr.ClearAllResource();
-	spdlog::info("[luastg] 清空所有游戏资源");
+	spdlog::info("[luastg] Resources freed");
 
 	// 卸载ImGui
 #ifdef USING_DEAR_IMGUI
@@ -284,7 +284,7 @@ void AppFrame::Shutdown()noexcept
 #endif
 
 	core::FileSystemManager::removeAllFileSystem();
-	spdlog::info("[luastg] 卸载所有资源包");
+	spdlog::info("[luastg] Freed packages");
 
 	CloseInput();
 	m_DirectInput = nullptr;
@@ -293,12 +293,12 @@ void AppFrame::Shutdown()noexcept
 	m_audio_engine = nullptr;
 
 	m_iStatus = AppStatus::Destroyed;
-	spdlog::info("[luastg] 引擎关闭");
+	spdlog::info("[luastg] Engine shutdown");
 }
 void AppFrame::Run()noexcept
 {
 	assert(m_iStatus == AppStatus::Initialized);
-	spdlog::info("[luastg] 开始更新&渲染循环");
+	spdlog::info("[luastg] Start Update/Render Loop");
 
 	m_pAppModel->getWindow()->addEventListener(this);
 	onSwapChainCreate(); // 手动触发一次，让自动尺寸的RenderTarget设置为正确的尺寸
@@ -310,7 +310,7 @@ void AppFrame::Run()noexcept
 	m_pAppModel->getSwapChain()->removeEventListener(this);
 	m_pAppModel->getWindow()->removeEventListener(this);
 
-	spdlog::info("[luastg] 结束更新&渲染循环");
+	spdlog::info("[luastg] Exiting Update & Render Loop");
 }
 
 #pragma endregion
@@ -326,13 +326,13 @@ void AppFrame::onWindowCreate()
 		uint32_t cnt = m_DirectInput->count();
 		for (uint32_t i = 0; i < cnt; i += 1)
 		{
-			spdlog::info("[luastg] 检测到 {} 控制器 产品名称：{} 设备名称：{}",
+			spdlog::info("[luastg] Controller detected: {}. Product Name: {}. Device Name: {}",
 				m_DirectInput->isXInputDevice(i) ? "XInput" : "DirectInput",
 				utf8::to_string(m_DirectInput->getProductName(i)),
 				utf8::to_string(m_DirectInput->getDeviceName(i))
 			);
 		}
-		spdlog::info("[luastg] 成功创建了 {} 个控制器", cnt);
+		spdlog::info("[luastg] Controllers {} successfully initialized", cnt);
 	}
 }
 void AppFrame::onWindowDestroy()

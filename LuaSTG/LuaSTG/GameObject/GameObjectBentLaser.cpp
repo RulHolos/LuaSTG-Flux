@@ -308,7 +308,7 @@ bool GameObjectBentLaser::Update(size_t id, int length, float width, bool active
 	GameObject* p = LPOOL.GetPooledObject(id);
 	if (!p)
 	{
-		spdlog::error("[luastg] [GameObjectBentLaser::Update] 无效的lstg.GameObject");
+		spdlog::error("[luastg] [GameObjectBentLaser::Update] Invalid lstg.GameObject");
 		return false;
 	}
 	return Update((float)p->x, (float)p->y, (float)p->rot, length, width, active);
@@ -320,7 +320,7 @@ bool GameObjectBentLaser::Update(float x, float y, float rot, int length, float 
 
 	if (length <= 1)
 	{
-		spdlog::error("[luastg] [GameObjectBentLaser::Update] 无效的参数length={}", length);
+		spdlog::error("[luastg] [GameObjectBentLaser::Update] Invalid length = {}", length);
 		return false;
 	}
 
@@ -448,18 +448,18 @@ bool GameObjectBentLaser::Render(const char* tex_name, BlendMode blend, core::Co
 	core::SmartReference<IResourceTexture> pTex = LRES.FindTexture(tex_name);
 	if (!pTex)
 	{
-		spdlog::error("[luastg] [GameObjectBentLaser::Render] 找不到纹理'{}'", tex_name);
+		spdlog::error("[luastg] [GameObjectBentLaser::Render] Texture '{}' doesn't exist", tex_name);
 		return false;
 	}
 
-	// 设置纹理、混合模式等
+	// 设置纹理,混合模式等
 	auto* p_renderer = LAPP.GetAppModel()->getRenderer();
 	LAPP.updateGraph2DBlendMode(blend);
 	p_renderer->setTexture(pTex->GetTexture());
 
 	// 分配顶点和索引
-	// 顶点总共需要：节点数 * 2
-	// 索引总共需要：(节点数 - 1) * 3 * 2
+	// 顶点总共需要:节点数 * 2
+	// 索引总共需要:(节点数 - 1) * 3 * 2
 	// 两个节点之间组成一个四边形
 	uint16_t const node_count = (uint16_t)m_Queue.size();
 	IRenderer::DrawVertex* p_vertex = nullptr;
@@ -482,7 +482,7 @@ bool GameObjectBentLaser::Render(const char* tex_name, BlendMode blend, core::Co
 	// if (!cur.active || !next.active) continue;
 	// 得思考一下如何加进去
 
-	// 第一部分：填充顶点，从老节点到新节点
+	// 第一部分:填充顶点，从老节点到新节点
 	// 0---2---4---6
 	// |\  |\  |\  |
 	// | \ | \ | \ |
@@ -541,7 +541,7 @@ bool GameObjectBentLaser::Render(const char* tex_name, BlendMode blend, core::Co
 		p_vert += 2;
 	}
 
-	// 第二部分：填充索引
+	// 第二部分:填充索引
 	// 0 0-->2 2 2-->4 4 4-->6
 	// |\ \  | |\ \  | |\ \  |
 	// | \ \ | | \ \ | | \ \ |
@@ -751,11 +751,11 @@ bool GameObjectBentLaser::UpdateByNode(size_t id, int node, int length, float wi
 
 	GameObject* p = LPOOL.GetPooledObject(id);
 	if (!p) {
-		spdlog::error("[luastg] [GameObjectBentLaser::UpdateByNode] 无效的lstg.GameObject");
+		spdlog::error("[luastg] [GameObjectBentLaser::UpdateByNode] Invalid lstg.GameObject");
 		return false;
 	}
 	if (length <= 1) {
-		spdlog::error("[luastg] [GameObjectBentLaser::UpdateByNode] 无效的参数length={}", length);
+		spdlog::error("[luastg] [GameObjectBentLaser::UpdateByNode] Invalid length = {}", length);
 		return false;
 	}
 

@@ -78,7 +78,7 @@ namespace luastg
 
 			auto errorLineParser = [&path](std::string_view line)
 			{
-				spdlog::error("[luastg] 加载 HGE 纹理字体出错，在字体定义文件 '{}' 中发现无法解析的行：'{}'", path, line);
+				spdlog::error("[luastg] 加载 HGE 纹理字体出错，在字体定义文件 '{}' 中发现无法解析的行:'{}'", path, line);
 			};
 
 			struct CharData
@@ -129,7 +129,7 @@ namespace luastg
 					utf::utf8reader reader(str.data(), str.size());
 					if (!reader.step(cd.code))
 					{
-						spdlog::error("[luastg] 加载 HGE 纹理字体出错，在字体定义文件 '{}' 行 '{}' 中发现无法识别的字符：'{}'", path, line, str);
+						spdlog::error("[luastg] 加载 HGE 纹理字体出错，在字体定义文件 '{}' 行 '{}' 中发现无法识别的字符:'{}'", path, line, str);
 						return {};
 					}
 				}
@@ -155,7 +155,7 @@ namespace luastg
 					}
 					catch (std::exception const& e)
 					{
-						spdlog::error("[luastg] 加载 HGE 纹理字体出错，在字体定义文件 '{}' 行 '{}' 中发现无法识别的码点：'{}' ({})", path, line, hex, e.what());
+						spdlog::error("[luastg] 加载 HGE 纹理字体出错，在字体定义文件 '{}' 行 '{}' 中发现无法识别的码点:'{}' ({})", path, line, hex, e.what());
 						return {};
 					}
 				}
@@ -198,7 +198,7 @@ namespace luastg
 				}
 				catch (std::exception const& e)
 				{
-					spdlog::error("[luastg] 加载 HGE 纹理字体出错，在字体定义文件 '{}' 中发现无法解析的行：'{}' ({})", path, line, e.what());
+					spdlog::error("[luastg] 加载 HGE 纹理字体出错，在字体定义文件 '{}' 中发现无法解析的行:'{}' ({})", path, line, e.what());
 					return {};
 				}
 
@@ -230,7 +230,7 @@ namespace luastg
 					}
 					if (m_map.find((uint32_t)char_data.code) != m_map.end())
 					{
-						spdlog::error("[luastg] 加载 HGE 纹理字体出错，在字体定义文件 '{}' 中发现重复的字符定义：{}", path, line);
+						spdlog::error("[luastg] 加载 HGE 纹理字体出错，在字体定义文件 '{}' 中发现重复的字符定义:{}", path, line);
 						continue;
 					}
 					// 转换为字形数据

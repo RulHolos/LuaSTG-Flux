@@ -28,7 +28,7 @@ namespace luastg
         m_TTFFontPool.clear();
         m_FXPool.clear();
         m_ModelPool.clear();
-        spdlog::info("[luastg] 已清空资源池 '{}'", getResourcePoolTypeName());
+        spdlog::info("[luastg] Resource pool '{}' cleared", getResourcePoolTypeName());
     }
 
     template<typename T>
@@ -37,13 +37,13 @@ namespace luastg
         auto i = pool.find(std::string_view(name));
         if (i == pool.end())
         {
-            spdlog::warn("[luastg] RemoveResource: 试图卸载一个不存在的资源 '{}'", name);
+            spdlog::warn("[luastg] RemoveResource: Attempted to remove non-existing resource '{}'", name);
             return;
         }
         pool.erase(i);
         if (ResourceMgr::GetResourceLoadingLog())
         {
-            spdlog::info("[luastg] RemoveResource: 资源 '{}' 已卸载", name);
+            spdlog::info("[luastg] RemoveResource: Resource '{}' unloaded", name);
         }
     }
 
@@ -94,7 +94,7 @@ namespace luastg
             removeResource(m_ModelPool, name);
             break;
         default:
-            spdlog::warn("[luastg] RemoveResource: 试图移除一个不存在的资源类型 ({})", (int)t);
+            spdlog::warn("[luastg] RemoveResource: Attempted to remove non-existing resource ({})", (int)t);
             return;
         }
     }
@@ -124,7 +124,7 @@ namespace luastg
         case ResourceType::Model:
             return m_ModelPool.find(name) != m_ModelPool.end();
         default:
-            spdlog::warn("[luastg] CheckRes: 试图检索一个不存在的资源类型({})", (int)t);
+            spdlog::warn("[luastg] CheckRes: Attempted to index non-existing resource type ({})", (int)t);
             break;
         }
         return false;
@@ -180,7 +180,7 @@ namespace luastg
             listResourceName(L, m_ModelPool);
             break;
         default:
-            spdlog::warn("[luastg] EnumRes: 试图枚举一个不存在的资源类型({})", (int)t);
+            spdlog::warn("[luastg] EnumRes: Attempted to enumerate through non-existing resource type ({})", (int)t);
             S.create_array(0);
             break;
         }
@@ -195,7 +195,7 @@ namespace luastg
         {
             if (ResourceMgr::GetResourceLoadingLog())
             {
-                spdlog::warn("[luastg] LoadTexture: 纹理 '{}' 已存在，加载操作已取消", name);
+                spdlog::warn("[luastg] LoadTexture: Texture '{}' already exists. Skipping loading", name);
             }
             return true;
         }
@@ -203,7 +203,7 @@ namespace luastg
         core::SmartReference<core::Graphics::ITexture2D> p_texture;
         if (!LAPP.GetAppModel()->getDevice()->createTextureFromFile(path, mipmaps, p_texture.put()))
         {
-            spdlog::error("[luastg] 从 '{}' 创建纹理 '{}' 失败", path, name);
+            spdlog::error("[luastg] Failed to create texture '{}' from '{}'", path, name);
             return false;
         }
 
@@ -215,13 +215,13 @@ namespace luastg
         }
         catch (std::exception const& e)
         {
-            spdlog::error("[luastg] LoadTexture: 创建纹理 '{}' 失败 ({})", name, e.what());
+            spdlog::error("[luastg] LoadTexture: Failed to create texture '{}' ({})", name, e.what());
             return false;
         }
     
         if (ResourceMgr::GetResourceLoadingLog())
         {
-            spdlog::info("[luastg] LoadTexture: 已从 '{}' 加载纹理 '{}' ({})", path, name, getResourcePoolTypeName());
+            spdlog::info("[luastg] LoadTexture: Texture '{}' loaded from '{}' ({})", path, name, getResourcePoolTypeName());
         }
     
         return true;
@@ -233,7 +233,7 @@ namespace luastg
         {
             if (ResourceMgr::GetResourceLoadingLog())
             {
-                spdlog::warn("[luastg] LoadTexture: 纹理 '{}' 已存在，加载操作已取消", name);
+                spdlog::warn("[luastg] LoadTexture: Texture '{}' already exists. Skipping loading", name);
             }
             return true;
         }
@@ -241,7 +241,7 @@ namespace luastg
         core::SmartReference<core::Graphics::ITexture2D> p_texture;
         if (!LAPP.GetAppModel()->getDevice()->createTexture(core::Vector2U((uint32_t)width, (uint32_t)height), p_texture.put()))
         {
-            spdlog::error("[luastg] 创建纹理 '{}' ({}x{}) 失败", name, width, height);
+            spdlog::error("[luastg] Unable to create texture '{}' ({}x{}) 失败", name, width, height);
             return false;
         }
 
@@ -258,7 +258,7 @@ namespace luastg
         }
 
         if (ResourceMgr::GetResourceLoadingLog()) {
-            spdlog::info("[luastg] LoadTexture: 已创建纹理 '{}' ({}x{}) ({})", name, width, height, getResourcePoolTypeName());
+            spdlog::info("[luastg] LoadTexture: Texture created '{}' ({}x{}) ({})", name, width, height, getResourcePoolTypeName());
         }
 
         return true;
@@ -272,12 +272,12 @@ namespace luastg
         {
             if (ResourceMgr::GetResourceLoadingLog())
             {
-                spdlog::warn("[luastg] CreateRenderTarget: 渲染目标 '{}' 已存在，创建操作已取消", name);
+                spdlog::warn("[luastg] CreateRenderTarget: RenderTarget '{}' already exists. Skipping creating", name);
             }
             return true;
         }
     
-        std::string_view ds_info("和深度缓冲区");
+        std::string_view ds_info("Depth buffer");
 
         try
         {
@@ -460,7 +460,7 @@ namespace luastg
             {
                 spdlog::warn("[luastg] LoadMusic: 音乐 '{}' 已存在，创建操作已取消", name);
             }
-            //m_MusicPool.find(name)->second->Stop(); // 注：以前确实不判断同名资源是否存在，但是 emplace 失败了，所以没有打断旧 BGM
+            //m_MusicPool.find(name)->second->Stop(); // 注:以前确实不判断同名资源是否存在，但是 emplace 失败了，所以没有打断旧 BGM
             return true;
         }
     
@@ -638,7 +638,7 @@ namespace luastg
         core::SmartReference<core::IData> src;
         if (!core::FileSystemManager::readFile(path, src.put()))
         {
-            spdlog::error("[luastg] LoadParticle：无法从 '{}' 加载粒子特效 '{}'，读取文件失败", path, name);
+            spdlog::error("[luastg] LoadParticle:无法从 '{}' 加载粒子特效 '{}'，读取文件失败", path, name);
             return false;
         }
     

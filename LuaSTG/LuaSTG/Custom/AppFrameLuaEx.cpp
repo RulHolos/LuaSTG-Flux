@@ -10,23 +10,23 @@ namespace luastg
     {
         bool is_launch_loaded = false;
         #ifdef USING_LAUNCH_FILE
-        spdlog::info("[luastg] 加载初始化脚本");
+        spdlog::info("[luastg] Loading launch file");
         core::SmartReference<core::IData> src;
         if (core::FileSystemManager::readFile(LUASTG_LAUNCH_SCRIPT, src.put()))
         {
             if (SafeCallScript((char const*)src->data(), src->size(), LUASTG_LAUNCH_SCRIPT))
             {
                 is_launch_loaded = true;
-                spdlog::info("[luastg] 加载脚本'{}'", LUASTG_LAUNCH_SCRIPT);
+                spdlog::info("[luastg] Loading script '{}'", LUASTG_LAUNCH_SCRIPT);
             }
             else
             {
-                spdlog::error("[luastg] 加载初始化脚本'{}'失败", LUASTG_LAUNCH_SCRIPT);
+                spdlog::error("[luastg] Failed to load launch file '{}'", LUASTG_LAUNCH_SCRIPT);
             }
         }
         if (!is_launch_loaded)
         {
-            spdlog::error("[luastg] 找不到文件'{}'", LUASTG_LAUNCH_SCRIPT);
+            spdlog::error("[luastg] Launch file not found", LUASTG_LAUNCH_SCRIPT);
         }
         #endif
 
@@ -35,7 +35,7 @@ namespace luastg
     
     bool AppFrame::OnLoadMainScriptAndFiles()
     {
-        spdlog::info("[luastg] 加载入口点脚本");
+        spdlog::info("[luastg] Loading entry point candidates");
         std::string_view entry_scripts[3] = {
             "core.lua",
             "main.lua",
@@ -49,7 +49,7 @@ namespace luastg
             {
                 if (SafeCallScript((char const*)src->data(), src->size(), v.data()))
                 {
-                    spdlog::info("[luastg] 加载脚本'{}'", v);
+                    spdlog::info("[luastg] Loading script '{}'", v);
                     is_load = true;
                     break;
                 }
@@ -57,7 +57,7 @@ namespace luastg
         }
         if (!is_load)
         {
-            spdlog::error("[luastg] 找不到文件'{}'、'{}'或'{}'", entry_scripts[0], entry_scripts[1], entry_scripts[2]);
+            spdlog::error("[luastg] Cannot find any entry point candidates at '{}', '{}' or '{}'", entry_scripts[0], entry_scripts[1], entry_scripts[2]);
         }
         return true;
     }

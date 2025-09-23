@@ -3,7 +3,7 @@
 CPMAddPackage(
     NAME nlohmann_json
     VERSION 3.12.0
-    # ！！！警告：不要直接使用 nlohmann json 的 git 仓库，否则下载耗时++++
+    # ！！！警告:不要直接使用 nlohmann json 的 git 仓库，否则下载耗时++++
     #GITHUB_REPOSITORY nlohmann/json
     #OPTIONS
     #"JSON_BuildTests OFF"

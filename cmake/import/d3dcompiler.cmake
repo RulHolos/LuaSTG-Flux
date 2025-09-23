@@ -2,7 +2,7 @@
 
 add_library(Microsoft.D3DCompiler.Redist SHARED IMPORTED GLOBAL)
 
-# 注意：从 Windows SDK 10.0.26100 开始，d3dcompiler_47.dll 不再静态链接 CRT，而是链接到 UCRT
+# 注意:从 Windows SDK 10.0.26100 开始，d3dcompiler_47.dll 不再静态链接 CRT，而是链接到 UCRT
 
 CPMAddPackage(
     NAME Microsoft.Windows.SDK.CPP

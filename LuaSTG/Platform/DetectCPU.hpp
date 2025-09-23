@@ -1,6 +1,6 @@
 #pragma once
 
-// 谢谢你，微软：https://docs.microsoft.com/zh-cn/cpp/intrinsics/cpuid-cpuidex?view=msvc-170
+// 谢谢你，微软:https://docs.microsoft.com/zh-cn/cpp/intrinsics/cpuid-cpuidex?view=msvc-170
 
 // InstructionSet.cpp
 // Compile by using: cl /EHsc /W4 InstructionSet.cpp

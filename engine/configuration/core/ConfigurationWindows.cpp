@@ -157,6 +157,14 @@ namespace core {
 											write_arg_error(raw_arg);
 											return false;
 										});
+									access_field(borderless,
+										if (auto const value = to_boolean(arg); value) {
+											graphics_system.setBorderless(value.value());
+										}
+										else {
+											write_arg_error(raw_arg);
+											return false;
+										});
 									access_field(vsync,
 										if (auto const value = to_boolean(arg); value) {
 											graphics_system.setVsync(value.value());

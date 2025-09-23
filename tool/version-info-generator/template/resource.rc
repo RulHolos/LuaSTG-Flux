@@ -67,12 +67,12 @@ BEGIN
         BLOCK "000004b0"
         BEGIN
             VALUE "CompanyName", "${ORGNIZATION}"
-            VALUE "FileDescription", "LuaSTG Sub"
+            VALUE "FileDescription", "LuaSTG Flux"
             VALUE "FileVersion", "${VERSION}.0"
-            VALUE "InternalName", "LuaSTG Sub"
+            VALUE "InternalName", "LuaSTG Flux"
             VALUE "LegalCopyright", "Copyright 2020-2025 ${ORGNIZATION}"
-            VALUE "OriginalFilename", "LuaSTGSub.exe"
-            VALUE "ProductName", "LuaSTG Sub"
+            VALUE "OriginalFilename", "LuaSTGFlux.exe"
+            VALUE "ProductName", "LuaSTG Flux"
             VALUE "ProductVersion", "${VERSION}.0"
         END
     END

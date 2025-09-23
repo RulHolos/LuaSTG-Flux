@@ -143,6 +143,7 @@ namespace luastg {
 		// 以独占全屏显示  
 		// 当 refresh_rate 为全 0 时，自动选择合适的匹配的刷新率  
 		bool SetDisplayModeExclusiveFullscreen(core::Vector2U window_size, bool vsync, core::Rational refresh_rate);
+		bool SetDisplayModeBorderlessFullscreen(bool vsync);
 
 		bool InitializationApplySettingStage1();
 

@@ -64,60 +64,60 @@ namespace {
 	std::string multi_plane_overlay_flags_to_string(UINT const flags) {
 		std::string buffer;
 		if (flags & DXGI_OVERLAY_SUPPORT_FLAG_DIRECT) {
-			buffer.append("直接呈现");
+			buffer.append("Direct");
 		}
 		if (flags & DXGI_OVERLAY_SUPPORT_FLAG_SCALING) {
-			if (!buffer.empty()) buffer.append("、");
-			buffer.append("缩放呈现");
+			if (!buffer.empty()) buffer.append(",");
+			buffer.append("Scaling");
 		}
 		if (buffer.empty()) {
-			buffer.append("无");
+			buffer.append("None");
 		}
 		return buffer;
 	};
 	std::string hardware_composition_flags_to_string(UINT const flags) {
 		std::string buffer;
 		if (flags & DXGI_HARDWARE_COMPOSITION_SUPPORT_FLAG_FULLSCREEN) {
-			buffer.append("全屏");
+			buffer.append("Fullscreen");
 		}
 		if (flags & DXGI_HARDWARE_COMPOSITION_SUPPORT_FLAG_WINDOWED) {
-			if (!buffer.empty()) buffer.append("、");
-			buffer.append("窗口");
+			if (!buffer.empty()) buffer.append(",");
+			buffer.append("Windowed");
 		}
 		if (flags & DXGI_HARDWARE_COMPOSITION_SUPPORT_FLAG_CURSOR_STRETCHED) {
-			if (!buffer.empty()) buffer.append("、");
-			buffer.append("鼠标指针缩放");
+			if (!buffer.empty()) buffer.append(",");
+			buffer.append("Mouse pointer zoom");
 		}
 		if (buffer.empty()) {
-			buffer.append("无");
+			buffer.append("None");
 		}
 		return buffer;
 	};
 	std::string_view rotation_to_string(DXGI_MODE_ROTATION const rot) {
 		switch (rot) {
 		default:
-		case DXGI_MODE_ROTATION_UNSPECIFIED: return "未知";
-		case DXGI_MODE_ROTATION_IDENTITY: return "无";
-		case DXGI_MODE_ROTATION_ROTATE90: return "90 度";
-		case DXGI_MODE_ROTATION_ROTATE180: return "180 度";
-		case DXGI_MODE_ROTATION_ROTATE270: return "270 度";
+		case DXGI_MODE_ROTATION_UNSPECIFIED: return "Unknown";
+		case DXGI_MODE_ROTATION_IDENTITY: return "None";
+		case DXGI_MODE_ROTATION_ROTATE90: return "90 deg";
+		case DXGI_MODE_ROTATION_ROTATE180: return "180 deg";
+		case DXGI_MODE_ROTATION_ROTATE270: return "270 deg";
 		}
 	};
 	std::string_view threading_feature_to_string(D3D11_FEATURE_DATA_THREADING const v) {
 		if (v.DriverConcurrentCreates) {
 			if (v.DriverCommandLists) {
-				return "异步资源创建、多线程命令队列";
+				return "Asynchronous resource creation and multi-threaded command lists";
 			}
 			else {
-				return "异步资源创建";
+				return "Asynchronous resource creation";
 			}
 		}
 		else {
 			if (v.DriverCommandLists) {
-				return "多线程命令队列";
+				return "Multi-threaded command lists";
 			}
 			else {
-				return "不支持";
+				return "Not supported";
 			}
 		}
 	};
@@ -509,13 +509,13 @@ namespace core::Graphics::Direct3D11 {
 			if (SUCCEEDED(hr)) {
 				switch (d3d_driver_type) {
 				case D3D_DRIVER_TYPE_REFERENCE:
-					spdlog::info("[core] 设备类型：参考光栅化设备");
+					spdlog::info("[core] Driver Type: Reference Rasterizer");
 					break;
 				case D3D_DRIVER_TYPE_SOFTWARE:
-					spdlog::info("[core] 设备类型：软件光栅化设备");
+					spdlog::info("[core] Driver Type: Software Rasterizer");
 					break;
 				case D3D_DRIVER_TYPE_WARP:
-					spdlog::info("[core] 设备类型：Windows 高级光栅化平台（WARP）");
+					spdlog::info("[core] Driver Type: Windows Advanced Rasterization Platform (WARP)");
 					break;
 				}
 			}
@@ -614,23 +614,23 @@ namespace core::Graphics::Direct3D11 {
 		}
 
 	#define _FORMAT_INFO_STRING_FMT3 \
-		"        用于顶点缓冲区：{}\n"\
-		"        创建二维纹理：{}\n"\
-		"        创建立方体纹理：{}\n"\
-		"        着色器采样：{}\n"\
-		"        创建多级渐进纹理：{}\n"\
-		"        自动生成多级渐进纹理：{}\n"\
-		"        绑定为渲染目标：{}\n"\
-		"        像素颜色混合操作：{}\n"\
-		"        绑定为深度、模板缓冲区：{}\n"\
-		"        被 CPU 锁定、读取：{}\n"\
-		"        解析多重采样：{}\n"\
-		"        用于显示输出：{}\n"\
-		"        创建多重采样渲染目标：{}\n"\
-		"        像素颜色逻辑混合操作：{}\n"\
-		"        资源可分块：{}\n"\
-		"        资源可共享：{}\n"\
-		"        多平面叠加：{}\n"
+		"        For vertex buffers: {}\n"\
+        "        Create 2D textures: {}\n"\
+        "        Create cube textures: {}\n"\
+        "        Shader sampling: {}\n"\
+        "        Create multi-level progressive textures: {}\n"\
+        "        Automatically generate multilevel progressive textures: {}\n"\
+        "        Bind as render target: {}\n"\
+        "        Perform pixel color blending operations: {}\n"\
+        "        Bind as depth/vertex buffers: {}\n"\
+        "        Locked and read by CPU: {}\n"\
+        "        Resolve multisample: {}\n"\
+        "        Used for display output: {}\n"\
+        "        Create multisample render target: {}\n"\
+        "        Perform pixel color logical blend operation: {}\n"\
+        "        Resource is blockable: {}\n"\
+        "        Resource sharing: {}\n"\
+        "        Multi-plane overlay: {}\n"
 
 	#define _FORMAT_MAKE_SUPPORT i18n("support") : i18n("not_support")
 
@@ -653,22 +653,22 @@ namespace core::Graphics::Direct3D11 {
 		, (d3d11_feature_format_##_NAME.OutFormatSupport2 & D3D11_FORMAT_SUPPORT2_SHAREABLE             ) ? _FORMAT_MAKE_SUPPORT\
 		, (d3d11_feature_format_##_NAME.OutFormatSupport2 & D3D11_FORMAT_SUPPORT2_MULTIPLANE_OVERLAY    ) ? _FORMAT_MAKE_SUPPORT
 
-		spdlog::info("[core] Direct3D 11 设备功能支持：\n"
-					 "    Direct3D 功能级别：{}\n"
-					 "    R8G8B8A8 格式：\n"
+		spdlog::info("[core] Direct3D 11 Device feature support:\n"
+					 "    Direct3D level: {}\n"
+					 "    R8G8B8A8 format:\n"
 					 _FORMAT_INFO_STRING_FMT3
-					 "    R8G8B8A8 sRGB 格式：\n"
+					 "    R8G8B8A8 sRGB format:\n"
 					 _FORMAT_INFO_STRING_FMT3
-					 "    B8G8R8A8 格式：\n"
+					 "    B8G8R8A8 format:\n"
 					 _FORMAT_INFO_STRING_FMT3
-					 "    B8G8R8A8 sRGB 格式：\n"
+					 "    B8G8R8A8 sRGB format:\n"
 					 _FORMAT_INFO_STRING_FMT3
-					 "    D24 S8 格式：\n"
+					 "    D24 S8 format:\n"
 					 _FORMAT_INFO_STRING_FMT3
-					 "    最大二维纹理尺寸：{}\n"
-					 "    多线程架构：{}\n"
-					 "    渲染架构：{}\n"
-					 "    统一内存架构（UMA）：{}"
+					 "    Maximum Texture2D size: {}\n"
+					 "    Multi-threading architecture: {}\n"
+					 "    Rendering architecture: {}\n"
+					 "    UMA: {}"
 					 , d3d_feature_level_to_string(d3d_feature_level)
 					 _FORMAT_INFO_STRING_ARG3(rgba32)
 					 _FORMAT_INFO_STRING_ARG3(rgba32_srgb)
@@ -696,7 +696,7 @@ namespace core::Graphics::Direct3D11 {
 			// 确实支持
 		}
 		else {
-			spdlog::warn("[core] 此设备没有完整的 B8G8R8A8 格式支持，程序可能无法正常运行");
+			spdlog::warn("[core] This device does not fully support the B8G8R8A8 format, and the program may not function properly.");
 		}
 
 		testMultiPlaneOverlay();

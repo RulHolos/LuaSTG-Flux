@@ -59,8 +59,8 @@ namespace luastg
             if (errmsg == nullptr) {
                 errmsg = "(error object is a nil value)";
             }
-            spdlog::error("[luajit] StackTraceback时发生错误：{}", errmsg);// ??? errmsg t errmsg
-            lua_pop(L, 2);                                                // ??? errmsg
+            spdlog::error("[luajit] A StackTraceback error has occured: {}", errmsg); // ??? errmsg t errmsg
+            lua_pop(L, 2);                                                			  // ??? errmsg
             return 1;
         }
 
@@ -75,11 +75,11 @@ namespace luastg
 		{
 			try
 			{
-				spdlog::error("[luajit] 编译'{}'失败：{}", desc, lua_tostring(L, -1));
+				spdlog::error("[luajit] Error while compiling '{}': {}", desc, lua_tostring(L, -1));
 				MessageBoxW(
 					m_pAppModel ? (HWND)m_pAppModel->getWindow()->getNativeHandle() : NULL,
 					utf8::to_wstring(
-						fmt::format("编译'{}'失败：{}", desc, lua_tostring(L, -1))
+						fmt::format("Error while compiling '{}': {}", desc, lua_tostring(L, -1))
 					).c_str(),
 					L"" LUASTG_INFO,
 					MB_ICONERROR | MB_OK
@@ -87,7 +87,7 @@ namespace luastg
 			}
 			catch (const std::bad_alloc&)
 			{
-				spdlog::error("[luastg] 记录日志时出错");
+				spdlog::error("[luastg] Unable to load file");
 			}
 			lua_pop(L, 2);
 			return false;
@@ -100,11 +100,11 @@ namespace luastg
 				if (errmsg == nullptr) {
 					errmsg = "(error object is a nil value)";
 				}
-				spdlog::error("[luajit] 运行'{}'时出错：{}", desc, errmsg);
+				spdlog::error("[luajit] Error while compiling '{}': {}", desc, errmsg);
 				MessageBoxW(
 					m_pAppModel ? (HWND)m_pAppModel->getWindow()->getNativeHandle() : NULL,
 					utf8::to_wstring(
-						fmt::format("运行'{}'时出错：\n{}", desc, errmsg)
+						fmt::format("Error while compiling '{}':\n{}", desc, errmsg)
 					).c_str(),
 					L"" LUASTG_INFO,
 					MB_ICONERROR | MB_OK
@@ -112,7 +112,7 @@ namespace luastg
 			}
 			catch (const std::bad_alloc&)
 			{
-				spdlog::error("[luastg] 记录日志时出错");
+				spdlog::error("[luastg] Unable to load file");
 			}
 			lua_pop(L, 2);
 			return false;
@@ -145,11 +145,11 @@ namespace luastg
 				if (errmsg == nullptr) {
 					errmsg = "(error object is a nil value)";
 				}
-				spdlog::error("[luajit] 调用全局函数'{}'时出错：{}", name, errmsg);
+				spdlog::error("[luajit] Error calling global function '{}': {}", name, errmsg);
 				MessageBoxW(
 					m_pAppModel ? (HWND)m_pAppModel->getWindow()->getNativeHandle() : NULL,
 					utf8::to_wstring(
-						fmt::format("调用全局函数'{}'时出错：\n{}", name, errmsg)
+						fmt::format("Error calling global function '{}':\n{}", name, errmsg)
 					).c_str(),
 					L"" LUASTG_INFO,
 					MB_ICONERROR | MB_OK
@@ -157,7 +157,7 @@ namespace luastg
 			}
 			catch (const std::bad_alloc&)
 			{
-				spdlog::error("[luastg] 记录日志时出错");
+				spdlog::error("[luastg] Unable to call function");
 			}
 			lua_pop(L, 2);
 			return false;
@@ -179,7 +179,7 @@ namespace luastg
 		#ifdef _DEBUG
 			try
 			{
-				spdlog::error("[luajit] 调用全局函数'{}'时出错：全局函数'{}'不存在", name, name);
+				spdlog::error("[luajit] Error calling '{}': Global function '{}' does not exist", name, name);
 				/*
 				MessageBoxW(
 					m_pAppModel ? (HWND)m_pAppModel->getWindow()->getNativeHandle() : NULL,
@@ -190,7 +190,7 @@ namespace luastg
 			}
 			catch (const std::bad_alloc&)
 			{
-				spdlog::error("[luastg] 记录日志时出错");
+				spdlog::error("[luastg] Unable to call global function");
 			}
 		#endif
 			lua_pop(L, argc + 2); 										// ?
@@ -206,18 +206,18 @@ namespace luastg
 			//															// ? trace errmsg
 			try
 			{
-				spdlog::error("[luajit] 调用全局函数'{}'时出错：{}", name, lua_tostring(L, -1));
+				spdlog::error("[luajit] Error calling global function '{}': {}", name, lua_tostring(L, -1));
 				MessageBoxW(
 					m_pAppModel ? (HWND)m_pAppModel->getWindow()->getNativeHandle() : NULL,
 					utf8::to_wstring(
-						fmt::format("调用全局函数'{}'时出错：\n{}", name, lua_tostring(L, -1))
+						fmt::format("Error calling global function '{}':\n{}", name, lua_tostring(L, -1))
 					).c_str(),
 					L"" LUASTG_INFO,
 					MB_ICONERROR | MB_OK);
 			}
 			catch (const std::bad_alloc&)
 			{
-				spdlog::error("[luastg] 记录日志时出错");
+				spdlog::error("[luastg] Unable to call global function");
 			}
 			lua_pop(L, 2);												// ?
 			return false;
@@ -244,9 +244,9 @@ namespace luastg
 		if (ResourceMgr::GetResourceLoadingLog())
 		{
 			if (packname)
-				spdlog::info("[luastg] 在资源包'{}'中加载脚本'{}'", packname, path);
+				spdlog::info("[luastg] Loading script '{}' in package '{}'", packname, path);
 			else
-				spdlog::info("[luastg] 加载脚本'{}'", path);
+				spdlog::info("[luastg] Loading scripts '{}'", path);
 		}
 		bool loaded = false;
 		core::SmartReference<core::IData> src;
@@ -263,14 +263,14 @@ namespace luastg
 		}
 		if (!loaded)
 		{
-			spdlog::error("[luastg] 无法加载文件'{}'", path);
+			spdlog::error("[luastg] Unable to load file '{}'", path);
 			luaL_error(SL, "can't load file '%s'", path);
 			return;
 		}
 		if (0 != luaL_loadbuffer(SL, (char const*)src->data(), src->size(), luaL_checkstring(SL, 1)))
 		{
 			const char* tDetail = lua_tostring(SL, -1);
-			spdlog::error("[luajit] 编译'{}'失败：{}", path, tDetail);
+			spdlog::error("[luajit] Error while compiling '{}': {}", path, tDetail);
 			luaL_error(SL, "failed to compile '%s': %s", path, tDetail);
 			return;
 		}
@@ -288,16 +288,16 @@ namespace luastg
 		L = luaL_newstate();
 		if (!L)
 		{
-			spdlog::error("[luajit] 无法创建luajit引擎");
+			spdlog::error("[luajit] Unable to create LuaJIT engine");
 			return false;
 		}
 		if (0 == luaJIT_setmode(L, 0, LUAJIT_MODE_ENGINE | LUAJIT_MODE_ON))
 		{
-			spdlog::error("[luajit] 无法启动jit模式");
+			spdlog::error("[luajit] Unable to start JIT mode");
 		}
 		lua_gc(L, LUA_GCSTOP, 0);  // 初始化时关闭GC
 		{
-			spdlog::info("[luajit] 注册标准库与内置包");
+			spdlog::info("[luajit] Registering standard libraries and built-in packages");
 			luaL_openlibs(L);  // 内建库 (lua build in lib)
 			lua_register_custom_loader(L); // 加强版 package 库 (require)
 			luaopen_cjson(L);
@@ -326,7 +326,7 @@ namespace luastg
 			binding::RegistBuiltInClassWrapper(L);  // 注册内建类 (luastg lib)
 
 			// 设置命令行参数
-			spdlog::info("[luajit] 储存命令行参数");
+			spdlog::info("[luajit] Getting command line arguments");
 			std::vector<std::string_view> args;
 			Platform::CommandLineArguments::Get().GetArguments(args);
 			if (!args.empty()) {

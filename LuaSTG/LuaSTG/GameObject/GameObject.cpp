@@ -249,7 +249,7 @@ namespace luastg {
 			// 分配粒子池
 			if (!tParticle->CreateInstance(&ps)) {
 				res = nullptr;
-				spdlog::error("[luastg] ResParticle: 无法分配粒子池，内存不足");
+				spdlog::error("[luastg] ResParticle: Unable to allocate particle pool: Insufficient memory");
 				return false;
 			}
 			ps->SetActive(false);
@@ -323,7 +323,7 @@ namespace luastg {
 						vy = scale_ * vy;
 					}
 				}
-				//针对x、y方向单独限制
+				//针对x,y方向单独限制
 				vx = std::clamp(vx, -max_vx, max_vx);
 				vy = std::clamp(vy, -max_vy, max_vy);
 			#endif
@@ -410,7 +410,7 @@ namespace luastg {
 						vy = scale_ * vy;
 					}
 				}
-				//针对x、y方向单独限制
+				//针对x,y方向单独限制
 				vx = std::clamp(vx, -max_vx, max_vx);
 				vy = std::clamp(vy, -max_vy, max_vy);
 			#endif

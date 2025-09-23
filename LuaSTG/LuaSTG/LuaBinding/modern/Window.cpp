@@ -139,6 +139,14 @@ namespace luastg::binding {
 			return 0;
 		}
 
+		static int setCentered(lua_State* L) {
+			auto self = as(L, 1);
+			lua::stack_t S(L);
+			auto const show = S.get_value<bool>(2);
+			self->data->setCentered(show);
+			return 0;
+		}
+
 		// extension
 
 		static int queryInterface(lua_State* L) {
@@ -217,6 +225,7 @@ namespace luastg::binding {
 		S.set_map_value(method_table, "setTitle", &WindowBinding::setTitle);
 		S.set_map_value(method_table, "getClientAreaSize", &WindowBinding::getClientAreaSize);
 		S.set_map_value(method_table, "getStyle", &WindowBinding::getStyle);
+		S.set_map_value(method_table, "setCentered", &WindowBinding::setCentered);
 		S.set_map_value(method_table, "getDisplayScale", &WindowBinding::getDisplayScale);
 		S.set_map_value(method_table, "setWindowed", &WindowBinding::setWindowed);
 		S.set_map_value(method_table, "setFullscreen", &WindowBinding::setFullscreen);

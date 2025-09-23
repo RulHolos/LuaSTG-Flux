@@ -296,15 +296,14 @@ namespace core
 		MEMORYSTATUSEX info = { sizeof(MEMORYSTATUSEX) };
 		if (GlobalMemoryStatusEx(&info))
 		{
-			spdlog::info("[core] 系统内存使用情况：\n"
-				"    使用百分比：{}%\n"
-				"    总物理内存：{}\n"
-				"    剩余物理内存：{}\n"
-				"    当前进程可提交内存限制：{}\n"
-				"    当前进程剩余的可提交内存：{}\n"
-				"    当前进程用户模式内存空间限制*1：{}\n"
-				"    当前进程剩余的用户模式内存空间：{}\n"
-				"        *1 此项反映此程序实际上能用的最大内存，在 32 位应用程序上此项一般为 2 GB，修改 Windows 操作系统注册表后可能为 1 到 3 GB"
+			spdlog::info("[core] System memory usage:\n"
+				"    Percentage of use: {}%\n"
+				"    Total RAM: {}\n"
+				"    Free RAM: {}\n"
+				"    Usable RAM amount: {}\n"
+				"    Used RAM amount: {}\n"
+				"    Virtual RAM total: {}\n"
+				"    Virtual RAM usage: {}\n"
 				, info.dwMemoryLoad
 				, bytes_count_to_string(info.ullTotalPhys)
 				, bytes_count_to_string(info.ullAvailPhys)
@@ -316,7 +315,7 @@ namespace core
 		}
 		else
 		{
-			spdlog::error("[core] 无法获取系统内存使用情况");
+			spdlog::error("[core] Unable to get RAM usage information");
 		}
 	}
 
@@ -484,7 +483,7 @@ namespace core
 				// 监控退出事件和消息队列
 				// MsgWaitForMultipleObjectsEx 在不带 MWMO_INPUTAVAILABLE 调用时，只会注意到“新”消息
 				// 如果某些地方 PeekMessageW 不带 PM_REMOVE 调用，那么这个消息仍然存在于消息队列中，但是已经成为“老”消息
-				// 为了防止这种情况卡住 MsgWaitForMultipleObjectsEx 造成无限等待：
+				// 为了防止这种情况卡住 MsgWaitForMultipleObjectsEx 造成无限等待:
 				//   1、调用 MsgWaitForMultipleObjectsEx 时带上 MWMO_INPUTAVAILABLE
 				//   2、使用 while 循环带 PM_REMOVE 调用 PeekMessageW 直到返回 FALSE
 				switch (MsgWaitForMultipleObjectsEx(1, win32_events, INFINITE, QS_ALLINPUT, MWMO_INPUTAVAILABLE))

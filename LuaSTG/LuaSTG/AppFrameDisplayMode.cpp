@@ -32,6 +32,19 @@ namespace luastg
 		return result;
 	}
 
+	bool AppFrame::SetDisplayModeBorderlessFullscreen(bool vsync)
+	{
+		auto* window = GetAppModel()->getWindow();
+		auto* swapchain = GetAppModel()->getSwapChain();
+
+		swapchain->setVSync(vsync);
+		bool const result = swapchain->setCanvasSize(window->getSize());
+
+		window->setBorderlessFullScreenMode();
+
+		return result;
+	}
+
 	bool AppFrame::InitializationApplySettingStage1()
 	{
 		// 配置框架
@@ -76,7 +89,7 @@ namespace luastg
 		}
 		else if (m_iStatus == AppStatus::Running)
 		{
-			spdlog::warn("[luastg] SetWindowed: 试图在运行时更改窗口化模式");
+			spdlog::warn("[luastg] SetWindowed: launch-only function called at runtime");
 		}
 	}
 
@@ -89,7 +102,7 @@ namespace luastg
 		}
 		else if (m_iStatus == AppStatus::Running)
 		{
-			spdlog::warn("[luastg] SetVsync: 试图在运行时更改垂直同步模式");
+			spdlog::warn("[luastg] SetVsync: launch-only function called at runtime");
 		}
 	}
 
@@ -102,6 +115,6 @@ namespace luastg
 			gs.setHeight(height);
 		}
 		else if (m_iStatus == AppStatus::Running)
-			spdlog::warn("[luastg] SetResolution: 试图在运行时更改分辨率");
+			spdlog::warn("[luastg] SetResolution: launch-only function called at runtime");
 	}
 }

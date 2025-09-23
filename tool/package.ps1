@@ -36,7 +36,7 @@ foreach ($Line in $ConfigFile.Split("`n")) {
     }
 }
 $VersionFull = "$VersionMajor.$VersionMinor.$VersionPatch"
-$ReleaseRoot = [System.IO.Path]::Join($ReleasesRoot, "LuaSTG-Sub-v$VersionFull")
+$ReleaseRoot = [System.IO.Path]::Join($ReleasesRoot, "LuaSTG-Flux-v$VersionFull")
 
 Write-Output "Version            : $VersionFull"
 Write-Output "Release Root       : $ReleaseRoot"
@@ -49,8 +49,8 @@ if (-not [System.IO.Directory]::Exists($ReleaseRoot)) {
 
 $BinaryFilesAMD64 = @(
     @{
-        Source = [System.IO.Path]::Join($BinaryRootAMD64, "LuaSTGSub.exe")
-        Destination = [System.IO.Path]::Join($ReleaseRoot, "LuaSTGSub.exe")
+        Source = [System.IO.Path]::Join($BinaryRootAMD64, "LuaSTGFlux.exe")
+        Destination = [System.IO.Path]::Join($ReleaseRoot, "LuaSTGFlux.exe")
     },
     @{
         Source = [System.IO.Path]::Join($BinaryRootAMD64, "d3dcompiler_47.dll")
@@ -72,8 +72,8 @@ foreach ($BinaryFile in $BinaryFilesAMD64) {
 $Release32Root = [System.IO.Path]::Join($ReleaseRoot, "windows-32bit")
 $BinaryFilesX86 = @(
     @{
-        Source = [System.IO.Path]::Join($BinaryRootX86, "LuaSTGSub.exe")
-        Destination = [System.IO.Path]::Join($Release32Root, "LuaSTGSub.exe")
+        Source = [System.IO.Path]::Join($BinaryRootX86, "LuaSTGFlux.exe")
+        Destination = [System.IO.Path]::Join($Release32Root, "LuaSTGFlux.exe")
     },
     @{
         Source = [System.IO.Path]::Join($BinaryRootX86, "d3dcompiler_47.dll")
@@ -128,5 +128,5 @@ Copy-Item -Path $LicenseRoot -Destination $ReleaseLicenseRoot -Recurse
 
 # archive
 
-$ArchivePath = [System.IO.Path]::Join($ReleasesRoot, "LuaSTG-Sub-v$VersionFull.zip")
+$ArchivePath = [System.IO.Path]::Join($ReleasesRoot, "LuaSTG-Flux-v$VersionFull.zip")
 Compress-Archive -Path $ReleaseRoot -DestinationPath $ArchivePath -CompressionLevel Optimal -Force

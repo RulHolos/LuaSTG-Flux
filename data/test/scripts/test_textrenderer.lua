@@ -11,8 +11,8 @@ local test = require("test")
 ---@param color lstg.Color
 ---@return number, number
 function RenderTTF3(ttfname, text, x, y, rot, hscale, vscale, blend, color, ...)
-    -- 警告：这里的实现代码以后可能会变化，甚至转为 C++ 实现
-    -- 警告：请勿直接使用这些 Native API
+    -- 警告:这里的实现代码以后可能会变化，甚至转为 C++ 实现
+    -- 警告:请勿直接使用这些 Native API
     
     -- 翻译对齐
     local args = {...}

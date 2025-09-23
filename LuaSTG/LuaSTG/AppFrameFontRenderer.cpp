@@ -95,7 +95,7 @@ namespace luastg
 		pText = pScanner;
 		while (!bEOS)
 		{
-			// 寻找断句位置，换行、EOF、或者行溢出
+			// 寻找断句位置，换行,EOF,或者行溢出
 			while (*pScanner != L'\0' && *pScanner != '\n')
 			{
 				GlyphInfo tGlyphInfo{};
@@ -196,7 +196,7 @@ namespace luastg
 		core::SmartReference<IResourceFont> p = m_ResourceMgr.FindSpriteFont(name);
 		if (!p)
 		{
-			spdlog::error("[luastg] RenderText: 找不到字体资源'{}'", name);
+			spdlog::error("[luastg] RenderText: Font resource '{}' not found", name);
 			return false;
 		}
 		
@@ -208,7 +208,7 @@ namespace luastg
 		}
 		catch (const std::bad_alloc&)
 		{
-			spdlog::error("[luastg] RenderText: 内存不足");
+			spdlog::error("[luastg] RenderText: Out of memory");
 			return false;
 		}
 		
@@ -255,7 +255,7 @@ namespace luastg
 	{
 		core::SmartReference<IResourceFont> p = m_ResourceMgr.FindTTFFont(name);
 		if (!p) {
-			spdlog::error("[luastg] RenderTTF: 找不到字体资源'{}'", name);
+			spdlog::error("[luastg] RenderTTF: Font resource '{}' not found", name);
 			return false;
 		}
 		
@@ -265,7 +265,7 @@ namespace luastg
 			s_TempStringBuf = utf8::to_wstring(str);
 		}
 		catch (const std::bad_alloc&) {
-			spdlog::error("[luastg] RenderTTF: 内存不足");
+			spdlog::error("[luastg] RenderTTF: Out of memory");
 			return false;
 		}
 		
@@ -306,7 +306,7 @@ namespace luastg
 		core::SmartReference<IResourceFont> p = m_ResourceMgr.FindTTFFont(name);
 		if (!p)
 		{
-			spdlog::error("[luastg] SetFontProvider: 找不到字体资源'{}'", name);
+			spdlog::error("[luastg] SetFontProvider: Font resource '{}' not found", name);
 			return false;
 		}
 		m_pTextRenderer->setGlyphManager(p->GetGlyphManager());

@@ -129,7 +129,7 @@ namespace luastg
 		if (f)
 			f->GetGlyphManager()->cacheString(core::StringView(text, len));
 		else
-			spdlog::error("[luastg] CacheTTFFontString: 缓存字形时未找到指定字体'{}'", name);
+			spdlog::error("[luastg] CacheTTFFontString: The specified font was not found when caching glyphs: '{}'", name);
 	}
 
 	void ResourceMgr::UpdateSound()

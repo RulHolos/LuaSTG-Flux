@@ -178,7 +178,7 @@ namespace luastg::binding {
 			//S.push_value(std::nullopt); // TODO
 			//create(L);
 			//return 1;
-			return luaL_error(L, "not implement");
+			return luaL_error(L, "getNearestFromWindow is not implemented.");
 		}
 
 	};

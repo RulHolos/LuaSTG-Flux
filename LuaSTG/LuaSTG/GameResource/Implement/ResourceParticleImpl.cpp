@@ -205,7 +205,7 @@ namespace luastg
 				float ang = 0.0f;
 				if (m_bOldBehavior)
 				{
-					// LuaSTG Plus、LuaSTG Ex Plus、LuaSTG-x 的代码
+					// LuaSTG Plus,LuaSTG Ex Plus,LuaSTG-x 的代码
 					ang = /* pInfo.fDirection */ (m_fDirection - L_PI_HALF_F) - L_PI_HALF_F + RandomFloat(0.0f, pInfo.fSpread) - pInfo.fSpread / 2.0f;
 				}
 				else

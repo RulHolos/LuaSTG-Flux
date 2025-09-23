@@ -420,7 +420,7 @@ namespace core::Graphics
 		// 检查 PresentAllowTearing
 		// * DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING 从 Windows 10 开始支持
 		// * DXGI_PRESENT_ALLOW_TEARING 从 Windows 10 开始支持
-		// * 此外还有别的要求，比如WDDM支持、MPO支持、显卡驱动支持等
+		// * 此外还有别的要求，比如WDDM支持,MPO支持,显卡驱动支持等
 		// * 注意，就算报告支持，实际运行的时候可能仍然不允许撕裂
 		// * 系统安装了 KB3156421 更新，也就是 Windows 10 在 2016 年 5 月 10 日的更新
 		//   https://zhuanlan.zhihu.com/p/20892856?refer=highwaytographics

@@ -57,7 +57,7 @@ namespace Platform
 			int const head_result_ = std::swprintf(
 				buffer_,
 				2046u,
-				L"系统调用出错，文件：'%s' 第 %d 行：(HRESULT = 0x%08X) ",
+				L"System call error on file: '%s' at line %d. Code: (HRESULT = 0x%08X) ",
 				source_, line_, static_cast<DWORD>(hr));
 			assert(head_result_ > 0);
 			DWORD const head_length_ = (DWORD)head_result_;
@@ -65,7 +65,7 @@ namespace Platform
 			int const head_result_ = std::swprintf(
 				buffer_,
 				2046u,
-				L"系统调用出错：(HRESULT = 0x%08X) ",
+				L"System call error:(HRESULT = 0x%08X) ",
 				static_cast<DWORD>(hr));
 			assert(head_result_ > 0);
 			DWORD const head_length_ = (DWORD)head_result_;
@@ -140,7 +140,7 @@ namespace Platform
 	HResultChecker::HResultChecker(HResult const hr) noexcept
 		: hr_(hr)
 	#ifdef _DEBUG
-		, source_(L"未知")
+		, source_(L"Unknown")
 		, line_(0)
 	#endif
 	{
@@ -148,7 +148,7 @@ namespace Platform
 	HResultChecker::HResultChecker() noexcept
 		: hr_(S_OK)
 	#ifdef _DEBUG
-		, source_(L"未知")
+		, source_(L"Unknown")
 		, line_(0)
 	#endif
 	{

@@ -144,6 +144,7 @@ namespace core {
 			GetterSetterPrimitive(GraphicsSystem, uint32_t, width, Width);
 			GetterSetterPrimitive(GraphicsSystem, uint32_t, height, Height);
 			GetterSetterBoolean(GraphicsSystem, fullscreen, Fullscreen);
+			GetterSetterBoolean(GraphicsSystem, borderless, Borderless);
 			GetterSetterBoolean(GraphicsSystem, vsync, Vsync);
 			GetterSetterBoolean(GraphicsSystem, allow_software_device, AllowSoftwareDevice);
 			GetterSetterBoolean(GraphicsSystem, allow_exclusive_fullscreen, AllowExclusiveFullscreen);
@@ -154,6 +155,7 @@ namespace core {
 			uint32_t width{ 640u };
 			uint32_t height{ 480u };
 			bool fullscreen{};
+			bool borderless{};
 			bool vsync{};
 			bool allow_software_device{};
 			bool allow_exclusive_fullscreen{ true };

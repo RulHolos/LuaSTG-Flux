@@ -1,7 +1,7 @@
 #pragma once
 
 #define LUASTG_NAME          "LuaSTG"
-#define LUASTG_BRANCH        "Sub"
+#define LUASTG_BRANCH        "Flux"
 #define LUASTG_VERSION_NAME  "v${VERSION}"
 #define LUASTG_VERSION_MAJOR ${VERSION_MAJOR}
 #define LUASTG_VERSION_MINOR ${VERSION_MINOR}

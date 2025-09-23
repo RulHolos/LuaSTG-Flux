@@ -3,7 +3,7 @@
 CPMAddPackage(
     NAME dr_libs
     VERSION 2025.7.25
-    # ！！！警告：不要直接使用 mackron dr_libs 的 git 仓库，否则下载耗时++++
+    # ！！！警告:不要直接使用 mackron dr_libs 的 git 仓库，否则下载耗时++++
     #GITHUB_REPOSITORY mackron/dr_libs
     #GIT_TAG 660795b2834aebb2217c9849d668b6e4bd4ef810
     URL https://github.com/mackron/dr_libs/archive/36a0b4532468b0408b8a5a11649e0291b420f1bd.zip

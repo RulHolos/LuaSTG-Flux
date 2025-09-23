@@ -743,25 +743,25 @@ namespace core::Graphics
 	{
 		assert(m_device->GetD3D11Device());
 
-		spdlog::info("[core] 开始创建渲染器");
+		spdlog::info("[core] Start creating the renderer");
 		
 		if (!createBuffers())
 		{
-			spdlog::error("[core] 无法创建渲染器所需的顶点、索引缓冲区和着色器常量缓冲区");
+			spdlog::error("[core] Unable to create the vertex buffer, index buffer, and shader constant buffer required for the renderer.");
 			return false;
 		}
 		if (!createStates())
 		{
-			spdlog::error("[core] 无法创建渲染器所需的渲染状态");
+			spdlog::error("[core] Unable to create the render state required for the renderer.");
 			return false;
 		}
 		if (!createShaders())
 		{
-			spdlog::error("[core] 无法创建渲染器所需的内置着色器");
+			spdlog::error("[core] The built-in shader required to create the renderer cannot be created.");
 			return false;
 		}
 
-		spdlog::info("[core] 已创建渲染器");
+		spdlog::info("[core] Renderer created");
 
 		return true;
 	}
@@ -1083,7 +1083,7 @@ namespace core::Graphics
 				}
 				else
 				{
-					spdlog::error("[core] ID3D11DeviceContext::Map -> #fog_data_buffer 调用失败，无法上传雾颜色、范围和密度信息");
+					spdlog::error("[core] ID3D11DeviceContext::Map -> #fog_data_buffer 调用失败，无法上传雾颜色,范围和密度信息");
 				}
 			}
 			ctx->PSSetShader(_pixel_shader[IDX(_state_set.vertex_color_blend_state)][IDX(state)][IDX(_state_set.texture_alpha_type)].Get(), NULL, 0);
@@ -1637,15 +1637,15 @@ namespace core::Graphics
 	{
 		if (!m_model_shared)
 		{
-			spdlog::info("[core] 创建模型渲染器共享组件");
+			spdlog::info("[core] Creating model renderer");
 			try
 			{
 				*(m_model_shared.put()) = new ModelSharedComponent_D3D11(m_device.get());
-				spdlog::info("[luastg] 已创建模型渲染器共享组件");
+				spdlog::info("[core] Model renderer created");
 			}
 			catch (...)
 			{
-				spdlog::error("[core] 无法创建模型渲染器共享组件");
+				spdlog::error("[core] Undable to create model renderer");
 				return false;
 			}
 		}
@@ -1658,7 +1658,7 @@ namespace core::Graphics
 		catch (const std::exception&)
 		{
 			*pp_model = nullptr;
-			spdlog::error("[luastg] LuaSTG::core::Renderer::createModel 失败");
+			spdlog::error("[luastg] LuaSTG::core::Renderer::createModel failed");
 			return false;
 		}
 	}

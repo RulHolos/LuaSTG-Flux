@@ -71,7 +71,7 @@ namespace core::Graphics
 		DWORD win32_window_style_ex{ 0 };
 		WINDOWPLACEMENT m_last_window_placement{};
 		BOOL m_alt_down{ FALSE };
-		BOOL m_fullscreen_mode{ FALSE };
+		FullscreenMode m_fullscreen_mode{ FullscreenMode::Windowed };
 		BOOL m_ignore_size_message{ FALSE }; // 在 SetWindowLongPtr 修改窗口样式时，可以忽略 WM_SIZE
 		BOOL m_allow_windows_11_window_corner{ TRUE };
 
@@ -110,6 +110,7 @@ namespace core::Graphics
 		bool recreateWindow();
 		void _toggleFullScreenMode();
 		void _setWindowMode(SetWindowedModeParameters* parameters, bool ignore_size);
+		void _setBorderlessFullScreenMode(IDisplay* display);
 		void _setFullScreenMode(IDisplay* display);
 
 		void implSetApplicationModel(IApplicationModel* p_framework) { m_framework = p_framework; }
@@ -198,6 +199,7 @@ namespace core::Graphics
 
 		void setWindowMode(Vector2U size, WindowFrameStyle style, IDisplay* display) override;
 		void setFullScreenMode(IDisplay* display) override;
+		void setBorderlessFullScreenMode(IDisplay* display) override;
 		void setCentered(bool show, IDisplay* display) override;
 
 		void setCustomSizeMoveEnable(bool v) override;

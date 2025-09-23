@@ -343,8 +343,8 @@ namespace core::Graphics
 
 namespace core::Graphics
 {
-	static DWORD mapWindowStyle(WindowFrameStyle style, bool fullscreen) {
-		if (fullscreen) {
+	static DWORD mapWindowStyle(WindowFrameStyle style, FullscreenMode fullscreen) {
+		if (fullscreen == FullscreenMode::Exclusive || fullscreen == FullscreenMode::Borderless) {
 			return WS_VISIBLE | WS_POPUP;
 		}
 		switch (style)
@@ -397,7 +397,7 @@ namespace core::Graphics
 				std::array<WCHAR, 256> buffer2{};
 				LRESULT const length1 = SendMessageW(focus_window, WM_GETTEXT, 256, (LPARAM)buffer1.data());
 				int const length2 = GetClassNameW(focus_window, buffer2.data(), 256);
-				spdlog::info("[core] 窗口焦点已改变，新的焦点窗口为：[{}] ({}) {}", (void*)focus_window,
+				spdlog::info("[core] 窗口焦点已改变，新的焦点窗口为:[{}] ({}) {}", (void*)focus_window,
 					utf8::to_string(std::wstring_view(buffer2.data(), (size_t)length2)),
 					utf8::to_string(std::wstring_view(buffer1.data(), (size_t)length1))
 				);
@@ -570,7 +570,10 @@ namespace core::Graphics
 			_setWindowMode(reinterpret_cast<SetWindowedModeParameters*>(arg1), arg2);
 			return 0;
 		case LUASTG_WM_SET_FULLSCREEN_MODE:
-			_setFullScreenMode(reinterpret_cast<IDisplay*>(arg2));
+			if (arg1 == 1)
+				_setBorderlessFullScreenMode(reinterpret_cast<IDisplay*>(arg2));
+			else
+				_setFullScreenMode(reinterpret_cast<IDisplay*>(arg2));
 			return 0;
 		}
 		const auto result = DefWindowProcW(window, message, arg1, arg2);
@@ -578,7 +581,7 @@ namespace core::Graphics
 			// 在 CreateWindow/CreateWindowEx 期间，
 			// 即使设置了窗口类的 hbrBackground 为黑色笔刷，窗口背景也会先绘制为白色，再转为黑色。
 			// 只有不断追着窗口消息重绘背景，才能 **一定程度** 上避免白色背景（不保证 100% 有效）。
-			// CreateWindow/CreateWindowEx 一般会产生以下窗口消息（按先后顺序）：
+			// CreateWindow/CreateWindowEx 一般会产生以下窗口消息（按先后顺序）:
 			// - WM_GETMINMAXINFO
 			// - WM_NCCREATE
 			// - WM_NCCALCSIZE
@@ -598,7 +601,7 @@ namespace core::Graphics
 			// - WM_WINDOWPOSCHANGED
 			// - WM_SIZE
 			// - WM_MOVE
-			// 经过测试，如果在以下三类消息之后重绘背景为黑色，能极大程度地减少看到白色背景的概率：
+			// 经过测试，如果在以下三类消息之后重绘背景为黑色，能极大程度地减少看到白色背景的概率:
 			// - WM_NCPAINT
 			// - WM_GETICON
 			// - WM_ERASEBKGND
@@ -749,7 +752,7 @@ namespace core::Graphics
 	}
 	void Window_Win32::_toggleFullScreenMode()
 	{
-		if (m_fullscreen_mode) {
+		if (m_fullscreen_mode == FullscreenMode::Exclusive) {
 			SetWindowedModeParameters parameters{};
 			parameters.size = Vector2U(win32_window_width, win32_window_height);
 			parameters.style = m_framestyle;
@@ -780,7 +783,7 @@ namespace core::Graphics
 		assert(monitor_info.rcWork.right > monitor_info.rcWork.left);
 		assert(monitor_info.rcWork.bottom > monitor_info.rcWork.top);
 
-		bool const new_fullsceen_mode = false;
+		FullscreenMode const new_fullsceen_mode = FullscreenMode::Windowed;
 		m_framestyle = parameters->style;
 		DWORD new_win32_window_style = mapWindowStyle(m_framestyle, new_fullsceen_mode);
 
@@ -802,7 +805,7 @@ namespace core::Graphics
 
 		bool want_restore_placement = false;
 
-		if (m_fullscreen_mode && ignore_size)
+		if (m_fullscreen_mode == FullscreenMode::Exclusive && ignore_size)
 		{
 			want_restore_placement = true;
 		}
@@ -838,11 +841,60 @@ namespace core::Graphics
 			assert(set_placement_result); (void)set_placement_result;
 		}
 	}
+
+	void Window_Win32::_setBorderlessFullScreenMode(IDisplay* display)
+	{
+		if (m_fullscreen_mode == FullscreenMode::Windowed) {
+			BOOL const get_placement_result = GetWindowPlacement(win32_window, &m_last_window_placement);
+			assert(get_placement_result); (void)get_placement_result;
+		}
+
+		HMONITOR win32_monitor{};
+		if (display) {
+			win32_monitor = static_cast<HMONITOR>(display->getNativeHandle());
+		}
+		else {
+			win32_monitor = MonitorFromWindow(win32_window, MONITOR_DEFAULTTONEAREST);
+		}
+		assert(win32_monitor);
+		MONITORINFO monitor_info = {};
+		monitor_info.cbSize = sizeof(monitor_info);
+		BOOL const get_monitor_info_result = GetMonitorInfoW(win32_monitor, &monitor_info);
+		assert(get_monitor_info_result); (void)get_monitor_info_result;
+
+		// Set style to borderless (WS_POPUP)
+		DWORD new_win32_window_style = WS_VISIBLE | WS_POPUP;
+		SetLastError(0);
+		SetWindowLongPtrW(win32_window, GWL_STYLE, new_win32_window_style);
+		DWORD const set_style_result = GetLastError();
+		assert(set_style_result == 0); (void)set_style_result;
+
+		// Resize to cover the monitor
+		BOOL const set_window_pos_result = SetWindowPos(
+			win32_window,
+			HWND_TOP,
+			monitor_info.rcMonitor.left,
+			monitor_info.rcMonitor.top,
+			monitor_info.rcMonitor.right - monitor_info.rcMonitor.left,
+			monitor_info.rcMonitor.bottom - monitor_info.rcMonitor.top,
+			SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+		assert(set_window_pos_result); (void)set_window_pos_result;
+
+		m_fullscreen_mode = FullscreenMode::Borderless;
+		win32_window_style = new_win32_window_style;
+		win32_window_width = UINT(monitor_info.rcMonitor.right - monitor_info.rcMonitor.left);
+		win32_window_height = UINT(monitor_info.rcMonitor.bottom - monitor_info.rcMonitor.top);
+
+		EventData event_data{};
+		event_data.window_fullscreen_state = true;
+		dispatchEvent(EventType::WindowFullscreenStateChange, event_data);
+	}
+
 	void Window_Win32::_setFullScreenMode(IDisplay* display)
 	{
 		m_title_bar_controller.setEnable(false);
 
-		if (!m_fullscreen_mode)
+		if (m_fullscreen_mode == FullscreenMode::Windowed)
 		{
 			BOOL const get_placement_result = GetWindowPlacement(win32_window, &m_last_window_placement);
 			assert(get_placement_result); (void)get_placement_result;
@@ -863,7 +915,7 @@ namespace core::Graphics
 		assert(monitor_info.rcMonitor.right > monitor_info.rcMonitor.left);
 		assert(monitor_info.rcMonitor.bottom > monitor_info.rcMonitor.top);
 
-		bool const new_fullsceen_mode = true;
+		FullscreenMode const new_fullsceen_mode = FullscreenMode::Windowed;
 		DWORD new_win32_window_style = mapWindowStyle(m_framestyle, new_fullsceen_mode);
 
 		//m_ignore_size_message = TRUE;
@@ -1181,6 +1233,10 @@ namespace core::Graphics
 	{
 		SendMessageW(win32_window, LUASTG_WM_SET_FULLSCREEN_MODE, 0, reinterpret_cast<LPARAM>(display));
 	}
+	void Window_Win32::setBorderlessFullScreenMode(IDisplay* display)
+	{
+		SendMessageW(win32_window, LUASTG_WM_SET_FULLSCREEN_MODE, 1, reinterpret_cast<LPARAM>(display));
+	}
 	void Window_Win32::setCentered(bool show, IDisplay* display) {
 		core::SmartReference<IDisplay> local_display;
 		if (!display) {
@@ -1309,8 +1365,8 @@ namespace core::Graphics
 	}
 	void Window_Win32::setTitleBarAutoHidePreference(bool const allow) {
 		auto_hide_title_bar = allow;
-		m_title_bar_controller.setEnable(auto_hide_title_bar && !m_fullscreen_mode);
-		if (!m_fullscreen_mode) {
+		m_title_bar_controller.setEnable(auto_hide_title_bar && m_fullscreen_mode == FullscreenMode::Windowed);
+		if (m_fullscreen_mode == FullscreenMode::Windowed) {
 			WINDOWPLACEMENT placement{ .length{sizeof(WINDOWPLACEMENT)} };
 			GetWindowPlacement(win32_window, &placement);
 			SetWindowPos(win32_window, nullptr, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);

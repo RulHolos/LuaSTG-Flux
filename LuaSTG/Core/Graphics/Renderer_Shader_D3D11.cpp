@@ -92,7 +92,7 @@ namespace core::Graphics
 		if (FAILED(hr))
 		{
 			spdlog::error("[core] D3DCompile 调用失败");
-			spdlog::error("[core] 编译着色器 '{}' 失败：{}", name, (char*)errmsg_->GetBufferPointer());
+			spdlog::error("[core] 编译着色器 '{}' 失败:{}", name, (char*)errmsg_->GetBufferPointer());
 			return false;
 		}
 		return true;

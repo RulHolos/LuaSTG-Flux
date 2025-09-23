@@ -48,9 +48,9 @@ namespace luastg
 				"系统有多个更新未安装。是否从微软官网下载？\n"
 				"\n"
 				"提示：\n"
-				"    1、如果无法打开链接，请尝试安装更新版本的谷歌/Edge/火狐浏览器。\n"
-				"    2、下载时请选择对应的系统变体，有普通版、嵌入式版（Embedded）、服务器（Server）等。\n"
-				"    3、下载时请选择对应的系统位数，有32位（x86）、64位（x64）等。"
+				"    1,如果无法打开链接，请尝试安装更新版本的谷歌/Edge/火狐浏览器。\n"
+				"    2,下载时请选择对应的系统变体，有普通版,嵌入式版（Embedded）,服务器（Server）等。\n"
+				"    3,下载时请选择对应的系统位数，有32位（x86）,64位（x64）等。"
 				;
 		}
 		else
@@ -110,7 +110,7 @@ namespace luastg
 				std::string buffer = std::to_string(counter);
 				if (chinese_simplified)
 				{
-					buffer.append("、");
+					buffer.append(",");
 				}
 				else
 				{
@@ -204,7 +204,7 @@ namespace luastg
 					{
 						message << "下载 " << service_pack_1_name << " ？\n";
 						message << "将打开以下链接：\n";
-						message << "1、https://www.catalog.update.microsoft.com/Search.aspx?q=KB976932";
+						message << "1,https://www.catalog.update.microsoft.com/Search.aspx?q=KB976932";
 					}
 					else
 					{
@@ -227,9 +227,9 @@ namespace luastg
 					{
 						message << "下载 " << platform_update_name << " ？\n";
 						message << "将打开以下链接：\n";
-						message << "1、https://www.catalog.update.microsoft.com/Search.aspx?q=KB2670838";
+						message << "1,https://www.catalog.update.microsoft.com/Search.aspx?q=KB2670838";
 						message << "\n";
-						message << "2、https://www.catalog.update.microsoft.com/Search.aspx?q=KB2834140";
+						message << "2,https://www.catalog.update.microsoft.com/Search.aspx?q=KB2834140";
 					}
 					else
 					{
@@ -254,7 +254,7 @@ namespace luastg
 					{
 						message << "下载 " << secure_library_loading_name << " ？\n";
 						message << "将打开以下链接：\n";
-						message << "1、https://support.microsoft.com/help/2533623";
+						message << "1,https://support.microsoft.com/help/2533623";
 					}
 					else
 					{
@@ -285,10 +285,10 @@ namespace luastg
 			if (chinese_simplified)
 			{
 				text = "找不到可用的显卡：\n"
-					"1、显卡驱动程序可能未安装或未正确安装\n"
-					"2、显卡驱动程序可能未正常工作\n"
-					"3、显卡可能过于老旧，无法被识别\n"
-					"4、虚拟机或者云电脑可能不支持或未安装显卡\n";
+					"1,显卡驱动程序可能未安装或未正确安装\n"
+					"2,显卡驱动程序可能未正常工作\n"
+					"3,显卡可能过于老旧，无法被识别\n"
+					"4,虚拟机或者云电脑可能不支持或未安装显卡\n";
 			}
 			else
 			{

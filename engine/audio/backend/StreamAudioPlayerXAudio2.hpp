@@ -83,19 +83,19 @@ namespace core {
 
 		class ActionQueue {
 		public:
-			// 线程：任意线程
+			// 线程:任意线程
 			// 通知工作线程应该退出
 			void notifyExit();
 
-			// 线程：任意线程
+			// 线程:任意线程
 			// 通知指定的缓冲区已经处于可用状态，可用于解码并储存 PCM 数据
 			void notifyBufferAvailable(size_t i);
 
-			// 线程：仅限引擎更新线程
+			// 线程:仅限引擎更新线程
 			// 向工作线程发送动作
 			void sendAction(Action const& v);
 
-			// 线程：仅限解码线程
+			// 线程:仅限解码线程
 			// 工作线程接收动作
 			void receiveAction(Action& v);
 

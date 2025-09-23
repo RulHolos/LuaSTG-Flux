@@ -22,8 +22,8 @@ int luastg::main() {
 	CoInitializeScope com_runtime;
 	if (!com_runtime()) {
 		Platform::MessageBox::Error(LUASTG_INFO,
-			"引擎初始化失败。\n"
-			"未能正常初始化COM组件库，请尝试重新启动此应用程序。");
+			"Engine initialization failed.\n"
+			"The COM component library failed to initialize properly. Please try to restart this application.");
 		return EXIT_FAILURE;
 	}
 
@@ -62,7 +62,7 @@ int luastg::main() {
 		if (LAPP.Init())
 		{
 			auto const t3 = std::chrono::high_resolution_clock::now();
-			spdlog::info("Duration of initialization: {}s", double((t3 - t2).count()) / 1000000000.0);
+			spdlog::info("[luastg] Duration of initialization: {}s", double((t3 - t2).count()) / 1000000000.0);
 
 			LAPP.Run();
 			result = EXIT_SUCCESS;
@@ -70,9 +70,9 @@ int luastg::main() {
 		else
 		{
 			Platform::MessageBox::Error(LUASTG_INFO,
-				"引擎初始化失败。\n"
-				"查看日志文件（engine.log，可以用记事本打开）可以获得更多信息。\n"
-				"请尝试重新启动此应用程序，或者联系开发人员。");
+				"Engine initialization failed.\n"
+				"Check the log file (engine.log) for more informations.\n"
+				"Please try to restart this application or contact the developers.");
 			result = EXIT_FAILURE;
 		}
 		LAPP.Shutdown();

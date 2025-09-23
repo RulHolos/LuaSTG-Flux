@@ -6,7 +6,7 @@ struct i18n_entry_t
 	std::string_view const en_us;
 };
 
-static i18n_lang_t g_i18n_lang = i18n_lang_t::zh_cn;
+static i18n_lang_t g_i18n_lang = i18n_lang_t::en_us;
 static std::unordered_map<std::string_view, i18n_entry_t> const g_i18n_map = {
 	{"[core].system_call_failed_f",{
 		.zh_cn = "[core] {} 调用失败",
@@ -35,27 +35,27 @@ static std::unordered_map<std::string_view, i18n_entry_t> const g_i18n_map = {
 	}},
 	{"support",{
 		.zh_cn = "支持",
-		.en_us = "support",
+		.en_us = "supported",
 	}},
 	{"not_support",{
 		.zh_cn = "不支持",
-		.en_us = "not support",
+		.en_us = "unsupported",
 	}},
 	{"not_support.requires_Windows_8",{
 		.zh_cn = "不支持（最低系统要求为 Windows 8）",
-		.en_us = "not support (requires Windows 8 or above)",
+		.en_us = "unsupported (requires Windows 8 or above)",
 	}},
 	{"not_support.requires_Windows_8_point_1",{
 		.zh_cn = "不支持（最低系统要求为 Windows 8.1）",
-		.en_us = "not support (requires Windows 8.1 or above)",
+		.en_us = "unsupported (requires Windows 8.1 or above)",
 	}},
 	{"not_support.requires_Windows_10",{
 		.zh_cn = "不支持（最低系统要求为 Windows 10）",
-		.en_us = "not support (requires Windows 10 or above)",
+		.en_us = "unsupported (requires Windows 10 or above)",
 	}},
 	{"not_support.requires_Windows_10_and_hardware",{
 		.zh_cn = "不支持（最低系统要求为 Windows 10，且硬件支持该功能）",
-		.en_us = "not support (requires Windows 10 or above, and hardware support)",
+		.en_us = "unsupported (requires Windows 10 or above, and hardware support)",
 	}},
 
 	{"[core].Device_D3D11.start_creating_graphic_components",{
@@ -80,8 +80,8 @@ static std::unordered_map<std::string_view, i18n_entry_t> const g_i18n_map = {
 		.en_us = "[core] Enumerate all graphics devices",
 	}},
 	{"[core].Device_D3D11.DXGI_detail_fmt",{
-		.zh_cn = "[core] DXGI 组件功能支持：\n"
-			"    立即刷新：{}"
+		.zh_cn = "[core] DXGI 组件功能支持:\n"
+			"    立即刷新:{}"
 			,
 		.en_us = "[core] DXGI components feature support:\n"
 			"    Present Allow Tearing: {}"
@@ -105,23 +105,23 @@ static std::unordered_map<std::string_view, i18n_entry_t> const g_i18n_map = {
 		.en_us = "Remote Software",
 	}},
 	{"DXGI_adapter_type_software_warning",{
-		.zh_cn = "（警告：软件或远程设备性能不足流畅运行程序）",
+		.zh_cn = "（警告:软件或远程设备性能不足流畅运行程序）",
 		.en_us = " (WARNING: The software or remote device does not have enough performance to run the program smoothly)",
 	}},
 
 	{"[core].Device_D3D11.DXGI_adapter_detail_fmt",{
-		.zh_cn = "[core] 图形设备[{}]：\n"
-			"    设备名称：{}\n"
-			"    Direct3D 功能级别：{}\n"
-			"    设备类型：{}{}\n"
-			"    专用显存：{}\n"
-			"    专用内存：{}\n"
-			"    共享内存：{}\n"
-			"    供应商 ID：0x{:08X}\n"
-			"    设备 ID：0x{:08X}\n"
-			"    子系统 ID：0x{:08X}\n"
-			"    修订号：0x{:08X}\n"
-			"    设备 LUID：{:08X}-{:08X}"
+		.zh_cn = "[core] 图形设备[{}]:\n"
+			"    设备名称:{}\n"
+			"    Direct3D 功能级别:{}\n"
+			"    设备类型:{}{}\n"
+			"    专用显存:{}\n"
+			"    专用内存:{}\n"
+			"    共享内存:{}\n"
+			"    供应商 ID:0x{:08X}\n"
+			"    设备 ID:0x{:08X}\n"
+			"    子系统 ID:0x{:08X}\n"
+			"    修订号:0x{:08X}\n"
+			"    设备 LUID:{:08X}-{:08X}"
 			,
 		.en_us = "[core] Graphics Device[{}]:\n"
 			"    Description: {}\n"
@@ -134,16 +134,16 @@ static std::unordered_map<std::string_view, i18n_entry_t> const g_i18n_map = {
 			"    Device ID: 0x{:08X}\n"
 			"    SubSystem ID: 0x{:08X}\n"
 			"    Revision: 0x{:08X}\n"
-			"    Adapter LUID：{:08X}-{:08X}"
+			"    Adapter LUID:{:08X}-{:08X}"
 			,
 	}},
 	{"[core].Device_D3D11.DXGI_adapter_detail_error_fmt",{
-		.zh_cn = "[core] 图形设备[{}]：<无法读取信息>",
+		.zh_cn = "[core] 图形设备[{}]:<无法读取信息>",
 		.en_us = "[core] Graphics Device[{}]: <Unable to read information>",
 	}},
 
 	{"[core].Device_D3D11.select_DXGI_adapter_fmt",{
-		.zh_cn = "[core] 已选择图形设备：{}",
+		.zh_cn = "[core] 已选择图形设备:{}",
 		.en_us = "[core] Select Graphics Device: {}",
 	}},
 	{"[core].Device_D3D11.no_available_DXGI_adapter",{
@@ -151,7 +151,7 @@ static std::unordered_map<std::string_view, i18n_entry_t> const g_i18n_map = {
 		.en_us = "[core] No Graphics Device available",
 	}},
 	{"[core].Device_D3D11.DXGI_adapter_no_output_warning_fmt",{
-		.zh_cn = "[core] 图形设备 {} 似乎没有连接到任何显示输出，这可能导致：\n"
+		.zh_cn = "[core] 图形设备 {} 似乎没有连接到任何显示输出，这可能导致:\n"
 			"    独占全屏时会通过 PCI-E 复制渲染缓冲区\n"
 			"    独占全屏时桌面窗口管理器接管画面合成\n"
 			"    性能下降、呈现延迟变高"
@@ -173,11 +173,11 @@ static std::unordered_map<std::string_view, i18n_entry_t> const g_i18n_map = {
 	}},
 
 	{"[core].Device_D3D11.DXGI_output_detail_fmt",{
-		.zh_cn = "[core] 图形设备[{}] - 显示输出设备[{}]：\n"
-			"    连接状态：{}\n"
-			"    显示区域：({}, {}) ({} x {})\n"
-			"    旋转：{}\n"
-			"    硬件表面合成：{}"
+		.zh_cn = "[core] 图形设备[{}] - 显示输出设备[{}]:\n"
+			"    连接状态:{}\n"
+			"    显示区域:({}, {}) ({} x {})\n"
+			"    旋转:{}\n"
+			"    硬件表面合成:{}"
 			,
 		.en_us = "[core] Graphics Device[{}] - Display Output[{}]:\n"
 			"    Attached To Desktop: {}\n"
@@ -187,13 +187,13 @@ static std::unordered_map<std::string_view, i18n_entry_t> const g_i18n_map = {
 			,
 	}},
 	{"[core].Device_D3D11.DXGI_output_detail_fmt2",{
-		.zh_cn = "[core] 图形设备[{}] - 显示输出设备[{}]：\n"
-			"    连接状态：{}\n"
-			"    显示区域：({}, {}) ({} x {})\n"
-			"    旋转：{}\n"
-			"    多平面叠加：{}\n"
-			"    多平面叠加功能：{}\n"
-			"    硬件表面合成：{}"
+		.zh_cn = "[core] 图形设备[{}] - 显示输出设备[{}]:\n"
+			"    连接状态:{}\n"
+			"    显示区域:({}, {}) ({} x {})\n"
+			"    旋转:{}\n"
+			"    多平面叠加:{}\n"
+			"    多平面叠加功能:{}\n"
+			"    硬件表面合成:{}"
 			,
 		.en_us = "[core] Graphics Device[{}] - Display Output[{}]:\n"
 			"    Attached To Desktop: {}\n"
@@ -205,7 +205,7 @@ static std::unordered_map<std::string_view, i18n_entry_t> const g_i18n_map = {
 			,
 	}},
 	{"[core].Device_D3D11.DXGI_output_detail_error_fmt",{
-		.zh_cn = "[core] 图形设备[{}] - 显示输出设备[{}]：<无法读取信息>",
+		.zh_cn = "[core] 图形设备[{}] - 显示输出设备[{}]:<无法读取信息>",
 		.en_us = "[core] Graphics Device[{}] - Display Output[{}]: <Unable to read information>",
 	}},
 
@@ -248,15 +248,15 @@ static std::unordered_map<std::string_view, i18n_entry_t> const g_i18n_map = {
 		.en_us = "[core] SwapChain created",
 	),
 	ADD("[core].SwapChain_D3D11.created_swapchain_info_fmt",
-		.zh_cn = "[core] 已创建 SwapChain：\n"
-			"    显示模式：{}x{}@{}\n"
-			"    独占全屏：{}\n"
-			"    交换链模式：{}\n"
-			"    立即刷新：{}\n"
-			"    低延迟呈现：{}",
+		.zh_cn = "[core] 已创建 SwapChain:\n"
+			"    显示模式:{}x{}@{}\n"
+			"    独占全屏:{}\n"
+			"    交换链模式:{}\n"
+			"    立即刷新:{}\n"
+			"    低延迟呈现:{}",
 		.en_us = "[core] SwapChain created:\n"
 			"    Display Mode: {}x{}@{}\n"
-			"    Exclusive Fullscreen：{}\n"
+			"    Exclusive Fullscreen:{}\n"
 			"    SwapChain swap effect: {}\n"
 			"    Present Allow Tearing: {}\n"
 			"    Frame Latency Waitable Object: {}",
@@ -304,7 +304,7 @@ static std::unordered_map<std::string_view, i18n_entry_t> const g_i18n_map = {
 		.en_us = "[core] Start enumerating DisplayMode",
 	),
 	ADD("[core].SwapChain_D3D11.found_N_DisplayMode_fmt",
-		.zh_cn = "[core] 共找到 {} 个支持的显示模式：",
+		.zh_cn = "[core] 共找到 {} 个支持的显示模式:",
 		.en_us = "[core] Found {} supported DisplayMode:",
 	),
 	ADD("[core].SwapChain_D3D11.enumerating_DisplayMode_failed",

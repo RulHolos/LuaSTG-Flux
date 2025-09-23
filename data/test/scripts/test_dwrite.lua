@@ -5,7 +5,7 @@ local M = {}
 
 local text = [[People communicate with text all the time in their daily lives. It is the primary way for people to consume an increasing volume of information. In the past, it used to be through printed content, primarily documents, newspapers, books, and so on. Increasingly, it is online content on their Windows PC. A typical Windows user spends a lot of time reading from their computer screen. They might be surfing the Web, scanning e-mail, composing a report, filling in a spreadsheet, or writing software, but what they're really doing is reading. Even though text and fonts permeate nearly every part of the user experience in Windows, for most users, reading on the screen is not as enjoyable as reading printed output.
 
-统一的 App Store 让你的应用在 Windows 设备（如电脑、平板电脑、Xbox、HoloLens、Surface Hub 和物联网 (IoT) 设备）上可用。 可以向 Microsoft Store 提交应用，并使其对所有类型的设备或仅对所选设备类型可用。 你将在一个位置上提交和管理适用于 Windows 设备的所有应用。 想要使用 UWP 功能实现 C++ 桌面应用的现代化并将其在 Microsoft store 内出售？ 这同样可以实现。]]
+统一的 App Store 让你的应用在 Windows 设备（如电脑,平板电脑,Xbox,HoloLens,Surface Hub 和物联网 (IoT) 设备）上可用。 可以向 Microsoft Store 提交应用，并使其对所有类型的设备或仅对所选设备类型可用。 你将在一个位置上提交和管理适用于 Windows 设备的所有应用。 想要使用 UWP 功能实现 C++ 桌面应用的现代化并将其在 Microsoft store 内出售？ 这同样可以实现。]]
 
 function M:onCreate()
     ---@type DirectWrite
@@ -28,7 +28,7 @@ function M:onCreate()
         ""
     )
     local text_layout = DirectWrite.CreateTextLayout(
-        "测试文本：\n" .. text,
+        "测试文本:\n" .. text,
         text_format,
         1024, -- width
         640 -- height
@@ -44,7 +44,7 @@ function M:onCreate()
     DirectWrite.CreateTextureFromTextLayout(text_layout, "global", "text-texture", 2)
 
     local text_layout_2 = DirectWrite.CreateTextLayout(
-        "城阙辅三秦，风烟望五津。\n与君离别意，同是宦游人。\n海内存知己，天涯若比邻。\n无为在歧路，儿女共沾巾。\nLet life be beautiful like summer flowers and death like autumn leaves.\nThe world has kissed my soul with its pain, asking for its return in songs.\nあなたが帰ってきたのは詩です。\n立ち去るのは言葉です。\n風塵を見ても、次を作ることはできません。",
+        "城阙辅三秦，风烟望五津。\n与君离别意，同是宦游人。\n海内存知己，天涯若比邻。\n无为在歧路，儿女共沾巾。\nLet life be beautiful like summer flowers and death like autumn leaves.\nThe world has kissed my soul with its pain, asking for its return in songs.\nあなたが帰ってきたのは詩です。\n立ち去るのは言葉です。\n風塵を見ても,次を作ることはできません。",
         text_format,
         512, -- width
         512 -- height
