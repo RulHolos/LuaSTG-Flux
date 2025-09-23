@@ -12,21 +12,28 @@ namespace luastg
         #ifdef USING_LAUNCH_FILE
         spdlog::info("[luastg] Loading launch file");
         core::SmartReference<core::IData> src;
-        if (core::FileSystemManager::readFile(LUASTG_LAUNCH_SCRIPT, src.put()))
+        const char* file_name = LUASTG_LAUNCH_SCRIPT;
+        if (core::FileSystemManager::hasFile(LUASTG_LAUNCH_SCRIPT ".lua"))
         {
-            if (SafeCallScript((char const*)src->data(), src->size(), LUASTG_LAUNCH_SCRIPT))
+            file_name = LUASTG_LAUNCH_SCRIPT ".lua";
+        }
+        if (core::FileSystemManager::readFile(file_name, src.put()))
+        {
+            spdlog::info("[luastg] Found '{}'", file_name);
+
+            if (SafeCallScript((char const*)src->data(), src->size(), file_name))
             {
                 is_launch_loaded = true;
-                spdlog::info("[luastg] Loading script '{}'", LUASTG_LAUNCH_SCRIPT);
+                spdlog::info("[luastg] Loading script '{}'", file_name);
             }
             else
             {
-                spdlog::error("[luastg] Failed to load launch file '{}'", LUASTG_LAUNCH_SCRIPT);
+                spdlog::error("[luastg] Failed to load launch file '{}'", file_name);
             }
         }
         if (!is_launch_loaded)
         {
-            spdlog::error("[luastg] Launch file not found", LUASTG_LAUNCH_SCRIPT);
+            spdlog::error("[luastg] Launch file not found", file_name);
         }
         #endif
 
