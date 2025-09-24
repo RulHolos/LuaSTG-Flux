@@ -12,13 +12,13 @@
 	url = https://github.com/openresty/lua-cjson.git
 [submodule "doc"]
 	path = doc
-	url = https://github.com/Legacy-LuaSTG-Engine/LuaSTG-Sub-Documentation.git
+	url = https://github.com/RulHolos/LuaSTG-Flux-Documentation.git
 [submodule "external/image.qoi"]
 	path = external/image.qoi
 	url = https://github.com/phoboslab/qoi.git
 [submodule "external/luajit2"]
 	path = external/luajit2
-	url = https://github.com/Legacy-LuaSTG-Engine/LuaSTG-Sub-LuaJIT.git
+	url = https://github.com/RulHolos/LuaSTG-Flux-LuaJIT.git
 [submodule "external/beautiful-win32-api"]
 	path = external/beautiful-win32-api
 	url = https://github.com/Demonese/beautiful-win32-api

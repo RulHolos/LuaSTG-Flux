@@ -863,7 +863,9 @@ namespace core::Graphics
 		assert(get_monitor_info_result); (void)get_monitor_info_result;
 
 		// Set style to borderless (WS_POPUP)
-		DWORD new_win32_window_style = WS_VISIBLE | WS_POPUP;
+		FullscreenMode const new_fullsceen_mode = FullscreenMode::Borderless;
+		DWORD new_win32_window_style = mapWindowStyle(m_framestyle, new_fullsceen_mode);
+
 		SetLastError(0);
 		SetWindowLongPtrW(win32_window, GWL_STYLE, new_win32_window_style);
 		DWORD const set_style_result = GetLastError();
