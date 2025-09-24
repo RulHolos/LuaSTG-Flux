@@ -23,7 +23,7 @@
 
 // !!!deprecated
 // lstg.GameObject.pause
-//#define LUASTG_ENABLE_GAME_OBJECT_PROPERTY_PAUSE
+#define LUASTG_ENABLE_GAME_OBJECT_PROPERTY_PAUSE
 
 // add gravity (self.ag), speed limit (self.maxv, self.maxvx, self.maxvy)
 #define USER_SYSTEM_OPERATION

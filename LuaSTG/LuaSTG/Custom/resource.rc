@@ -68,12 +68,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Rül Hölos"
             VALUE "FileDescription", "LuaSTG Flux"
-            VALUE "FileVersion", "1.0.0.0"
+            VALUE "FileVersion", "0.1.0.0"
             VALUE "InternalName", "LuaSTG Flux"
             VALUE "LegalCopyright", "Copyright 2025 Rül Hölos"
             VALUE "OriginalFilename", "LuaSTGFlux.exe"
             VALUE "ProductName", "LuaSTG Flux"
-            VALUE "ProductVersion", "1.0.0.0"
+            VALUE "ProductVersion", "0.1.0.0"
         END
     END
     BLOCK "VarFileInfo"

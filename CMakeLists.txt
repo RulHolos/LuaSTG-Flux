@@ -6,7 +6,7 @@ project(LuaSTGFlux)
 option(LUASTG_SUPPORTS_WINDOWS_7 "LuaSTG Flux Windows compatibility: Windows 7" ON)
 option(LUASTG_LINK_YY_THUNKS "Link to YY_Thunks for older Windows version (not recommended)" OFF)
 option(LUASTG_LINK_LUASOCKET "Link to luasocket" ON)
-option(LUASTG_LINK_TRACY_CLIENT "Link to Tracy client" OFF)
+option(LUASTG_LINK_TRACY_CLIENT "Link to Tracy client" ON)
 option(LUASTG_LINK_STEAM_API "Link to Steam API" OFF)
 
 if(LUASTG_SUPPORTS_WINDOWS_7)
