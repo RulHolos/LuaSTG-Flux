@@ -40,6 +40,10 @@
 // access lstg.GameObject particle system via lstg.ParticleSystem instance
 #define LUASTG_GAME_OBJECT_PARTICLE_SYSTEM_OBJECT
 
+// For security reasons, this is disabled by default
+// Only enable if you really need it.
+//#define DEFINE_EXECUTE_API_FUNCTION
+
 // ---------- ---------- steam api ---------- ---------- //
 
 #define STEAM_APP_ID 0
