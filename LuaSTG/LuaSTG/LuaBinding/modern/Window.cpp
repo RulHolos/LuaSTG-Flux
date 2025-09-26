@@ -124,6 +124,36 @@ namespace luastg::binding {
 			return 0;
 		}
 
+		static int setCursorType(lua_State* L) {
+			auto self = as(L, 1);
+			lua::stack_t S(L);
+			auto const cursor_type = S.get_value<std::string>(2);
+			if (cursor_type == "Arrow")
+				self->data->setCursor(core::Graphics::WindowCursor::Arrow);
+			else if (cursor_type == "Hand")
+				self->data->setCursor(core::Graphics::WindowCursor::Hand);
+			else if (cursor_type == "Cross")
+				self->data->setCursor(core::Graphics::WindowCursor::Cross);
+			else if (cursor_type == "TextInput")
+				self->data->setCursor(core::Graphics::WindowCursor::TextInput);
+			else if (cursor_type == "Resize")
+				self->data->setCursor(core::Graphics::WindowCursor::Resize);
+			else if (cursor_type == "ResizeEW")
+				self->data->setCursor(core::Graphics::WindowCursor::ResizeEW);
+			else if (cursor_type == "ResizeNS")
+				self->data->setCursor(core::Graphics::WindowCursor::ResizeNS);
+			else if (cursor_type == "ResizeNESW")
+				self->data->setCursor(core::Graphics::WindowCursor::ResizeNESW);
+			else if (cursor_type == "ResizeNWSE")
+				self->data->setCursor(core::Graphics::WindowCursor::ResizeNWSE);
+			else if (cursor_type == "NotAllowed")
+				self->data->setCursor(core::Graphics::WindowCursor::NotAllowed);
+			else if (cursor_type == "Wait")
+				self->data->setCursor(core::Graphics::WindowCursor::Wait);
+
+			return 0;
+		}
+
 		static int getCursorVisibility(lua_State* L) {
 			auto self = as(L, 1);
 			lua::stack_t S(L);
@@ -229,6 +259,7 @@ namespace luastg::binding {
 		S.set_map_value(method_table, "getDisplayScale", &WindowBinding::getDisplayScale);
 		S.set_map_value(method_table, "setWindowed", &WindowBinding::setWindowed);
 		S.set_map_value(method_table, "setFullscreen", &WindowBinding::setFullscreen);
+		S.set_map_value(method_table, "setCursorType", &WindowBinding::setCursorType);
 		S.set_map_value(method_table, "getCursorVisibility", &WindowBinding::getCursorVisibility);
 		S.set_map_value(method_table, "setCursorVisibility", &WindowBinding::setCursorVisibility);
 		S.set_map_value(method_table, "queryInterface", &WindowBinding::queryInterface);
