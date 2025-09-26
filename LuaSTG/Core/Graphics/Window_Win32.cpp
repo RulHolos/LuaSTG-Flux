@@ -491,7 +491,11 @@ namespace core::Graphics
 			}
 			if (m_alt_down && arg1 == VK_RETURN)
 			{
-				_toggleFullScreenMode();
+				if (m_fullscreen_mode == FullscreenMode::Exclusive)
+					_toggleFullScreenMode();
+				else if (m_fullscreen_mode == FullscreenMode::Borderless)
+					_toggleBorderlessMode();
+				else
 				return 0;
 			}
 			break;
@@ -504,17 +508,17 @@ namespace core::Graphics
 			}
 			break;
 		case WM_GETMINMAXINFO:
-		{
-			MINMAXINFO* info = (MINMAXINFO*)arg2;
-			RECT rect_min = { 0, 0, 320, 240 };
-			UINT const dpi = win32::getDpiForWindow(window);
-			if (m_title_bar_controller.adjustWindowRectExForDpi(&rect_min, win32_window_style, FALSE, win32_window_style_ex, dpi))
 			{
-				info->ptMinTrackSize.x = rect_min.right - rect_min.left;
-				info->ptMinTrackSize.y = rect_min.bottom - rect_min.top;
+				MINMAXINFO* info = (MINMAXINFO*)arg2;
+				RECT rect_min = { 0, 0, 320, 240 };
+				UINT const dpi = win32::getDpiForWindow(window);
+				if (m_title_bar_controller.adjustWindowRectExForDpi(&rect_min, win32_window_style, FALSE, win32_window_style_ex, dpi))
+				{
+					info->ptMinTrackSize.x = rect_min.right - rect_min.left;
+					info->ptMinTrackSize.y = rect_min.bottom - rect_min.top;
+				}
 			}
-		}
-		return 0;
+			return 0;
 		case WM_DPICHANGED:
 			if (getFrameStyle() != WindowFrameStyle::None)
 			{
@@ -762,6 +766,18 @@ namespace core::Graphics
 			_setFullScreenMode(nullptr);
 		}
 	}
+	void Window_Win32::_toggleBorderlessMode()
+	{
+		if (m_fullscreen_mode == FullscreenMode::Borderless) {
+			SetWindowedModeParameters parameters{};
+			parameters.size = Vector2U(win32_window_width, win32_window_height);
+			parameters.style = m_framestyle;
+			_setWindowMode(&parameters, true);
+		}
+		else {
+			_setBorderlessFullScreenMode(nullptr);
+		}
+	}
 	void Window_Win32::_setWindowMode(SetWindowedModeParameters* parameters, bool ignore_size)
 	{
 		assert(parameters);
@@ -805,7 +821,7 @@ namespace core::Graphics
 
 		bool want_restore_placement = false;
 
-		if (m_fullscreen_mode == FullscreenMode::Exclusive && ignore_size)
+		if (m_fullscreen_mode != FullscreenMode::Windowed && ignore_size)
 		{
 			want_restore_placement = true;
 		}

@@ -109,6 +109,7 @@ namespace core::Graphics
 		bool _recreateWindow();
 		bool recreateWindow();
 		void _toggleFullScreenMode();
+		void _toggleBorderlessMode();
 		void _setWindowMode(SetWindowedModeParameters* parameters, bool ignore_size);
 		void _setBorderlessFullScreenMode(IDisplay* display);
 		void _setFullScreenMode(IDisplay* display);

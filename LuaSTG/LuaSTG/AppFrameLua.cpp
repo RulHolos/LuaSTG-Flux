@@ -313,6 +313,8 @@ namespace luastg
 			{
 				lua_getfield(L, LUA_REGISTRYINDEX, "_LOADED"); // ... _LOADED
 				{
+					spdlog::info("[luajit] Registering Luasocket 'socket' and 'mime' packages");
+					
 					luaopen_socket_core(L);        // ... _LOADED socket
 					lua_setfield(L, -2, "socket.core"); // ... _LOADED
 					luaopen_mime_core(L);          // ... _LOADED mime
