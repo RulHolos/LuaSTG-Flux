@@ -1,6 +1,6 @@
-# 如何为 LuaSTG Sub 引擎出谋献策
+# 如何为 LuaSTG Flux 引擎出谋献策
 
-> 下文中的“我们”指 LuaSTG Sub 引擎开发团队
+> 下文中的“我们”指 LuaSTG Flux 引擎开发团队
 
 ## 发现并报告缺陷
 
@@ -8,8 +8,8 @@
 
 我们提供了多种报告缺陷的途径:
 
-* GitHub Issues:https://github.com/Legacy-LuaSTG-Engine/LuaSTG-Sub/issues
-* 邮箱:contact@luastg-sub.com
+* GitHub Issues:https://github.com/RulHolos/LuaSTG-Flux/issues
+* 邮箱:contact@luastg-Flux.com
 * LuaSTG 交流群（QQ群）:230927410
 * LuaSTG 寒流群（QQ群）:563868788
 
@@ -17,9 +17,9 @@
 
 ## 提出功能需求
 
-LuaSTG Sub 并不是一款大而全的游戏引擎，在过去的 10 多年里，LuaSTG 系列引擎一直专精于“东方风弹幕射击游戏（东方STG）”这个小众领域，引擎提供的主要功能很少发生重大改变。
+LuaSTG Flux 并不是一款大而全的游戏引擎，在过去的 10 多年里，LuaSTG 系列引擎一直专精于“东方风弹幕射击游戏（东方STG）”这个小众领域，引擎提供的主要功能很少发生重大改变。
 
-此外，我们是一群用爱发电的开发者，利用业余时间开发 LuaSTG Sub 引擎，时间,精力,技术都十分紧缺。虽然有很多“棒极了”的想法，但我们却无力开发。
+此外，我们是一群用爱发电的开发者，利用业余时间开发 LuaSTG Flux 引擎，时间,精力,技术都十分紧缺。虽然有很多“棒极了”的想法，但我们却无力开发。
 
 尽管如此，我们仍然欢迎游戏开发者们提出功能需求，因为这会给东方STG带来新的可能性。比如，我们将引擎迁移到更加现代化的平台（Direct3D11,XAudio2等），提高了引擎对Windows 10/11系统的兼容性；我们开发了基本的模型渲染功能，而该功能已经被一些作品使用，关卡背景画面因此变得更加丰富。
 
