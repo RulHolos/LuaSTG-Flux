@@ -102,6 +102,7 @@ set(LUASTG_ENGINE_SOURCES
     LuaSTG/LuaBinding/LW_ResourceMgr.cpp
     LuaSTG/LuaBinding/LW_Platform.cpp
     LuaSTG/LuaBinding/LW_GameObjectManager.cpp
+    LuaSTG/LuaBinding/LW_GameObjectPoolMgr.cpp
     LuaSTG/LuaBinding/PostEffectShader.hpp
     LuaSTG/LuaBinding/PostEffectShader.cpp
     LuaSTG/LuaBinding/Resource.hpp

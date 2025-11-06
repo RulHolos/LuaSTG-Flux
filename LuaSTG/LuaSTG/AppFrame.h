@@ -54,9 +54,6 @@ namespace luastg {
 		// 资源管理器
 		ResourceMgr m_ResourceMgr;
 
-		// 对象池
-		std::unique_ptr<GameObjectPool> m_GameObjectPool;
-
 		// Lua虚拟机
 		lua_State* L = nullptr;
 
@@ -249,7 +246,10 @@ namespace luastg {
 
 		ResourceMgr& GetResourceMgr()noexcept { return m_ResourceMgr; }
 
-		GameObjectPool& GetGameObjectPool()noexcept { return *m_GameObjectPool; }
+		GameObjectPool& GetGameObjectPool()noexcept
+		{
+			return *GetActiveGameObjectPool();
+		}
 
 		Platform::DirectInput* GetDInput()noexcept { return m_DirectInput.get(); }
 

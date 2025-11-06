@@ -63,6 +63,12 @@ namespace luastg::binding
 	public:
 		static void Register(lua_State* L) noexcept;
 	};
+
+	class GameObjectPoolMgr
+	{
+	public:
+		static void Register(lua_State* L) noexcept;
+	};
 	
 	class ResourceManager
 	{

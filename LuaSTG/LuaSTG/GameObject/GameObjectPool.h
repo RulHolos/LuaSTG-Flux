@@ -477,4 +477,15 @@ namespace luastg
 		GameObjectPool(const GameObjectPool&) = delete;
 		~GameObjectPool();
 	};
+
+	// Manager API
+		
+	bool CreateGameObjectPool(std::string_view name);
+	bool RemoveGameObjectPool(std::string_view name);
+	GameObjectPool* GetGameObjectPool(std::string_view name) noexcept;
+	bool SetActiveGameObjectPoolByName(std::string_view name) noexcept;
+	GameObjectPool* GetActiveGameObjectPool() noexcept;
+	std::string GetActiveGameObjectPoolName() noexcept;
+	std::vector<std::string> EnumGameObjectPools() noexcept;
+	void ClearAllGameObjectPools();
 }

@@ -13,14 +13,14 @@ namespace {
 
 namespace luastg
 {
+	// Manager for storage of named pools
+	static std::unordered_map<std::string, std::unique_ptr<GameObjectPool>> g_gameobject_pools;
+	static GameObjectPool* g_active_gameobject_pool = nullptr;
+	static std::mutex g_gameobject_pools_mutex; // jic
+
 	// --------------------------------------------------------------------------------
 
-	static GameObjectPool* g_GameObjectPool = nullptr;
-
 	GameObjectPool::GameObjectPool() {
-		assert(g_GameObjectPool == nullptr);
-		g_GameObjectPool = this;
-
 		// initialize GameObject list
 
 		m_render_list = decltype(m_render_list){ &m_memory_resource };
@@ -38,7 +38,21 @@ namespace luastg
 	GameObjectPool::~GameObjectPool()
 	{
 		ResetPool();
-		g_GameObjectPool = nullptr;
+		// If this instance was the global pointer or active pools, clear this fucker
+		{
+			std::lock_guard<std::mutex> lk(g_gameobject_pools_mutex);
+			if (g_active_gameobject_pool == this)
+				g_active_gameobject_pool = nullptr;
+			
+			for (auto it = g_gameobject_pools.begin(); it != g_gameobject_pools.end(); ++it)
+			{
+				if (it->second.get() == this)
+				{
+					g_gameobject_pools.erase(it);
+					break;
+				}
+			}
+		}
 	}
 
 	void GameObjectPool::resetGameObjectLists() {
@@ -526,65 +540,6 @@ namespace luastg
 				{
 					LAPP.DebugDrawEllipse((float)p->x, (float)p->y, (float)p->a, (float)p->b, (float)p->rot, fillColor);
 				}
-				else {
-					//备份，为以后做准备
-					/*
-					case _::Diamond:
-					{
-						core::Vector2F tHalfSize(cc.a, cc.b);
-						// 计算出菱形的4个顶点
-						f2dGraphics2DVertex tFinalPos[4] =
-						{
-							{  tHalfSize.x,         0.0f, 0.5f, fillColor.argb, 0.0f, 0.0f },
-							{         0.0f, -tHalfSize.y, 0.5f, fillColor.argb, 0.0f, 1.0f },
-							{ -tHalfSize.x,         0.0f, 0.5f, fillColor.argb, 1.0f, 1.0f },
-							{         0.0f,  tHalfSize.y, 0.5f, fillColor.argb, 1.0f, 0.0f }
-						};
-						float tCos = std::cosf((float)p->rot);
-						float tSin = std::sinf((float)p->rot);
-						// 变换
-						for (int i = 0; i < 4; i++)
-						{
-							float tx = tFinalPos[i].x * tCos - tFinalPos[i].y * tSin,
-								ty = tFinalPos[i].x * tSin + tFinalPos[i].y * tCos;
-							tFinalPos[i].x = tx + cc.absx;
-							tFinalPos[i].y = ty + cc.absy;
-						}
-						graph->DrawQuad(nullptr, tFinalPos);
-						break;
-					}
-					case _::Triangle:
-					{
-						core::Vector2F tHalfSize(cc.a, cc.b);
-						// 计算出菱形的4个顶点
-						f2dGraphics2DVertex tFinalPos[4] =
-						{
-							{  tHalfSize.x,         0.0f, 0.5f, fillColor.argb, 0.0f, 0.0f },
-							{ -tHalfSize.x, -tHalfSize.y, 0.5f, fillColor.argb, 0.0f, 1.0f },
-							{ -tHalfSize.x,  tHalfSize.y, 0.5f, fillColor.argb, 1.0f, 1.0f },
-							{ -tHalfSize.x,  tHalfSize.y, 0.5f, fillColor.argb, 1.0f, 1.0f },//和第三个点相同
-						};
-						float tCos = std::cosf((float)p->rot);
-						float tSin = std::sinf((float)p->rot);
-						// 变换
-						for (int i = 0; i < 4; i++)
-						{
-							float tx = tFinalPos[i].x * tCos - tFinalPos[i].y * tSin,
-								ty = tFinalPos[i].x * tSin + tFinalPos[i].y * tCos;
-							tFinalPos[i].x = tx + cc.absx;
-							tFinalPos[i].y = ty + cc.absy;
-						}
-						graph->DrawQuad(nullptr, tFinalPos);
-						break;
-					}
-					case _::Point:
-					{
-						//点使用直径1的圆来替代
-						grender->____FillCircle(graph, core::Vector2F(cc.absx, cc.absy), 0.5f, fillColor, fillColor, 3);
-						break;
-					}
-					//*/
-				}
 			}
 		}
 	}
@@ -594,4 +549,106 @@ namespace luastg
 		DrawGroupCollider(groupId, fillColor);
 	}
 
+	bool CreateGameObjectPool(std::string_view name)
+	{
+		if (name.empty())
+			return false;
+		
+		std::string key(name);
+		std::lock_guard<std::mutex> lk(g_gameobject_pools_mutex);
+		if (g_gameobject_pools.find(key) != g_gameobject_pools.end())
+			return false;
+		
+		g_gameobject_pools.emplace(key, std::make_unique<GameObjectPool>());
+		spdlog::info("[luastg] GameObjectPool '{}' created", name);
+		return true;
+	}
+
+	bool RemoveGameObjectPool(std::string_view name)
+	{
+		if (name.empty())
+			return false;
+		
+		std::string key(name);
+		std::lock_guard<std::mutex> lk(g_gameobject_pools_mutex);
+		
+		auto it = g_gameobject_pools.find(key);
+		if (it == g_gameobject_pools.end())
+			return false;
+		
+		GameObjectPool* p = it->second.get();
+		if (g_active_gameobject_pool == p)
+		{
+			g_active_gameobject_pool = nullptr;
+		}
+		g_gameobject_pools.erase(it);
+		spdlog::info("[luastg] GameObjectPool '{}' deleted", name);
+		return true;
+	}
+
+	GameObjectPool* GetGameObjectPool(std::string_view name) noexcept
+	{
+		if (name.empty())
+			return nullptr;
+		
+		std::string key(name);
+		std::lock_guard<std::mutex> lk(g_gameobject_pools_mutex);
+
+		auto it = g_gameobject_pools.find(key);
+		return it != g_gameobject_pools.end() ? it->second.get() : nullptr;
+	}
+
+	bool SetActiveGameObjectPoolByName(std::string_view name) noexcept
+	{
+		if (name.empty())
+		{
+			std::lock_guard<std::mutex> lk(g_gameobject_pools_mutex);
+			g_active_gameobject_pool = nullptr;
+			return true;
+		}
+
+		std::string key(name);
+		std::lock_guard<std::mutex> lk(g_gameobject_pools_mutex);
+
+		auto it = g_gameobject_pools.find(key);
+		if (it == g_gameobject_pools.end())
+			return false;
+		
+		g_active_gameobject_pool = it->second.get();
+		return true;
+	}
+
+	GameObjectPool* GetActiveGameObjectPool() noexcept
+	{
+		std::lock_guard<std::mutex> lk(g_gameobject_pools_mutex);
+		return g_active_gameobject_pool;
+	}
+
+	std::string GetActiveGameObjectPoolName() noexcept
+	{
+		std::lock_guard<std::mutex> lk(g_gameobject_pools_mutex);
+		for (auto const& kv : g_gameobject_pools)
+		{
+			if (kv.second.get() == g_active_gameobject_pool)
+				return kv.first;
+		}
+		return std::string{};
+	}
+
+	std::vector<std::string> EnumGameObjectPools() noexcept
+	{
+		std::lock_guard<std::mutex> lk(g_gameobject_pools_mutex);
+		std::vector<std::string> ret;
+		ret.reserve(g_gameobject_pools.size());
+		for (auto const& kv : g_gameobject_pools)
+			ret.push_back(kv.first);
+		
+		return ret;
+	}
+
+	void ClearAllGameObjectPools()
+	{
+		std::lock_guard<std::mutex> lk(g_gameobject_pools_mutex);
+		g_active_gameobject_pool = nullptr;
+	}
 }

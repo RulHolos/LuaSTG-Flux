@@ -52,6 +52,7 @@ namespace luastg::binding
 		Render::Register(L);
 		Renderer::Register(L);
 		GameObjectManager::Register(L);
+		GameObjectPoolMgr::Register(L);
 		ResourceManager::Register(L);
 		Audio::Register(L);
 		Platform::Register(L);

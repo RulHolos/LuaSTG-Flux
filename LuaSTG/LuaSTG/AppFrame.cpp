@@ -164,12 +164,13 @@ bool AppFrame::Init()noexcept
 	//////////////////////////////////////// Allocate space for object pools
 
 	// 为对象池分配空间
-	spdlog::info("[luastg] Initializing object pool with capacity: {}", LOBJPOOL_SIZE);
+	spdlog::info("[luastg] Initializing global object pool with capacity: {}", LOBJPOOL_SIZE);
 	try {
-		m_GameObjectPool = std::make_unique<GameObjectPool>();
+		CreateGameObjectPool("global");
+		SetActiveGameObjectPoolByName("global");
 	}
 	catch (const std::bad_alloc&) {
-		spdlog::error("[luastg] Unable to allocate memory for object pool");
+		spdlog::error("[luastg] Unable to allocate memory for global object pool");
 		return false;
 	}
 
@@ -264,8 +265,8 @@ void AppFrame::Shutdown()noexcept
 		SafeCallGlobalFunction(LuaEngine::G_CALLBACK_EngineStop);
 	}
 
-	m_GameObjectPool = nullptr;
-	spdlog::info("[luastg] Object pool destroyed");
+	ClearAllGameObjectPools();
+	spdlog::info("[luastg] Object pools destroyed");
 
 	if (L)
 	{
@@ -421,7 +422,7 @@ bool AppFrame::onUpdate()
 		tracy_zone_scoped_with_name("OnUpdate-LuaCallback");
 		// 执行帧函数
 		imgui::cancelSetCursor();
-		m_GameObjectPool->DebugNextFrame();
+		GetGameObjectPool().DebugNextFrame();
 		if (!SafeCallGlobalFunction(LuaEngine::G_CALLBACK_EngineUpdate, 1))
 		{
 			result = false;

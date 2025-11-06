@@ -878,17 +878,6 @@ namespace luastg::binding {
 			return 0;
 		}
 		static int updateGameObjectManager(lua_State* const vm) {
-			// TODO: 移动到 GameObjectManager 绑定
-			// version 2
-			if (lua::stack_t const ctx(vm); ctx.is_number(1)) {
-				if (auto const version = ctx.get_value<int32_t>(1); version == 2) {
-					GameObjectManagerCallbacks::getInstance().lua_vm.push_back(vm);
-					LPOOL.updateMovements();
-					GameObjectManagerCallbacks::getInstance().lua_vm.pop_back();
-					return 0;
-				}
-			}
-			// version 1
 			GameObjectManagerCallbacks::getInstance().lua_vm.push_back(vm);
 			LPOOL.updateMovementsLegacy();
 			GameObjectManagerCallbacks::getInstance().lua_vm.pop_back();
@@ -902,17 +891,6 @@ namespace luastg::binding {
 			return 0;
 		}
 		static int boundCheckGameObjectManager(lua_State* const vm) {
-			// TODO: 移动到 GameObjectManager 绑定
-			// version 2
-			if (lua::stack_t const ctx(vm); ctx.is_number(1)) {
-				if (auto const version = ctx.get_value<int32_t>(1); version == 2) {
-					GameObjectManagerCallbacks::getInstance().lua_vm.push_back(vm);
-					LPOOL.detectOutOfWorldBound();
-					GameObjectManagerCallbacks::getInstance().lua_vm.pop_back();
-					return 0;
-				}
-			}
-			// version 1
 			GameObjectManagerCallbacks::getInstance().lua_vm.push_back(vm);
 			LPOOL.detectOutOfWorldBoundLegacy();
 			GameObjectManagerCallbacks::getInstance().lua_vm.pop_back();
