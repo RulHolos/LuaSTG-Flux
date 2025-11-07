@@ -28,10 +28,6 @@ namespace luastg
 		resetGameObjectLists();
 
 		// ex+
-
-#ifdef USING_MULTI_GAME_WORLD
-		m_pCurrentObject = nullptr;
-#endif // USING_MULTI_GAME_WORLD
 		m_superpause = 0;
 		m_nextsuperpause = 0;
 	}
@@ -83,7 +79,6 @@ namespace luastg
 #ifdef USING_MULTI_GAME_WORLD
 		m_iWorld = 0x00000001;
 		m_ActiveWorldMask = 0xFFFFFFFF;
-		m_pCurrentObject = nullptr;
 #endif // USING_MULTI_GAME_WORLD
 		m_LockObjectA = nullptr;
 		m_LockObjectB = nullptr;
@@ -101,13 +96,7 @@ namespace luastg
 				continue;
 			}
 			if (p->features.has_callback_update) {
-			#ifdef USING_MULTI_GAME_WORLD
-				m_pCurrentObject = p;
-			#endif // USING_MULTI_GAME_WORLD
 				p->dispatchOnUpdate();
-			#ifdef USING_MULTI_GAME_WORLD
-				m_pCurrentObject = nullptr;
-			#endif // USING_MULTI_GAME_WORLD
 			}
 			p->Update();
 		}
@@ -124,13 +113,7 @@ namespace luastg
 				continue;
 			}
 			if (p->features.has_callback_update) {
-			#ifdef USING_MULTI_GAME_WORLD
-				m_pCurrentObject = p;
-			#endif // USING_MULTI_GAME_WORLD
 				p->dispatchOnUpdate();
-			#ifdef USING_MULTI_GAME_WORLD
-				m_pCurrentObject = nullptr;
-			#endif // USING_MULTI_GAME_WORLD
 			}
 		}
 
@@ -147,14 +130,12 @@ namespace luastg
 		m_is_rendering = true;
 		dispatchOnBeforeBatchRender();
 #ifdef USING_MULTI_GAME_WORLD
-		m_pCurrentObject = nullptr;
 		auto const world = GetWorldFlag();
 #endif // USING_MULTI_GAME_WORLD
 
 		for (auto& p : m_render_list) {
 #ifdef USING_MULTI_GAME_WORLD
-			if (!p->hide && CheckWorlds(p->world, world)) { // 只渲染可见对象
-				m_pCurrentObject = p;
+			if (!p->hide && CheckWorlds(p->world, world)) {
 #else // USING_MULTI_GAME_WORLD
 			if (!p->hide) {  // 只渲染可见对象
 #endif // USING_MULTI_GAME_WORLD
@@ -167,9 +148,6 @@ namespace luastg
 			}
 		}
 
-#ifdef USING_MULTI_GAME_WORLD
-		m_pCurrentObject = nullptr;
-#endif // USING_MULTI_GAME_WORLD
 		dispatchOnAfterBatchRender();
 		m_is_rendering = false;
 	}
@@ -239,13 +217,7 @@ namespace luastg
 			p->status = GameObjectStatus::Dead; // 产生副作用
 			// 调用 del 回调
 			if (p->features.has_callback_destroy) {
-#ifdef USING_MULTI_GAME_WORLD
-				m_pCurrentObject = p;
-#endif // USING_MULTI_GAME_WORLD
 				p->dispatchOnQueueToDestroy(queue_to_destroy_reason_out_of_world_bound);
-#ifdef USING_MULTI_GAME_WORLD
-				m_pCurrentObject = nullptr;
-#endif // USING_MULTI_GAME_WORLD
 			}
 		}
 
@@ -290,14 +262,7 @@ namespace luastg
 			if (game_object->unique_id != uid) {
 				assert(false); continue; // 理论上不太可能发生
 			}
-			
-#ifdef USING_MULTI_GAME_WORLD
-			m_pCurrentObject = game_object;
-#endif // USING_MULTI_GAME_WORLD
 			game_object->dispatchOnQueueToDestroy(queue_to_destroy_reason_out_of_world_bound);
-#ifdef USING_MULTI_GAME_WORLD
-			m_pCurrentObject = nullptr;
-#endif // USING_MULTI_GAME_WORLD
 		}
 
 		dispatchOnAfterBatchOutOfWorldBoundCheck();
@@ -326,15 +291,9 @@ namespace luastg
 					continue;
 				}
 				debug_data.object_colli_callback += 1;
-#ifdef USING_MULTI_GAME_WORLD
-				m_pCurrentObject = pA;
-#endif // USING_MULTI_GAME_WORLD
 				m_LockObjectA = pA;
 				m_LockObjectB = pB;
 				pA->dispatchOnTrigger(pB);
-#ifdef USING_MULTI_GAME_WORLD
-				m_pCurrentObject = nullptr;
-#endif // USING_MULTI_GAME_WORLD
 				m_LockObjectA = nullptr;
 				m_LockObjectB = nullptr;
 			}
@@ -377,15 +336,9 @@ namespace luastg
 				assert(false); continue; // 理论上不太可能发生
 			}
 			debug_data.object_colli_callback += 1;
-#ifdef USING_MULTI_GAME_WORLD
-			m_pCurrentObject = object1;
-#endif // USING_MULTI_GAME_WORLD
 			m_LockObjectA = object1;
 			m_LockObjectB = object2;
 			object1->dispatchOnTrigger(object2);
-#ifdef USING_MULTI_GAME_WORLD
-			m_pCurrentObject = nullptr;
-#endif // USING_MULTI_GAME_WORLD
 			m_LockObjectA = nullptr;
 			m_LockObjectB = nullptr;
 		}
@@ -451,11 +404,6 @@ namespace luastg
 		auto const next = m_update_list.remove(object);
 		m_render_list.erase(object);
 		m_detect_lists[object->group].remove(object);
-	#ifdef USING_MULTI_GAME_WORLD
-		if (m_pCurrentObject == object) {
-			m_pCurrentObject = nullptr;
-		}
-	#endif // USING_MULTI_GAME_WORLD
 		object->status = GameObjectStatus::Free;
 		m_ObjectPool.free(object->id);
 		return next;

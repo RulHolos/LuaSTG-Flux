@@ -181,9 +181,6 @@ namespace luastg
 
 		void resetGameObjectLists();
 
-#ifdef USING_MULTI_GAME_WORLD
-		GameObject* m_pCurrentObject{};
-#endif // USING_MULTI_GAME_WORLD
 		GameObject* m_LockObjectA{};
 		GameObject* m_LockObjectB{};
 
@@ -298,10 +295,6 @@ namespace luastg
 		FrameStatistics DebugGetFrameStatistics();
 
 	public:
-#ifdef USING_MULTI_GAME_WORLD
-		GameObject* getCurrentGameObject() const noexcept { return m_pCurrentObject; }
-#endif // USING_MULTI_GAME_WORLD
-
 		/// @brief 获取已分配对象数量
 		size_t GetObjectCount() noexcept { return m_ObjectPool.size(); }
 
