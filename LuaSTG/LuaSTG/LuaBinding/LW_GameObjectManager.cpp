@@ -72,20 +72,20 @@ void luastg::binding::GameObjectManager::Register(lua_State* L) noexcept
 		}
 		static int IsSameWorld(lua_State* L) noexcept
 		{
-			int a = luaL_checkinteger(L, 1);
-			int b = luaL_checkinteger(L, 2);
+			lua_Integer a = luaL_checkinteger(L, 1);
+			lua_Integer b = luaL_checkinteger(L, 2);
 			lua_pushboolean(L, GameObjectPool::CheckWorlds(a, b));
 			return 1;
 		}
 		static int SetActiveWorlds(lua_State* L) noexcept
 		{
-			int mask = luaL_optinteger(L, 1, 0);
+			lua_Integer mask = luaL_optinteger(L, 1, 0);
 			LPOOL.SetActiveWorlds(mask);
 			return 0;
 		}
 		static int GetActiveWorlds(lua_State* L) noexcept
 		{
-			int32_t mask = LPOOL.GetActiveWorlds();
+			lua_Integer mask = LPOOL.GetActiveWorlds();
 			lua_pushnumber(L, mask);
 			return 1;
 		}
