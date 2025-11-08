@@ -110,6 +110,16 @@ namespace luastg
 	void ResourceMgr::ClearAllResource() noexcept {
 		m_GlobalResourcePool.Clear();
 		m_StageResourcePool.Clear();
+
+		std::lock_guard<std::mutex> lk(m_CustomPoolsMutex);
+		for (auto &kv : m_CustomPools)
+		{
+			if (kv.second)
+				kv.second->Clear();
+		}
+		m_pActiveCustomPool = nullptr;
+		m_ActiveCustomPoolName.clear();
+
 		m_ActivedPool = ResourcePoolType::Global;
 		m_GlobalImageScaleFactor = 1.0f;
 	}
