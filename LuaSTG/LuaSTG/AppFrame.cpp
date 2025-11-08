@@ -378,7 +378,6 @@ bool AppFrame::onUpdate()
 
 			lua_pushinteger(L, (lua_Integer)LuaEngine::EngineEvent::WindowActive);
 			lua_pushboolean(L, false);
-			SafeCallGlobalFunctionB(LuaEngine::G_CALLBACK_EngineEvent, 2, 0);
 
 			if (!SafeCallGlobalFunction(LuaEngine::G_CALLBACK_FocusLoseFunc))
 			{
@@ -393,7 +392,6 @@ bool AppFrame::onUpdate()
 
 			lua_pushinteger(L, (lua_Integer)LuaEngine::EngineEvent::WindowActive);
 			lua_pushboolean(L, true);
-			SafeCallGlobalFunctionB(LuaEngine::G_CALLBACK_EngineEvent, 2, 0);
 
 			if (!SafeCallGlobalFunction(LuaEngine::G_CALLBACK_FocusGainFunc))
 			{
