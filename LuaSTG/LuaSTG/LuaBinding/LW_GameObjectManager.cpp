@@ -89,6 +89,12 @@ void luastg::binding::GameObjectManager::Register(lua_State* L) noexcept
 			lua_pushnumber(L, mask);
 			return 1;
 		}
+		// EX+
+		static int GetCurrentObject(lua_State* L) noexcept
+		{
+			// Deprecated: Doesn't do anything. Keeping it for legacy compatiblity.
+			return 1;
+		}
 #endif // USING_MULTI_GAME_WORLD
 	};
 
@@ -109,6 +115,7 @@ void luastg::binding::GameObjectManager::Register(lua_State* L) noexcept
 		{ "IsSameWorld", &Wrapper::IsSameWorld },
 		{ "SetActiveWorlds", &Wrapper::SetActiveWorlds },
 		{ "GetActiveWorlds", &Wrapper::GetActiveWorlds },
+		{ "GetCurrentObject", &Wrapper::GetCurrentObject },
 #endif // USING_MULTI_GAME_WORLD
 		{ NULL, NULL },
 	};
