@@ -180,12 +180,20 @@ namespace luastg
 	void GameObjectPool::updateNextLegacy() {
 		tracy_zone_scoped_with_name("LOBJMGR.AfterFrame");
 		dispatchOnBeforeBatchDestroy();
+#ifdef USING_MULTI_GAME_WORLD
+		auto const world = GetWorldFlag();
+#endif // USING_MULTI_GAME_WORLD
 		auto const super_pause_time = GetSuperPauseTime();
 		for (auto p = m_update_list.first(); p != nullptr;) {
 			if (super_pause_time > 0 && !p->ignore_super_pause) {
 				p = p->update_list_next;
 				continue;
 			}
+#ifdef USING_MULTI_GAME_WORLD
+			if (!CheckWorlds(p->world, world)) {
+				continue;
+			}
+#endif // USING_MULTI_GAME_WORLD
 			if (p->status != GameObjectStatus::Active) {
 				p = freeWithCallbacks(p);
 				continue;
@@ -198,12 +206,20 @@ namespace luastg
 	void GameObjectPool::updateNext() {
 		tracy_zone_scoped_with_name("LOBJMGR.AfterFrame(New)");
 		dispatchOnBeforeBatchDestroy();
+#ifdef USING_MULTI_GAME_WORLD
+		auto const world = GetWorldFlag();
+#endif // USING_MULTI_GAME_WORLD
 		auto const super_pause_time = UpdateSuperPause(); // 更新超级暂停
 		for (auto p = m_update_list.first(); p != nullptr;) {
 			if (super_pause_time > 0 && !p->ignore_super_pause) {
 				p = p->update_list_next;
 				continue;
 			}
+#ifdef USING_MULTI_GAME_WORLD
+			if (!CheckWorlds(p->world, world)) {
+				continue;
+			}
+#endif // USING_MULTI_GAME_WORLD
 			if (p->status != GameObjectStatus::Active) {
 				p = freeWithCallbacks(p);
 				continue;
