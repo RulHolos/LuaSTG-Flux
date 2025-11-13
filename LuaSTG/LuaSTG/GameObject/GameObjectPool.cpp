@@ -191,6 +191,7 @@ namespace luastg
 			}
 #ifdef USING_MULTI_GAME_WORLD
 			if (!CheckWorlds(p->world, world)) {
+				p = p->update_list_next;
 				continue;
 			}
 #endif // USING_MULTI_GAME_WORLD
@@ -217,6 +218,7 @@ namespace luastg
 			}
 #ifdef USING_MULTI_GAME_WORLD
 			if (!CheckWorlds(p->world, world)) {
+				p = p->update_list_next;
 				continue;
 			}
 #endif // USING_MULTI_GAME_WORLD
