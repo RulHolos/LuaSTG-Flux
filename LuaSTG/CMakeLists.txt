@@ -118,6 +118,8 @@ set(LUASTG_ENGINE_SOURCES
 
     LuaSTG/LuaBinding/modern/Display.hpp
     LuaSTG/LuaBinding/modern/Display.cpp
+    LuaSTG/LuaBinding/modern/DiscordRPC.hpp
+    LuaSTG/LuaBinding/modern/DiscordRPC.cpp
     LuaSTG/LuaBinding/modern/Window.hpp
     LuaSTG/LuaBinding/modern/Window.cpp
     LuaSTG/LuaBinding/modern/SwapChain.hpp
@@ -156,6 +158,9 @@ set(LUASTG_ENGINE_SOURCES
 
     LuaSTG/SteamAPI/SteamAPI.cpp
     LuaSTG/SteamAPI/SteamAPI.hpp
+
+    LuaSTG/DiscordRPC/DiscordRPCManager.hpp
+    LuaSTG/DiscordRPC/DiscordRPCManager.cpp
 
     LuaSTG/Utility/Utility.h
     LuaSTG/Utility/ScopeObject.cpp
@@ -228,6 +233,7 @@ target_link_libraries(LuaSTG PRIVATE
     Core.Audio
     LuaSTG.InternalLuaScriptsFileSystem
     lua_sqlite3
+    discord-rpc
 )
 if (LUASTG_LINK_YY_THUNKS)
     target_link_libraries(LuaSTG PRIVATE YY_Thunks)
@@ -238,6 +244,10 @@ if (LUASTG_LINK_LUASOCKET)
     target_link_libraries(LuaSTG PRIVATE luasocket)
     message(STATUS "[LuaSTG] Link: luasocket")
 endif ()
+
+target_include_directories(LuaSTG PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../external/discord-rpc/include
+)
 
 add_custom_command(TARGET LuaSTG POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:Microsoft.XAudio2.Redist>     $<TARGET_FILE_DIR:LuaSTG>/$<TARGET_FILE_NAME:Microsoft.XAudio2.Redist>

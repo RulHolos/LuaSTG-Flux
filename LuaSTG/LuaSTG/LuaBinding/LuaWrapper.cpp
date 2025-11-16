@@ -3,6 +3,7 @@
 #include "LuaBinding/Resource.hpp"
 #include "LuaBinding/external/HttpClient.hpp"
 #include "LuaBinding/modern/Clipboard.hpp"
+#include "LuaBinding/modern/DiscordRPC.hpp"
 #include "LuaBinding/modern/Display.hpp"
 #include "LuaBinding/modern/Window.hpp"
 #include "LuaBinding/modern/SwapChain.hpp"
@@ -69,6 +70,7 @@ namespace luastg::binding
 		// modern
 
 		Clipboard::registerClass(L);
+		DiscordRPC::registerClass(L);
 		Display::registerClass(L);
 		Window::registerClass(L);
 		Window_InputMethodExtension::registerClass(L);

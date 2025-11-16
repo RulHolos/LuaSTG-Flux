@@ -150,3 +150,8 @@ add_subdirectory(tracy-patch)
 
 add_subdirectory(lua-sqlite3)
 set_target_properties(lua_sqlite3 PROPERTIES FOLDER lualib)
+
+# ==================== discord-rpc ====================
+
+add_subdirectory(discord-rpc)
+set_target_properties(discord-rpc PROPERTIES FOLDER external)

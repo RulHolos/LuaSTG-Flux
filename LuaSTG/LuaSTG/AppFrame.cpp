@@ -6,6 +6,7 @@
 #include "LuaBinding/LuaAppFrame.hpp"
 #include "utf8.hpp"
 #include "core/Configuration.hpp"
+#include "DiscordRPC/DiscordRPCManager.hpp"
 
 using namespace luastg;
 
@@ -431,6 +432,8 @@ bool AppFrame::onUpdate()
 			m_pAppModel->requestExit();
 		m_ResourceMgr.UpdateSound();
 	}
+
+	DiscordRPCManager::GetInstance().RunCallbacks();
 
 	return result;
 }

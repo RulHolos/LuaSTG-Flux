@@ -22,3 +22,6 @@
 [submodule "external/beautiful-win32-api"]
 	path = external/beautiful-win32-api
 	url = https://github.com/Demonese/beautiful-win32-api
+[submodule "external/discord-rpc"]
+	path = external/discord-rpc
+	url = https://github.com/discordapp/discord-rpc.git
