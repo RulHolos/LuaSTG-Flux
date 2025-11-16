@@ -241,7 +241,7 @@ namespace luastg
         core::SmartReference<core::Graphics::ITexture2D> p_texture;
         if (!LAPP.GetAppModel()->getDevice()->createTexture(core::Vector2U((uint32_t)width, (uint32_t)height), p_texture.put()))
         {
-            spdlog::error("[luastg] Unable to create texture '{}' ({}x{}) 失败", name, width, height);
+            spdlog::error("[luastg] Unable to create texture '{}' ({}x{})", name, width, height);
             return false;
         }
 
@@ -294,7 +294,7 @@ namespace luastg
         }
         catch (std::runtime_error const& e)
         {
-            spdlog::error("[luastg] CreateRenderTarget: 创建渲染目标 '{}' 失败 ({})", name, e.what());
+            spdlog::error("[luastg] CreateRenderTarget: Failed to create render target '{}' ({})", name, e.what());
             return false;
         }
     
@@ -302,11 +302,11 @@ namespace luastg
         {
             if (width <= 0 || height <= 0)
             {
-                spdlog::info("[luastg] CreateRenderTarget: 已创建渲染目标{} '{}' ({})", ds_info, name, getResourcePoolTypeName());
+                spdlog::info("[luastg] CreateRenderTarget: Render target created {} '{}' ({})", ds_info, name, getResourcePoolTypeName());
             }
             else
             {
-                spdlog::info("[luastg] CreateRenderTarget: 已创建渲染目标{} '{}' ({}x{}) ({})", ds_info, name, width, height, getResourcePoolTypeName());
+                spdlog::info("[luastg] CreateRenderTarget: Render target created {} '{}' ({}x{}) ({})", ds_info, name, width, height, getResourcePoolTypeName());
             }
         }
     
@@ -323,7 +323,7 @@ namespace luastg
         {
             if (ResourceMgr::GetResourceLoadingLog())
             {
-                spdlog::warn("[luastg] CreateSprite: 图片精灵 '{}' 已存在，创建操作已取消", name);
+                spdlog::warn("[luastg] CreateSprite: The sprite '{}' already exists. The creation operation has been canceled", name);
             }
             return true;
         }
@@ -331,7 +331,7 @@ namespace luastg
         core::SmartReference<IResourceTexture> pTex = m_pMgr->FindTexture(texname);
         if (!pTex)
         {
-            spdlog::error("[luastg] CreateSprite: 无法创建图片精灵 '{}'，无法找到纹理 '{}'", name, texname);
+            spdlog::error("[luastg] CreateSprite: Unable to create sprite sheet '{}'; texture '{}' not found", name, texname);
             return false;
         }
     
@@ -342,7 +342,7 @@ namespace luastg
             p_sprite.put()
         ))
         {
-            spdlog::error("[luastg] 从纹理 '{}' 创建图片精灵 '{}' 失败", texname, name);
+            spdlog::error("[luastg] Failed to create sprite sheet '{}' from texture '{}'", texname, name);
             return false;
         }
         p_sprite->setTextureRect(core::RectF((float)x, (float)y, (float)(x + w), (float)(y + h)));
@@ -356,13 +356,13 @@ namespace luastg
         }
         catch (std::exception const& e)
         {
-            spdlog::error("[luastg] CreateSprite: 创建图片精灵 '{}' 失败 ({})", name, e.what());
+            spdlog::error("[luastg] CreateSprite: Failed to create sprite sheet '{}' ({})", name, e.what());
             return false;
         }
     
         if (ResourceMgr::GetResourceLoadingLog())
         {
-            spdlog::info("[luastg] CreateSprite: 已从纹理 '{}' 创建图片精灵 '{}' ({})", texname, name, getResourcePoolTypeName());
+            spdlog::info("[luastg] CreateSprite: An image sprite '{}' has been created from the texture '{}' ({})", texname, name, getResourcePoolTypeName());
         }
     
         return true;
@@ -378,7 +378,7 @@ namespace luastg
         {
             if (ResourceMgr::GetResourceLoadingLog())
             {
-                spdlog::warn("[luastg] CreateAnimation: 动画精灵 '{}' 已存在，创建操作已取消", name);
+                spdlog::warn("[luastg] CreateAnimation: The animation sprite '{}' already exists. The creation operation has been canceled", name);
             }
             return true;
         }
@@ -386,7 +386,7 @@ namespace luastg
         core::SmartReference<IResourceTexture> pTex = m_pMgr->FindTexture(texname);
         if (!pTex)
         {
-            spdlog::error("[luastg] CreateAnimation: 无法创建动画精灵 '{}'，无法找到纹理 '{}'", name, texname);
+            spdlog::error("[luastg] CreateAnimation: Unable to create animation sprite '{}'; texture '{}' not found", name, texname);
             return false;
         }
     
@@ -403,13 +403,13 @@ namespace luastg
         }
         catch (std::exception const& e)
         {
-            spdlog::error("[luastg] CreateAnimation: 创建动画精灵 '{}' 失败 ({})", name, e.what());
+            spdlog::error("[luastg] CreateAnimation: Failed to create animation sprite '{}' ({})", name, e.what());
             return false;
         }
     
         if (ResourceMgr::GetResourceLoadingLog())
         {
-            spdlog::info("[luastg] CreateAnimation: 已从 '{}' 创建动画精灵 '{}' ({})", texname, name, getResourcePoolTypeName());
+            spdlog::info("[luastg] CreateAnimation: Animation sprite '{}' created from '{}' ({})", texname, name, getResourcePoolTypeName());
         }
     
         return true;
@@ -424,7 +424,7 @@ namespace luastg
         {
             if (ResourceMgr::GetResourceLoadingLog())
             {
-                spdlog::warn("[luastg] CreateAnimation: 动画精灵 '{}' 已存在，创建操作已取消", name);
+                spdlog::warn("[luastg] CreateAnimation: The animation sprite '{}' already exists. The creation operation has been canceled.", name);
             }
             return true;
         }
@@ -438,13 +438,13 @@ namespace luastg
         }
         catch (std::exception const& e)
         {
-            spdlog::error("[luastg] CreateAnimation: 创建动画精灵 '{}' 失败 ({})", name, e.what());
+            spdlog::error("[luastg] CreateAnimation: Failed to create animation sprite '{}' ({})", name, e.what());
             return false;
         }
 
         if (ResourceMgr::GetResourceLoadingLog())
         {
-            spdlog::info("[luastg] CreateAnimation: 已创建动画精灵 '{}' ({})", name, getResourcePoolTypeName());
+            spdlog::info("[luastg] CreateAnimation: Animation sprite '{}' has been created ({})", name, getResourcePoolTypeName());
         }
 
         return true;
@@ -458,7 +458,7 @@ namespace luastg
         {
             if (ResourceMgr::GetResourceLoadingLog())
             {
-                spdlog::warn("[luastg] LoadMusic: 音乐 '{}' 已存在，创建操作已取消", name);
+                spdlog::warn("[luastg] LoadMusic: Music '{}' already exists; creation operation canceled", name);
             }
             //m_MusicPool.find(name)->second->Stop(); // 注:以前确实不判断同名资源是否存在，但是 emplace 失败了，所以没有打断旧 BGM
             return true;
@@ -470,7 +470,7 @@ namespace luastg
         SmartReference<IAudioDecoder> p_decoder;
         if (!IAudioDecoder::create(path, p_decoder.put()))
         {
-            spdlog::error("[luastg] LoadMusic: 无法解码文件 '{}'，要求文件格式为 WAV/OGG/FLAC", path);
+            spdlog::error("[luastg] LoadMusic: Unable to decode file '{}'. Requires file format to be WAV/OGG/FLAC", path);
             return false;
         }
         auto to_sample = [&p_decoder](double t) -> uint32_t
@@ -482,11 +482,11 @@ namespace luastg
         if (0 == to_sample(start) && to_sample(start) == to_sample(end))
         {
             end = (double)p_decoder->getFrameCount() / (double)p_decoder->getSampleRate();
-            spdlog::info("[luastg] LoadMusic: 循环节范围设置为整首背景音乐 (start = {}, end = {})", start, end);
+            spdlog::info("[luastg] LoadMusic: Set the looping range to the entire background music track (start = {}, end = {})", start, end);
         }
         if (to_sample(start) >= to_sample(end))
         {
-            spdlog::error("[luastg] LoadMusic: 循环节范围格式错误，结束位置不能等于或先于开始位置 (start = {}, end = {})", start, end);
+            spdlog::error("[luastg] LoadMusic: The loop range format is incorrect; the end position cannot be equal to or before the start position (start = {}, end = {})", start, end);
             return false;
         }
     
@@ -497,7 +497,7 @@ namespace luastg
             // 流式播放器
             if (!LAPP.getAudioEngine()->createStreamAudioPlayer(p_decoder.get(), AudioMixingChannel::music, p_player.put()))
             {
-                spdlog::error("[luastg] LoadMusic: 无法创建音频播放器");
+                spdlog::error("[luastg] LoadMusic: Unable to create audio player");
                 return false;
             }
         }
@@ -506,7 +506,7 @@ namespace luastg
             // 一次性解码的播放器
             if (!LAPP.getAudioEngine()->createAudioPlayer(p_decoder.get(), AudioMixingChannel::music, p_player.put()))
             {
-                spdlog::error("[luastg] LoadMusic: 无法创建音频播放器");
+                spdlog::error("[luastg] LoadMusic: Unable to create audio player");
                 return false;
             }
         }
@@ -521,13 +521,13 @@ namespace luastg
         }
         catch (std::exception const& e)
         {
-            spdlog::error("[luastg] LoadMusic: 加载音乐 '{}' 失败 ({})", name, e.what());
+            spdlog::error("[luastg] LoadMusic: Failed to load music '{}' ({})", name, e.what());
             return false;
         }
     
         if (ResourceMgr::GetResourceLoadingLog())
         {
-            spdlog::info("[luastg] LoadMusic: 已从 '{}' 加载音乐 '{}'{} ({})", path, name, once_decode ? " 并一次性解码" : "", getResourcePoolTypeName());
+            spdlog::info("[luastg] LoadMusic: Music loaded from '{}' '{}'{} ({})", path, name, once_decode ? " and decode in one go" : "", getResourcePoolTypeName());
         }
     
         return true;
@@ -541,7 +541,7 @@ namespace luastg
         {
             if (ResourceMgr::GetResourceLoadingLog())
             {
-                spdlog::warn("[luastg] LoadSoundEffect: 音效 '{}' 已存在，创建操作已取消", name);
+                spdlog::warn("[luastg] LoadSoundEffect: Sound effect '{}' already exists; creation operation canceled", name);
             }
             return true;
         }
@@ -552,7 +552,7 @@ namespace luastg
         SmartReference<IAudioDecoder> p_decoder;
         if (!IAudioDecoder::create(path, p_decoder.put()))
         {
-            spdlog::error("[luastg] LoadSoundEffect: 无法解码文件 '{}'，要求文件格式为 WAV/OGG/FLAC", path);
+            spdlog::error("[luastg] LoadSoundEffect: Unable to decode file '{}'. Requires file format to be WAV/OGG/FLAC", path);
             return false;
         }
 
