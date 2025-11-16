@@ -259,7 +259,7 @@ namespace luastg::binding {
 
 			#ifdef USING_MULTI_GAME_WORLD
 			case LuaSTG::GameObjectMember::WORLD:
-				lua_pushinteger(vm, self->world); // interesting
+				ctx.push_value(self->world);
 				return 1;
 			#endif // USING_MULTI_GAME_WORLD
 
@@ -478,7 +478,7 @@ namespace luastg::binding {
 
 			#ifdef USING_MULTI_GAME_WORLD
 			case LuaSTG::GameObjectMember::WORLD:
-				self->world = luaL_checkinteger(vm, 3); // interesting
+				self->world = ctx.get_value<lua_Number>(3); // interesting
 				return 0;
 			#endif // USING_MULTI_GAME_WORLD
 
