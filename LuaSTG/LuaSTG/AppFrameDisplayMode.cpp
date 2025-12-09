@@ -95,7 +95,18 @@ namespace luastg
 
 	void AppFrame::SetBorderless(bool enable)
 	{
-		auto* window = GetAppModel()->getWindow();
+		if (m_iStatus == AppStatus::Initializing)
+		{
+			auto& gs = core::ConfigurationLoader::getInstance().getGraphicsSystemRef();
+			gs.setBorderless(enable);
+		}
+		else if (m_iStatus == AppStatus::Running)
+		{
+			spdlog::warn("[luastg] SetBorderless: launch-only function called at runtime");
+		}
+
+		/*
+		auto window = GetAppModel()->getWindow();
 		if (enable) {
 			window->setBorderlessFullScreenMode(nullptr);
 		} else {
@@ -106,6 +117,7 @@ namespace luastg
 				nullptr
 			);
 		}
+		*/
 	}
 
 	void AppFrame::SetVsync(bool v)
