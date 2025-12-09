@@ -1,6 +1,7 @@
 #include "LuaBinding/LuaWrapper.hpp"
 #include "lua/plus.hpp"
 #include "AppFrame.h"
+#include "core/Configuration.hpp"
 
 inline core::RectI lua_to_Core_RectI(lua_State* L, int idx)
 {
@@ -38,19 +39,19 @@ void luastg::binding::BuiltInFunction::Register(lua_State* L)noexcept
 	{
 		#pragma region 框架函数
 		// 框架函数
-		static int GetVersionNumber(lua_State* L) noexcept
+		static int GetVersionNumber(lua_State* L)noexcept
 		{
 			lua_pushinteger(L, LUASTG_VERSION_MAJOR);
 			lua_pushinteger(L, LUASTG_VERSION_MINOR);
 			lua_pushinteger(L, LUASTG_VERSION_PATCH);
 			return 3;
 		}
-		static int GetVersionName(lua_State* L) noexcept
+		static int GetVersionName(lua_State* L)noexcept
 		{
 			lua_pushstring(L, LUASTG_INFO);
 			return 1;
 		}
-		static int GetBranchName(lua_State* L) noexcept
+		static int GetBranchName(lua_State* L)noexcept
 		{
 			lua_pushstring(L, LUASTG_BRANCH);
 			return 1;
@@ -58,6 +59,11 @@ void luastg::binding::BuiltInFunction::Register(lua_State* L)noexcept
 		static int SetWindowed(lua_State* L)noexcept
 		{
 			LAPP.SetWindowed(lua_toboolean(L, 1));
+			return 0;
+		}
+		static int SetBorderless(lua_State* L)noexcept
+		{
+			LAPP.SetBorderless(lua_toboolean(L, 1));
 			return 0;
 		}
 		static int SetVsync(lua_State* L)noexcept
@@ -237,6 +243,7 @@ void luastg::binding::BuiltInFunction::Register(lua_State* L)noexcept
 		{ "GetVersionName", &Wrapper::GetVersionName },
 		{ "GetBranchName", &Wrapper::GetBranchName },
 		{ "SetWindowed", &Wrapper::SetWindowed },
+		{ "SetBorderless", &Wrapper::SetBorderless },
 		{ "SetFPS", &Wrapper::SetFPS },
 		{ "GetFPS", &Wrapper::GetFPS },
 		{ "SetVsync", &Wrapper::SetVsync },

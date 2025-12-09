@@ -93,6 +93,21 @@ namespace luastg
 		}
 	}
 
+	void AppFrame::SetBorderless(bool enable)
+	{
+		auto* window = GetAppModel()->getWindow();
+		if (enable) {
+			window->setBorderlessFullScreenMode(nullptr);
+		} else {
+			auto const& gs = core::ConfigurationLoader::getInstance().getGraphicsSystem();
+			window->setWindowMode(
+				core::Vector2U(gs.getWidth(), gs.getHeight()),
+				core::Graphics::WindowFrameStyle::Normal,
+				nullptr
+			);
+		}
+	}
+
 	void AppFrame::SetVsync(bool v)
 	{
 		if (m_iStatus == AppStatus::Initializing)

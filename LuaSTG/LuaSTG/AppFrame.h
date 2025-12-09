@@ -150,6 +150,7 @@ namespace luastg {
 		bool InitializationApplySettingStage2();
 
 		void SetWindowed(bool v);
+		void SetBorderless(bool v);
 
 		void SetVsync(bool v);
 
