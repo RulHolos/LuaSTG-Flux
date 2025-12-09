@@ -111,6 +111,19 @@ namespace luastg::binding {
 			return 0;
 		}
 
+		static int setBorderless(lua_State* L) {
+			auto self = as(L, 1);
+			lua::stack_t S(L);
+			if (Display::is(L, 2)) {
+				auto display = Display::as(L, 2);
+				self->data->setBorderlessFullScreenMode(display->data);
+			}
+			else {
+				self->data->setBorderlessFullScreenMode();
+			}
+			return 0;
+		}
+
 		static int setFullscreen(lua_State* L) {
 			auto self = as(L, 1);
 			lua::stack_t S(L);
@@ -258,6 +271,7 @@ namespace luastg::binding {
 		S.set_map_value(method_table, "setCentered", &WindowBinding::setCentered);
 		S.set_map_value(method_table, "getDisplayScale", &WindowBinding::getDisplayScale);
 		S.set_map_value(method_table, "setWindowed", &WindowBinding::setWindowed);
+		S.set_map_value(method_table, "setBorderless", &WindowBinding::setBorderless);
 		S.set_map_value(method_table, "setFullscreen", &WindowBinding::setFullscreen);
 		S.set_map_value(method_table, "setCursorType", &WindowBinding::setCursorType);
 		S.set_map_value(method_table, "getCursorVisibility", &WindowBinding::getCursorVisibility);
