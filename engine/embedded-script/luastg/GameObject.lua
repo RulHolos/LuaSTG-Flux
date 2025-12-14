@@ -95,3 +95,56 @@ function lstg.IsSameWorld(a, b)
         apiIsSameWorld(a.world, b.world)
     end
 end
+
+function lstg.Render3D(img, x, y, z, rotationx, rotationy, rotationz, scalex, scaley)
+    local halfWidth = 0.5 * scalex
+    local halfHeight = 0.5 * scaley
+
+    local vertices = {
+        {-halfWidth, -halfHeight, 0},
+        { halfWidth, -halfHeight, 0},
+        { halfWidth,  halfHeight, 0},
+        {-halfWidth,  halfHeight, 0}
+    }
+
+    local function rotateX(v, angle)
+        local rad = math.rad(angle)
+        local y = v[2] * math.cos(rad) - v[3] * math.sin(rad)
+        local z = v[2] * math.sin(rad) + v[3] * math.cos(rad)
+        return {v[1], y, z}
+    end
+
+    local function rotateY(v, angle)
+        local rad = math.rad(angle)
+        local x = v[1] * math.cos(rad) + v[3] * math.sin(rad)
+        local z = -v[1] * math.sin(rad) + v[3] * math.cos(rad)
+        return {x, v[2], z}
+    end
+
+    local function rotateZ(v, angle)
+        local rad = math.rad(angle)
+        local x = v[1] * math.cos(rad) - v[2] * math.sin(rad)
+        local y = v[1] * math.sin(rad) + v[2] * math.cos(rad)
+        return {x, y, v[3]}
+    end
+
+    for i, v in ipairs(vertices) do
+        v = rotateX(v, rotationx)
+        v = rotateY(v, rotationy)
+        v = rotateZ(v, rotationz)
+
+        v[1] = v[1] + x
+        v[2] = v[2] + y
+        v[3] = v[3] + z
+
+        vertices[i] = v
+    end
+
+    lstg.Render4V(
+        img,
+        vertices[1][1], vertices[1][2], vertices[1][3],
+        vertices[2][1], vertices[2][2], vertices[2][3],
+        vertices[3][1], vertices[3][2], vertices[3][3],
+        vertices[4][1], vertices[4][2], vertices[4][3]
+    )
+end
