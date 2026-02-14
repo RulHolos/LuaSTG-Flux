@@ -123,7 +123,7 @@ void luastg::binding::BuiltInFunction::Register(lua_State* L)noexcept
 		{
 			lua::stack_t S(L);
 			uint32_t const width = S.get_value<uint32_t>(1);
-			uint32_t const height = S.get_value<uint32_t>(1);
+			uint32_t const height = S.get_value<uint32_t>(2);
 			auto const window_mode = S.get_value<std::string_view>(3);
 			bool const vsync = S.get_value<bool>(4);
 
