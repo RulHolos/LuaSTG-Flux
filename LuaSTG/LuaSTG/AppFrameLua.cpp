@@ -1,4 +1,6 @@
 #include "AppFrame.h"
+#define LSTG_TRACY_MEMORY_IMPL
+#include "LuaMemoryTracker.hpp"
 #include "GameResource/ResourcePassword.hpp"
 #include "LuaBinding/LuaAppFrame.hpp"
 #include "LuaBinding/LuaCustomLoader.hpp"
@@ -292,6 +294,7 @@ namespace luastg
 			spdlog::error("[luajit] Unable to create LuaJIT engine");
 			return false;
 		}
+		LuaMemoryTracker::install(L);
 		if (0 == luaJIT_setmode(L, 0, LUAJIT_MODE_ENGINE | LUAJIT_MODE_ON))
 		{
 			spdlog::error("[luajit] Unable to start JIT mode");

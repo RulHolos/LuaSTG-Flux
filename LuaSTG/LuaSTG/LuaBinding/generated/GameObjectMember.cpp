@@ -24,16 +24,16 @@ GameObjectMember MapGameObjectMember(char const* const key, size_t const len) no
             case make_condition(0, 'i'): state = 64; continue; // -> img
             case make_condition(0, 'l'): state = 67; continue; // -> layer
             case make_condition(0, 'm'): state = 72; continue; // -> maxv, maxvx, maxvy
-            case make_condition(0, 'n'): state = 78; continue; // -> navi, nopause
-            case make_condition(0, 'o'): state = 88; continue; // -> omega, omiga
-            case make_condition(0, 'p'): state = 96; continue; // -> pause
-            case make_condition(0, 'r'): state = 101; continue; // -> rc, rect, rmove, rot
-            case make_condition(0, 's'): state = 112; continue; // -> status
-            case make_condition(0, 't'): state = 118; continue; // -> timer
-            case make_condition(0, 'v'): state = 123; continue; // -> vscale, vx, vy
-            case make_condition(0, 'w'): state = 131; continue; // -> world
-            case make_condition(0, 'x'): state = 136; continue; // -> x
-            case make_condition(0, 'y'): state = 137; continue; // -> y
+            case make_condition(0, 'n'): state = 78; continue; // -> name, navi, nopause
+            case make_condition(0, 'o'): state = 90; continue; // -> omega, omiga
+            case make_condition(0, 'p'): state = 98; continue; // -> pause
+            case make_condition(0, 'r'): state = 103; continue; // -> rc, rect, rmove, rot
+            case make_condition(0, 's'): state = 114; continue; // -> status
+            case make_condition(0, 't'): state = 120; continue; // -> timer
+            case make_condition(0, 'v'): state = 125; continue; // -> vscale, vx, vy
+            case make_condition(0, 'w'): state = 133; continue; // -> world
+            case make_condition(0, 'x'): state = 138; continue; // -> x
+            case make_condition(0, 'y'): state = 139; continue; // -> y
             default: return GameObjectMember::__unknown__;
             }
         case 1:
@@ -59,20 +59,20 @@ GameObjectMember MapGameObjectMember(char const* const key, size_t const len) no
             case make_condition(64, 'm'): state = 65; continue; // -> img
             case make_condition(67, 'a'): state = 68; continue; // -> layer
             case make_condition(72, 'a'): state = 73; continue; // -> maxv, maxvx, maxvy
-            case make_condition(78, 'a'): state = 79; continue; // -> navi
-            case make_condition(78, 'o'): state = 82; continue; // -> nopause
-            case make_condition(88, 'm'): state = 89; continue; // -> omega, omiga
-            case make_condition(96, 'a'): state = 97; continue; // -> pause
-            case make_condition(101, 'c'): state = 102; continue; // -> rc
-            case make_condition(101, 'e'): state = 103; continue; // -> rect
-            case make_condition(101, 'm'): state = 106; continue; // -> rmove
-            case make_condition(101, 'o'): state = 110; continue; // -> rot
-            case make_condition(112, 't'): state = 113; continue; // -> status
-            case make_condition(118, 'i'): state = 119; continue; // -> timer
-            case make_condition(123, 's'): state = 124; continue; // -> vscale
-            case make_condition(123, 'x'): state = 129; continue; // -> vx
-            case make_condition(123, 'y'): state = 130; continue; // -> vy
-            case make_condition(131, 'o'): state = 132; continue; // -> world
+            case make_condition(78, 'a'): state = 79; continue; // -> name, navi
+            case make_condition(78, 'o'): state = 84; continue; // -> nopause
+            case make_condition(90, 'm'): state = 91; continue; // -> omega, omiga
+            case make_condition(98, 'a'): state = 99; continue; // -> pause
+            case make_condition(103, 'c'): state = 104; continue; // -> rc
+            case make_condition(103, 'e'): state = 105; continue; // -> rect
+            case make_condition(103, 'm'): state = 108; continue; // -> rmove
+            case make_condition(103, 'o'): state = 112; continue; // -> rot
+            case make_condition(114, 't'): state = 115; continue; // -> status
+            case make_condition(120, 'i'): state = 121; continue; // -> timer
+            case make_condition(125, 's'): state = 126; continue; // -> vscale
+            case make_condition(125, 'x'): state = 131; continue; // -> vx
+            case make_condition(125, 'y'): state = 132; continue; // -> vy
+            case make_condition(133, 'o'): state = 134; continue; // -> world
             default: return GameObjectMember::__unknown__;
             }
         case 2:
@@ -91,18 +91,19 @@ GameObjectMember MapGameObjectMember(char const* const key, size_t const len) no
             case make_condition(65, 'g'): state = 66; continue; // -> img
             case make_condition(68, 'y'): state = 69; continue; // -> layer
             case make_condition(73, 'x'): state = 74; continue; // -> maxv, maxvx, maxvy
-            case make_condition(79, 'v'): state = 80; continue; // -> navi
-            case make_condition(82, 'p'): state = 83; continue; // -> nopause
-            case make_condition(89, 'e'): state = 90; continue; // -> omega
-            case make_condition(89, 'i'): state = 93; continue; // -> omiga
-            case make_condition(97, 'u'): state = 98; continue; // -> pause
-            case make_condition(103, 'c'): state = 104; continue; // -> rect
-            case make_condition(106, 'o'): state = 107; continue; // -> rmove
-            case make_condition(110, 't'): state = 111; continue; // -> rot
-            case make_condition(113, 'a'): state = 114; continue; // -> status
-            case make_condition(119, 'm'): state = 120; continue; // -> timer
-            case make_condition(124, 'c'): state = 125; continue; // -> vscale
-            case make_condition(132, 'r'): state = 133; continue; // -> world
+            case make_condition(79, 'm'): state = 80; continue; // -> name
+            case make_condition(79, 'v'): state = 82; continue; // -> navi
+            case make_condition(84, 'p'): state = 85; continue; // -> nopause
+            case make_condition(91, 'e'): state = 92; continue; // -> omega
+            case make_condition(91, 'i'): state = 95; continue; // -> omiga
+            case make_condition(99, 'u'): state = 100; continue; // -> pause
+            case make_condition(105, 'c'): state = 106; continue; // -> rect
+            case make_condition(108, 'o'): state = 109; continue; // -> rmove
+            case make_condition(112, 't'): state = 113; continue; // -> rot
+            case make_condition(115, 'a'): state = 116; continue; // -> status
+            case make_condition(121, 'm'): state = 122; continue; // -> timer
+            case make_condition(126, 'c'): state = 127; continue; // -> vscale
+            case make_condition(134, 'r'): state = 135; continue; // -> world
             default: return GameObjectMember::__unknown__;
             }
         case 3:
@@ -119,17 +120,18 @@ GameObjectMember MapGameObjectMember(char const* const key, size_t const len) no
             case make_condition(60, 'a'): state = 61; continue; // -> hscale
             case make_condition(69, 'e'): state = 70; continue; // -> layer
             case make_condition(74, 'v'): state = 75; continue; // -> maxv, maxvx, maxvy
-            case make_condition(80, 'i'): state = 81; continue; // -> navi
-            case make_condition(83, 'a'): state = 84; continue; // -> nopause
-            case make_condition(90, 'g'): state = 91; continue; // -> omega
-            case make_condition(93, 'g'): state = 94; continue; // -> omiga
-            case make_condition(98, 's'): state = 99; continue; // -> pause
-            case make_condition(104, 't'): state = 105; continue; // -> rect
-            case make_condition(107, 'v'): state = 108; continue; // -> rmove
-            case make_condition(114, 't'): state = 115; continue; // -> status
-            case make_condition(120, 'e'): state = 121; continue; // -> timer
-            case make_condition(125, 'a'): state = 126; continue; // -> vscale
-            case make_condition(133, 'l'): state = 134; continue; // -> world
+            case make_condition(80, 'e'): state = 81; continue; // -> name
+            case make_condition(82, 'i'): state = 83; continue; // -> navi
+            case make_condition(85, 'a'): state = 86; continue; // -> nopause
+            case make_condition(92, 'g'): state = 93; continue; // -> omega
+            case make_condition(95, 'g'): state = 96; continue; // -> omiga
+            case make_condition(100, 's'): state = 101; continue; // -> pause
+            case make_condition(106, 't'): state = 107; continue; // -> rect
+            case make_condition(109, 'v'): state = 110; continue; // -> rmove
+            case make_condition(116, 't'): state = 117; continue; // -> status
+            case make_condition(122, 'e'): state = 123; continue; // -> timer
+            case make_condition(127, 'a'): state = 128; continue; // -> vscale
+            case make_condition(135, 'l'): state = 136; continue; // -> world
             default: return GameObjectMember::__unknown__;
             }
         case 4:
@@ -146,15 +148,15 @@ GameObjectMember MapGameObjectMember(char const* const key, size_t const len) no
             case make_condition(70, 'r'): state = 71; continue; // -> layer
             case make_condition(75, 'x'): state = 76; continue; // -> maxvx
             case make_condition(75, 'y'): state = 77; continue; // -> maxvy
-            case make_condition(84, 'u'): state = 85; continue; // -> nopause
-            case make_condition(91, 'a'): state = 92; continue; // -> omega
-            case make_condition(94, 'a'): state = 95; continue; // -> omiga
-            case make_condition(99, 'e'): state = 100; continue; // -> pause
-            case make_condition(108, 'e'): state = 109; continue; // -> rmove
-            case make_condition(115, 'u'): state = 116; continue; // -> status
-            case make_condition(121, 'r'): state = 122; continue; // -> timer
-            case make_condition(126, 'l'): state = 127; continue; // -> vscale
-            case make_condition(134, 'd'): state = 135; continue; // -> world
+            case make_condition(86, 'u'): state = 87; continue; // -> nopause
+            case make_condition(93, 'a'): state = 94; continue; // -> omega
+            case make_condition(96, 'a'): state = 97; continue; // -> omiga
+            case make_condition(101, 'e'): state = 102; continue; // -> pause
+            case make_condition(110, 'e'): state = 111; continue; // -> rmove
+            case make_condition(117, 'u'): state = 118; continue; // -> status
+            case make_condition(123, 'r'): state = 124; continue; // -> timer
+            case make_condition(128, 'l'): state = 129; continue; // -> vscale
+            case make_condition(136, 'd'): state = 137; continue; // -> world
             default: return GameObjectMember::__unknown__;
             }
         case 5:
@@ -165,15 +167,15 @@ GameObjectMember MapGameObjectMember(char const* const key, size_t const len) no
             case make_condition(22, 'd'): state = 23; continue; // -> _speed
             case make_condition(43, 'd'): state = 44; continue; // -> collider
             case make_condition(62, 'e'): state = 63; continue; // -> hscale
-            case make_condition(85, 's'): state = 86; continue; // -> nopause
-            case make_condition(116, 's'): state = 117; continue; // -> status
-            case make_condition(127, 'e'): state = 128; continue; // -> vscale
+            case make_condition(87, 's'): state = 88; continue; // -> nopause
+            case make_condition(118, 's'): state = 119; continue; // -> status
+            case make_condition(129, 'e'): state = 130; continue; // -> vscale
             default: return GameObjectMember::__unknown__;
             }
         case 6:
             switch (make_condition(state, key[i])) {
             case make_condition(44, 'e'): state = 45; continue; // -> collider
-            case make_condition(86, 'e'): state = 87; continue; // -> nopause
+            case make_condition(88, 'e'): state = 89; continue; // -> nopause
             default: return GameObjectMember::__unknown__;
             }
         case 7:
@@ -214,23 +216,24 @@ GameObjectMember MapGameObjectMember(char const* const key, size_t const len) no
     case 75: return GameObjectMember::MAXV;
     case 76: return GameObjectMember::MAXVX;
     case 77: return GameObjectMember::MAXVY;
-    case 81: return GameObjectMember::NAVI;
-    case 87: return GameObjectMember::IGNORESUPERPAUSE;
-    case 92: return GameObjectMember::OMEGA;
-    case 95: return GameObjectMember::OMIGA;
-    case 100: return GameObjectMember::PAUSE;
-    case 102: return GameObjectMember::RES_RC;
-    case 105: return GameObjectMember::RECT;
-    case 109: return GameObjectMember::RESOLVEMOVE;
-    case 111: return GameObjectMember::ROT;
-    case 117: return GameObjectMember::STATUS;
-    case 122: return GameObjectMember::TIMER;
-    case 128: return GameObjectMember::VSCALE;
-    case 129: return GameObjectMember::VX;
-    case 130: return GameObjectMember::VY;
-    case 135: return GameObjectMember::WORLD;
-    case 136: return GameObjectMember::X;
-    case 137: return GameObjectMember::Y;
+    case 81: return GameObjectMember::NAME;
+    case 83: return GameObjectMember::NAVI;
+    case 89: return GameObjectMember::IGNORESUPERPAUSE;
+    case 94: return GameObjectMember::OMEGA;
+    case 97: return GameObjectMember::OMIGA;
+    case 102: return GameObjectMember::PAUSE;
+    case 104: return GameObjectMember::RES_RC;
+    case 107: return GameObjectMember::RECT;
+    case 111: return GameObjectMember::RESOLVEMOVE;
+    case 113: return GameObjectMember::ROT;
+    case 119: return GameObjectMember::STATUS;
+    case 124: return GameObjectMember::TIMER;
+    case 130: return GameObjectMember::VSCALE;
+    case 131: return GameObjectMember::VX;
+    case 132: return GameObjectMember::VY;
+    case 137: return GameObjectMember::WORLD;
+    case 138: return GameObjectMember::X;
+    case 139: return GameObjectMember::Y;
     default: return GameObjectMember::__unknown__;
     }
 }

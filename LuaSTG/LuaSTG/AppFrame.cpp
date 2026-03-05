@@ -141,6 +141,8 @@ bool AppFrame::Init()noexcept
 
 	//////////////////////////////////////// Base
 
+	TracySetProgramName(LUASTG_INFO);
+
 	// 初始化文件系统
 	if (auto const& resources = core::ConfigurationLoader::getInstance().getFileSystem().getResources(); !resources.empty()) {
 		for (auto const& resource : resources) {

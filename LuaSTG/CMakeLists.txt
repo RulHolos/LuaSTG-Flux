@@ -32,6 +32,8 @@ set(LUASTG_ENGINE_SOURCES
     LuaSTG/Debugger/ImGuiExtension.h
     LuaSTG/Debugger/Logger.cpp
     LuaSTG/Debugger/Logger.hpp
+    LuaSTG/Debugger/LuaObjectDebugCache.hpp
+    LuaSTG/Debugger/LuaObjectDebugInfo.hpp
 
     LuaSTG/GameObject/GameObject.cpp
     LuaSTG/GameObject/GameObject.hpp
@@ -176,6 +178,7 @@ set(LUASTG_ENGINE_SOURCES
     LuaSTG/AppFrameLua.cpp
     LuaSTG/AppFrameRender.cpp
     LuaSTG/AppFrameRenderEx.cpp
+    LuaSTG/LuaMemoryTracker.hpp
     LuaSTG/LConfig.h
     LuaSTG/LMathConstant.hpp
     LuaSTG/RuntimeCheck.hpp

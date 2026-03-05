@@ -1,5 +1,6 @@
 #include "LuaBinding/modern/GameObject.hpp"
 #include "LuaBinding/generated/GameObjectMember.hpp"
+#include "Debugger/LuaObjectDebugCache.hpp"
 #include "GameObject/GameObjectPool.h"
 #include "AppFrame.h"
 #include "LuaBinding/LuaWrapper.hpp"
@@ -264,6 +265,10 @@ namespace luastg::binding {
 			#endif // USING_MULTI_GAME_WORLD
 
 				// 位置
+			
+			case LuaSTG::GameObjectMember::NAME:
+				ctx.push_value(self->name);
+				return 1;
 
 			case LuaSTG::GameObjectMember::X:
 				ctx.push_value(self->x);
@@ -483,7 +488,10 @@ namespace luastg::binding {
 			#endif // USING_MULTI_GAME_WORLD
 
 				// 位置
-
+			
+			case LuaSTG::GameObjectMember::NAME:
+				self->name = ctx.get_value<std::string>(3);
+				return 0;
 			case LuaSTG::GameObjectMember::X:
 				self->x = ctx.get_value<lua_Number>(3);
 				return 0;
@@ -812,6 +820,7 @@ namespace luastg::binding {
 
 			pushGameObjectTable(vm);									// class object t
 			auto const objects_table = ctx.index_of_top();
+			LuaDebugCache::populate(vm, *object, 1);
 			auto const index = static_cast<int32_t>(object->id + 1);
 			ctx.set_array_value(objects_table, index, table);			// class object t
 			ctx.pop_value();											// class object

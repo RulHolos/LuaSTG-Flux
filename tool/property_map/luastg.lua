@@ -11,6 +11,7 @@ local GameObjectMember = property_map.Configuration()
     :addClassMember("CLASS" , nil, "class" )
     -- user
     :addClassMember("TIMER", nil, "timer")
+    :addClassMember("NAME" , nil, "name" )
     -- transform
     :addClassMember("X"     , nil, "x"     )
     :addClassMember("Y"     , nil, "y"     )

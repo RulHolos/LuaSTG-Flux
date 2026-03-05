@@ -4,6 +4,8 @@
 #include "lua/plus.hpp"
 #include "AppFrame.h"
 #include "iostream"
+#include "Debugger/LuaObjectDebugCache.hpp"
+#include <tracy/Tracy.hpp>
 
 using std::string_view_literals::operator ""sv;
 
@@ -103,10 +105,13 @@ namespace luastg
 				continue;
 			}
 #endif // USING_MULTI_GAME_WORLD
-			if (p->features.has_callback_update) {
-				p->dispatchOnUpdate();
+			{
+				LSTG_TRACY_FRAME_ZONE(p);
+				if (p->features.has_callback_update) {
+					p->dispatchOnUpdate();
+				}
+				p->Update();
 			}
-			p->Update();
 		}
 		dispatchOnAfterBatchUpdate();
 	}
@@ -128,8 +133,11 @@ namespace luastg
 				continue;
 			}
 #endif // USING_MULTI_GAME_WORLD
-			if (p->features.has_callback_update) {
-				p->dispatchOnUpdate();
+			{
+				LSTG_TRACY_FRAME_ZONE(p);
+				if (p->features.has_callback_update) {
+					p->dispatchOnUpdate();
+				}
 			}
 		}
 
@@ -139,28 +147,41 @@ namespace luastg
 			if (super_pause_time > 0 && !p->ignore_super_pause) {
 				continue;
 			}
-			p->UpdateV2();
+			{
+				LSTG_TRACY_FRAME_ZONE(p);
+				p->UpdateV2();
+			}
 		}
 	}
 	void GameObjectPool::render() {
-		m_is_rendering = true;
-		dispatchOnBeforeBatchRender();
 #ifdef USING_MULTI_GAME_WORLD
 		auto const world = GetWorldFlag();
+		ZoneNamed(render_zone, true);
+		ZoneNameVF(render_zone, "LOBJMGR.Render World=%08X", world);
+#else
+		ZoneNamed(render_zone, true);
+		ZoneName(render_zone, "LOBJMGR.Render");
 #endif // USING_MULTI_GAME_WORLD
 
+		m_is_rendering = true;
+		dispatchOnBeforeBatchRender();
+
 		for (auto& p : m_render_list) {
+			if (p->hide)
+				continue;
 #ifdef USING_MULTI_GAME_WORLD
-			if (!p->hide && CheckWorlds(p->world, world)) {
-#else // USING_MULTI_GAME_WORLD
-			if (!p->hide) {  // 只渲染可见对象
+			if (!CheckWorlds(p->world, world))
+				continue;
 #endif // USING_MULTI_GAME_WORLD
-				if (p->features.has_callback_render) {
-					p->dispatchOnRender();
-				}
-				else {
-					p->Render();
-				}
+			int group = p->group;
+			int layer = p->layer;
+			std::string name = p->name;
+			if (p->features.has_callback_render) {
+				LSTG_TRACY_RENDER_ZONE(p);
+				p->dispatchOnRender();
+			} else {
+				LSTG_TRACY_RENDER_ZONE(p);
+				p->Render();
 			}
 		}
 

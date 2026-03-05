@@ -1,6 +1,7 @@
 #pragma once
 #include "GameResource/ResourceBase.hpp"
 #include "GameResource/ResourceParticle.hpp"
+#include "Debugger/LuaObjectDebugCache.hpp"
 #include <memory_resource>
 
 #define LGOBJ_CC_INIT 1
@@ -58,6 +59,10 @@ namespace luastg {
 	struct GameObject {
 		static constexpr uint64_t max_id = 0xffffull;
 		static constexpr uint64_t max_unique_id = 0xffff'ffff'ffffull;
+
+		LuaObjectDebugInfo lua_debug{};
+
+		std::string name = "Unknown"; // Debug name because FUCK IT.
 
 		static constexpr int unhandled_set_group = 1;
 		static constexpr int unhandled_set_layer = 2;
