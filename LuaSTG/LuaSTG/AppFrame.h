@@ -167,6 +167,7 @@ namespace luastg {
 		// 读取资源包中的文本文件
 		// 也能读取其他类型的文件，但是会得到无意义的结果
 		int LoadTextFile(lua_State* L, const char* path, const char* packname) noexcept;
+		int LoadCompressedTextFile(lua_State* L, const char* path, const char *packname) noexcept;
 
 	public: // 渲染器接口
 
