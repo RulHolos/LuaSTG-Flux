@@ -48,23 +48,25 @@ namespace luastg
             "main.lua",
             "src/main.lua",
         };
-        core::SmartReference<core::IData> src;
-        bool is_load = false;
+        std::string_view entry_script;
         for (auto& v : entry_scripts)
         {
-            if (core::FileSystemManager::readFile(v, src.put()))
+            if (core::FileSystemManager::hasFile(v))
             {
-                if (SafeCallScript((char const*)src->data(), src->size(), v.data()))
-                {
-                    spdlog::info("[luastg] Loading script '{}'", v);
-                    is_load = true;
-                    break;
-                }
+                entry_script = v;
+                break;
             }
         }
-        if (!is_load)
+        if (entry_script.empty())
         {
             spdlog::error("[luastg] Cannot find any entry point candidates at '{}', '{}' or '{}'", entry_scripts[0], entry_scripts[1], entry_scripts[2]);
+            return true;
+        }
+        core::SmartReference<core::IData> src;
+        if (core::FileSystemManager::readFile(entry_script, src.put()))
+        {
+            spdlog::info("[luastg] Loading script '{}'", entry_script);
+            SafeCallScript((char const*)src->data(), src->size(), entry_script.data());
         }
         return true;
     }
