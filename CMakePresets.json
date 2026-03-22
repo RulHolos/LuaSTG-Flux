@@ -22,6 +22,56 @@
       }
     },
     {
+      "name": "vs2026",
+      "hidden": true,
+      "inherits": [
+        "cpm-cache"
+      ],
+      "generator": "Visual Studio 18 2026"
+    },
+    {
+      "name": "vs2026-x86",
+      "inherits": [
+        "vs2026"
+      ],
+      "architecture": "Win32",
+      "binaryDir": "${sourceDir}/build/x86"
+    },
+    {
+      "name": "vs2026-amd64",
+      "inherits": [
+        "vs2026"
+      ],
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/build/amd64"
+    },
+    {
+      "name": "vs2026-arm64",
+      "inherits": [
+        "vs2026"
+      ],
+      "architecture": "ARM64",
+      "binaryDir": "${sourceDir}/build/arm64"
+    },
+    {
+      "name": "vs2026-x86-steam",
+      "inherits": [
+        "vs2026",
+        "link-steam-api"
+      ],
+      "architecture": "Win32",
+      "binaryDir": "${sourceDir}/build/x86-steam"
+    },
+    {
+      "name": "vs2026-amd64-steam",
+      "inherits": [
+        "vs2026",
+        "link-steam-api"
+      ],
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/build/amd64-steam"
+    },
+    {
       "name": "vs2022",
       "hidden": true,
       "inherits": [
@@ -35,7 +85,7 @@
         "vs2022"
       ],
       "architecture": "Win32",
-      "binaryDir": "${sourceDir}/build/x86"
+      "binaryDir": "${sourceDir}/build/vs2022-x86"
     },
     {
       "name": "vs2022-amd64",
@@ -43,7 +93,7 @@
         "vs2022"
       ],
       "architecture": "x64",
-      "binaryDir": "${sourceDir}/build/amd64"
+      "binaryDir": "${sourceDir}/build/vs2022-amd64"
     },
     {
       "name": "vs2022-arm64",
@@ -51,7 +101,7 @@
         "vs2022"
       ],
       "architecture": "ARM64",
-      "binaryDir": "${sourceDir}/build/arm64"
+      "binaryDir": "${sourceDir}/build/vs2022-arm64"
     },
     {
       "name": "vs2022-x86-steam",
@@ -60,7 +110,7 @@
         "link-steam-api"
       ],
       "architecture": "Win32",
-      "binaryDir": "${sourceDir}/build/x86-steam"
+      "binaryDir": "${sourceDir}/build/vs2022-x86-steam"
     },
     {
       "name": "vs2022-amd64-steam",
@@ -69,7 +119,7 @@
         "link-steam-api"
       ],
       "architecture": "x64",
-      "binaryDir": "${sourceDir}/build/amd64-steam"
+      "binaryDir": "${sourceDir}/build/vs2022-amd64-steam"
     }
   ],
   "buildPresets": [
@@ -86,27 +136,27 @@
     {
       "name": "windows-x86",
       "hidden": true,
-      "configurePreset": "vs2022-x86"
+      "configurePreset": "vs2026-x86"
     },
     {
       "name": "windows-amd64",
       "hidden": true,
-      "configurePreset": "vs2022-amd64"
+      "configurePreset": "vs2026-amd64"
     },
     {
       "name": "windows-arm64",
       "hidden": true,
-      "configurePreset": "vs2022-arm64"
+      "configurePreset": "vs2026-arm64"
     },
     {
       "name": "windows-x86-steam",
       "hidden": true,
-      "configurePreset": "vs2022-x86-steam"
+      "configurePreset": "vs2026-x86-steam"
     },
     {
       "name": "windows-amd64-steam",
       "hidden": true,
-      "configurePreset": "vs2022-amd64-steam"
+      "configurePreset": "vs2026-amd64-steam"
     },
     {
       "name": "target-luastg",
@@ -194,6 +244,111 @@
         "release",
         "target-luastg"
       ]
+    },
+    {
+      "name": "vs2022-windows-x86",
+      "hidden": true,
+      "configurePreset": "vs2022-x86"
+    },
+    {
+      "name": "vs2022-windows-amd64",
+      "hidden": true,
+      "configurePreset": "vs2022-amd64"
+    },
+    {
+      "name": "vs2022-windows-arm64",
+      "hidden": true,
+      "configurePreset": "vs2022-arm64"
+    },
+    {
+      "name": "vs2022-windows-x86-steam",
+      "hidden": true,
+      "configurePreset": "vs2022-x86-steam"
+    },
+    {
+      "name": "vs2022-windows-amd64-steam",
+      "hidden": true,
+      "configurePreset": "vs2022-amd64-steam"
+    },
+    {
+      "name": "vs2022-windows-x86-debug",
+      "inherits": [
+        "vs2022-windows-x86",
+        "debug",
+        "target-luastg"
+      ]
+    },
+    {
+      "name": "vs2022-windows-x86-release",
+      "inherits": [
+        "vs2022-windows-x86",
+        "release",
+        "target-luastg"
+      ]
+    },
+    {
+      "name": "vs2022-windows-amd64-debug",
+      "inherits": [
+        "vs2022-windows-amd64",
+        "debug",
+        "target-luastg"
+      ]
+    },
+    {
+      "name": "vs2022-windows-amd64-release",
+      "inherits": [
+        "vs2022-windows-amd64",
+        "release",
+        "target-luastg"
+      ]
+    },
+    {
+      "name": "vs2022-windows-arm64-debug",
+      "inherits": [
+        "vs2022-windows-arm64",
+        "debug",
+        "target-luastg"
+      ]
+    },
+    {
+      "name": "vs2022-windows-arm64-release",
+      "inherits": [
+        "vs2022-windows-arm64",
+        "release",
+        "target-luastg"
+      ]
+    },
+    {
+      "name": "vs2022-windows-x86-steam-debug",
+      "inherits": [
+        "vs2022-windows-x86-steam",
+        "debug",
+        "target-luastg"
+      ]
+    },
+    {
+      "name": "vs2022-windows-x86-steam-release",
+      "inherits": [
+        "vs2022-windows-x86-steam",
+        "release",
+        "target-luastg"
+      ]
+    },
+    {
+      "name": "vs2022-windows-amd64-steam-debug",
+      "inherits": [
+        "vs2022-windows-amd64-steam",
+        "debug",
+        "target-luastg"
+      ]
+    },
+    {
+      "name": "vs2022-windows-amd64-steam-release",
+      "inherits": [
+        "vs2022-windows-amd64-steam",
+        "release",
+        "target-luastg"
+      ]
     }
   ],
   "workflowPresets": [
@@ -202,7 +357,7 @@
       "steps": [
         {
           "type": "configure",
-          "name": "vs2022-x86"
+          "name": "vs2026-x86"
         },
         {
           "type": "build",
@@ -215,7 +370,7 @@
       "steps": [
         {
           "type": "configure",
-          "name": "vs2022-amd64"
+          "name": "vs2026-amd64"
         },
         {
           "type": "build",
@@ -228,7 +383,7 @@
       "steps": [
         {
           "type": "configure",
-          "name": "vs2022-arm64"
+          "name": "vs2026-arm64"
         },
         {
           "type": "build",
@@ -241,7 +396,7 @@
       "steps": [
         {
           "type": "configure",
-          "name": "vs2022-x86-steam"
+          "name": "vs2026-x86-steam"
         },
         {
           "type": "build",
@@ -254,11 +409,76 @@
       "steps": [
         {
           "type": "configure",
-          "name": "vs2022-amd64-steam"
+          "name": "vs2026-amd64-steam"
         },
         {
           "type": "build",
           "name": "windows-amd64-steam-release"
+        }
+      ]
+    },
+    {
+      "name": "vs2022-windows-x86-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "vs2022-x86"
+        },
+        {
+          "type": "build",
+          "name": "vs2022-windows-x86-release"
+        }
+      ]
+    },
+    {
+      "name": "vs2022-windows-amd64-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "vs2022-amd64"
+        },
+        {
+          "type": "build",
+          "name": "vs2022-windows-amd64-release"
+        }
+      ]
+    },
+    {
+      "name": "vs2022-windows-arm64-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "vs2022-arm64"
+        },
+        {
+          "type": "build",
+          "name": "vs2022-windows-arm64-release"
+        }
+      ]
+    },
+    {
+      "name": "vs2022-windows-x86-steam-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "vs2022-x86-steam"
+        },
+        {
+          "type": "build",
+          "name": "vs2022-windows-x86-steam-release"
+        }
+      ]
+    },
+    {
+      "name": "vs2022-windows-amd64-steam-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "vs2022-amd64-steam"
+        },
+        {
+          "type": "build",
+          "name": "vs2022-windows-amd64-steam-release"
         }
       ]
     }

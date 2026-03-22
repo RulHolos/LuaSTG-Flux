@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 4.0)
 project(LuaSTGFlux)
 
 #option(LUASTG_RESDIR "Custom configurations" "res")
