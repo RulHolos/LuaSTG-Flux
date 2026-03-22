@@ -1,12 +1,10 @@
 $ProjectRoot = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, ".."))
 $ReleasesRoot = [System.IO.Path]::Combine($ProjectRoot, "build", "releases")
-$BinaryRootX86 = [System.IO.Path]::Combine($ProjectRoot, "build", "x86", "bin")
 $BinaryRootAMD64 = [System.IO.Path]::Combine($ProjectRoot, "build", "amd64", "bin")
 $ExampleRoot = [System.IO.Path]::Combine($ProjectRoot, "data", "example")
 
 Write-Output "Project Root       : $ProjectRoot"
 Write-Output "Releases Root      : $ReleasesRoot"
-Write-Output "Binary Root (x86)  : $BinaryRootX86"
 Write-Output "Binary Root (amd64): $BinaryRootAMD64"
 Write-Output "Example Root       : $ExampleRoot"
 
@@ -15,14 +13,13 @@ Write-Output "Example Root       : $ExampleRoot"
 Set-Location $ProjectRoot
 
 cmake --workflow --preset windows-amd64-release
-cmake --workflow --preset windows-x86-release
 
 # read version info
 
 $ConfigFilePath = [System.IO.Path]::Combine($ProjectRoot, "LuaSTG", "LuaSTG", "LConfig.h")
 $ConfigFile = [System.IO.File]::ReadAllText($ConfigFilePath, [System.Text.Encoding]::UTF8)
 $VersionMajor = "0"
-$VersionMinor = "1"
+$VersionMinor = "2"
 $VersionPatch = "2"
 foreach ($Line in $ConfigFile.Split("`n")) {
     if ($Line.Contains("LUASTG_VERSION_MAJOR")) {
@@ -63,33 +60,6 @@ $BinaryFilesAMD64 = @(
 )
 
 foreach ($BinaryFile in $BinaryFilesAMD64) {
-    if (Test-Path -Path $BinaryFile.Destination) {
-        Remove-Item -Path $BinaryFile.Destination
-    }
-    Copy-Item -Path $BinaryFile.Source -Destination $BinaryFile.Destination
-}
-
-$Release32Root = [System.IO.Path]::Combine($ReleaseRoot, "windows-32bit")
-$BinaryFilesX86 = @(
-    @{
-        Source = [System.IO.Path]::Combine($BinaryRootX86, "LuaSTGFlux.exe")
-        Destination = [System.IO.Path]::Combine($Release32Root, "LuaSTGFlux.exe")
-    },
-    @{
-        Source = [System.IO.Path]::Combine($BinaryRootX86, "d3dcompiler_47.dll")
-        Destination = [System.IO.Path]::Combine($Release32Root, "d3dcompiler_47.dll")
-    },
-    @{
-        Source = [System.IO.Path]::Combine($BinaryRootX86, "xaudio2_9redist.dll")
-        Destination = [System.IO.Path]::Combine($Release32Root, "xaudio2_9redist.dll")
-    }
-)
-
-if (-not [System.IO.Directory]::Exists($Release32Root)) {
-    [System.IO.Directory]::CreateDirectory($Release32Root)
-}
-
-foreach ($BinaryFile in $BinaryFilesX86) {
     if (Test-Path -Path $BinaryFile.Destination) {
         Remove-Item -Path $BinaryFile.Destination
     }
