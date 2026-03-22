@@ -1,5 +1,8 @@
 local type = type
 local math = require("math")
+local math_cos = math.cos
+local math_sin = math.sin
+local math_rad = math.rad
 local lstg = require("lstg")
 local _New = lstg._New
 function lstg.New(class, ...)
@@ -97,54 +100,45 @@ function lstg.IsSameWorld(a, b)
 end
 
 function lstg.Render3D(img, x, y, z, rotationx, rotationy, rotationz, scalex, scaley)
-    local halfWidth = 0.5 * scalex
-    local halfHeight = 0.5 * scaley
+    local hw = 0.5 * scalex
+    local hh = 0.5 * scaley
 
-    local vertices = {
-        {-halfWidth, -halfHeight, 0},
-        { halfWidth, -halfHeight, 0},
-        { halfWidth,  halfHeight, 0},
-        {-halfWidth,  halfHeight, 0}
-    }
+    local crx = math_cos(math_rad(rotationx))
+    local srx = math_sin(math_rad(rotationx))
+    local cry = math_cos(math_rad(rotationy))
+    local sry = math_sin(math_rad(rotationy))
+    local crz = math_cos(math_rad(rotationz))
+    local srz = math_sin(math_rad(rotationz))
 
-    local function rotateX(v, angle)
-        local rad = math.rad(angle)
-        local y = v[2] * math.cos(rad) - v[3] * math.sin(rad)
-        local z = v[2] * math.sin(rad) + v[3] * math.cos(rad)
-        return {v[1], y, z}
-    end
+    local vy1, vz1, vx2, vz2
 
-    local function rotateY(v, angle)
-        local rad = math.rad(angle)
-        local x = v[1] * math.cos(rad) + v[3] * math.sin(rad)
-        local z = -v[1] * math.sin(rad) + v[3] * math.cos(rad)
-        return {x, v[2], z}
-    end
+    vy1 = -hh * crx
+    vz1 = -hh * srx
+    vx2 = -hw * cry + vz1 * sry
+    vz2 =  hw * sry + vz1 * cry
+    local x1 = vx2 * crz - vy1 * srz + x
+    local y1 = vx2 * srz + vy1 * crz + y
+    local z1 = vz2 + z
 
-    local function rotateZ(v, angle)
-        local rad = math.rad(angle)
-        local x = v[1] * math.cos(rad) - v[2] * math.sin(rad)
-        local y = v[1] * math.sin(rad) + v[2] * math.cos(rad)
-        return {x, y, v[3]}
-    end
+    vx2 =  hw * cry + vz1 * sry
+    vz2 = -hw * sry + vz1 * cry
+    local x2 = vx2 * crz - vy1 * srz + x
+    local y2 = vx2 * srz + vy1 * crz + y
+    local z2 = vz2 + z
 
-    for i, v in ipairs(vertices) do
-        v = rotateX(v, rotationx)
-        v = rotateY(v, rotationy)
-        v = rotateZ(v, rotationz)
+    vy1 =  hh * crx
+    vz1 =  hh * srx
+    vx2 =  hw * cry + vz1 * sry
+    vz2 = -hw * sry + vz1 * cry
+    local x3 = vx2 * crz - vy1 * srz + x
+    local y3 = vx2 * srz + vy1 * crz + y
+    local z3 = vz2 + z
 
-        v[1] = v[1] + x
-        v[2] = v[2] + y
-        v[3] = v[3] + z
+    vx2 = -hw * cry + vz1 * sry
+    vz2 =  hw * sry + vz1 * cry
+    local x4 = vx2 * crz - vy1 * srz + x
+    local y4 = vx2 * srz + vy1 * crz + y
+    local z4 = vz2 + z
 
-        vertices[i] = v
-    end
-
-    lstg.Render4V(
-        img,
-        vertices[1][1], vertices[1][2], vertices[1][3],
-        vertices[2][1], vertices[2][2], vertices[2][3],
-        vertices[3][1], vertices[3][2], vertices[3][3],
-        vertices[4][1], vertices[4][2], vertices[4][3]
-    )
+    lstg.Render4V(img, x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4)
 end

@@ -100,7 +100,7 @@ namespace {
 		void onDestroy(luastg::GameObject* const object) override {
 		#if (defined(_DEBUG) && defined(LuaSTG_enable_GameObjectManager_Debug))
 			static std::string null_name("<null>");
-			spdlog::debug("[object] free {}-{} (img = {})", object->id, object->unique_id, object->res ? object->res->GetResName() : null_name);
+			//spdlog::debug("[object] free {}-{} (img = {})", object->id, object->unique_id, object->res ? object->res->GetResName() : null_name);
 		#endif
 
 			auto const vm = getInstance().lua_vm.back();
@@ -260,7 +260,7 @@ namespace luastg::binding {
 
 			#ifdef USING_MULTI_GAME_WORLD
 			case LuaSTG::GameObjectMember::WORLD:
-				ctx.push_value(self->world);
+				lua_pushinteger(vm, self->world); // interesting
 				return 1;
 			#endif // USING_MULTI_GAME_WORLD
 
@@ -483,12 +483,12 @@ namespace luastg::binding {
 
 			#ifdef USING_MULTI_GAME_WORLD
 			case LuaSTG::GameObjectMember::WORLD:
-				self->world = ctx.get_value<lua_Number>(3); // interesting
+				self->world = luaL_checkinteger(vm, 3); // interesting
 				return 0;
 			#endif // USING_MULTI_GAME_WORLD
 
 				// 位置
-			
+
 			case LuaSTG::GameObjectMember::NAME:
 				self->name = ctx.get_value<std::string>(3);
 				return 0;
@@ -827,10 +827,16 @@ namespace luastg::binding {
 
 			ctx.push_value<bool>(object->features.has_callback_create);	// class object init
 
-		#if (defined(_DEBUG) && defined(LuaSTG_enable_GameObjectManager_Debug))
+		#if (defined(LuaSTG_enable_GameObjectManager_Debug))
 			static std::string _name("<null>");
-			spdlog::debug("[object] new {}-{} (img = {})",
-				object->id, object->unique_id, object->res ? object->res->GetResName() : _name);
+			//spdlog::debug("[object] new {}-{}", object->id, object->unique_id);
+
+			lua_Debug ar;
+			if (lua_getstack(vm, 1, &ar)) {
+				if (lua_getinfo(vm, "Sl", &ar)) {
+					spdlog::info("[object] {}:{}", ar.short_src, ar.currentline);
+				}
+			}
 		#endif
 
 			return 2;
@@ -984,11 +990,9 @@ namespace luastg::binding {
 			auto object = LPOOL.getUpdateListFirst();
 
 			#ifdef USING_MULTI_GAME_WORLD
-				bool hasWorldArg = lua_gettop(vm) >= 1;
-				uint64_t worldToCheck = 0;
-				if (hasWorldArg)
+				if (!lua_isnoneornil(vm, 1))
 				{
-					worldToCheck = static_cast<uint32_t>(luaL_checkinteger(vm, 1));
+					uint64_t worldToCheck = static_cast<uint32_t>(luaL_checkinteger(vm, 1));
 					while (object && object->world != worldToCheck)
 						object = LPOOL.getUpdateListNext(object->id);
 				}
@@ -1006,11 +1010,9 @@ namespace luastg::binding {
 			auto object = LPOOL.getUpdateListNext(id - 1);
 
 			#ifdef USING_MULTI_GAME_WORLD
-				bool hasWorldArg = lua_gettop(vm) >= 2;
-				uint64_t worldToCheck = 0;
-				if (hasWorldArg)
+				if (!lua_isnoneornil(vm, 2))
 				{
-					worldToCheck = static_cast<uint64_t>(luaL_checkinteger(vm, 2));
+					uint64_t worldToCheck = static_cast<uint64_t>(luaL_checkinteger(vm, 2));
 					while (object && object->world != worldToCheck)
 						object = LPOOL.getUpdateListNext(object->id);
 				}
@@ -1028,11 +1030,9 @@ namespace luastg::binding {
 			auto object = LPOOL.getDetectListFirst(group);
 
 			#ifdef USING_MULTI_GAME_WORLD
-				bool hasWorldArg = lua_gettop(vm) >= 2;
-				uint64_t worldToCheck = 0;
-				if (hasWorldArg)
+				if (!lua_isnoneornil(vm, 2))
 				{
-					worldToCheck = static_cast<uint64_t>(luaL_checkinteger(vm, 2));
+					uint64_t worldToCheck = static_cast<uint64_t>(luaL_checkinteger(vm, 2));
 					while (object && object->world != worldToCheck)
 						object = LPOOL.getDetectListNext(group, object->id);
 				}
@@ -1051,11 +1051,9 @@ namespace luastg::binding {
 			auto object = LPOOL.getDetectListNext(group, id - 1);
 
 			#ifdef USING_MULTI_GAME_WORLD
-				bool hasWorldArg = lua_gettop(vm) >= 3;
-				uint64_t worldToCheck = 0;
-				if (hasWorldArg)
+				if (!lua_isnoneornil(vm, 3))
 				{
-					worldToCheck = static_cast<uint64_t>(luaL_checkinteger(vm, 3));
+					uint64_t worldToCheck = static_cast<uint64_t>(luaL_checkinteger(vm, 3));
 					while (object && object->world != worldToCheck)
 						object = LPOOL.getDetectListNext(group, object->id);
 				}
