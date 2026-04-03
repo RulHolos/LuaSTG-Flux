@@ -294,7 +294,7 @@ namespace luastg
 			spdlog::error("[luajit] Unable to create LuaJIT engine");
 			return false;
 		}
-		LuaMemoryTracker::install(L);
+		//LuaMemoryTracker::install(L);
 		if (0 == luaJIT_setmode(L, 0, LUAJIT_MODE_ENGINE | LUAJIT_MODE_ON))
 		{
 			spdlog::error("[luajit] Unable to start JIT mode");

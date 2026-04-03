@@ -9,7 +9,7 @@ namespace luastg
     bool AppFrame::OnLoadLaunchScriptAndFiles()
     {
         bool is_launch_loaded = false;
-        #ifdef USING_LAUNCH_FILE
+#ifdef USING_LAUNCH_FILE
         spdlog::info("[luastg] Loading launch file");
         core::SmartReference<core::IData> src;
         const char* file_name = LUASTG_LAUNCH_SCRIPT;
@@ -35,7 +35,7 @@ namespace luastg
         {
             spdlog::error("[luastg] Launch file not found", file_name);
         }
-        #endif
+#endif
 
         return true;
     };
