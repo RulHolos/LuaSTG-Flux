@@ -26,6 +26,7 @@ if(tracy_ADDED)
     target_sources(tracy PRIVATE
         ${tracy_SOURCE_DIR}/public/tracy/Tracy.hpp
         ${tracy_SOURCE_DIR}/public/tracy/TracyD3D11.hpp
+        ${tracy_SOURCE_DIR}/public/tracy/TracyLua.hpp
         ${tracy_SOURCE_DIR}/public/TracyClient.cpp
     )
     set_target_properties(tracy PROPERTIES FOLDER external)

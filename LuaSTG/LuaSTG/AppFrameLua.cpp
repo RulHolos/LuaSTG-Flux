@@ -1,6 +1,7 @@
 #include "AppFrame.h"
 #define LSTG_TRACY_MEMORY_IMPL
 #include "LuaMemoryTracker.hpp"
+#include <tracy/TracyLua.hpp>
 #include "GameResource/ResourcePassword.hpp"
 #include "LuaBinding/LuaAppFrame.hpp"
 #include "LuaBinding/LuaCustomLoader.hpp"
@@ -314,6 +315,7 @@ namespace luastg
 			luaopen_dwrite(L);
 			luaopen_random(L);
 			luaopen_string_pack(L);
+			//tracy::LuaRegister(L);
 		#ifdef LUASTG_LINK_LUASOCKET
 			{
 				lua_getfield(L, LUA_REGISTRYINDEX, "_LOADED"); // ... _LOADED
