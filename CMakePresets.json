@@ -8,6 +8,10 @@
         "CPM_SOURCE_CACHE": {
           "type": "PATH",
           "value": "${sourceDir}/build/packages"
+        },
+        "CMAKE_POLICY_VERSION_MINIMUM": {
+          "type": "STRING",
+          "value": "3.5"
         }
       }
     },

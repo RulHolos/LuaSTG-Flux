@@ -13,6 +13,7 @@ if(tracy_ADDED)
     if(LUASTG_LINK_TRACY_CLIENT)
         target_compile_definitions(tracy PUBLIC
             TRACY_ENABLE
+            TRACY_ON_DEMAND # Disable automatic crashing of the engine after like 10mins
         )
     endif()
     # WTF ???
