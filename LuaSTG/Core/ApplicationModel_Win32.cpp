@@ -406,6 +406,21 @@ namespace core
 				m_p_frame_rate_controller->update();
 			}
 
+			{
+				Microsoft::WRL::ComPtr<IDXGIDevice> dxgiDevice;
+				Microsoft::WRL::ComPtr<IDXGIAdapter> adapter;
+				if (SUCCEEDED(m_device->GetD3D11Device()->QueryInterface(IID_PPV_ARGS(&dxgiDevice))))
+				{
+					if (SUCCEEDED(dxgiDevice->GetAdapter(&adapter)))
+					{
+						DXGI_ADAPTER_DESC desc{};
+						adapter->GetDesc(&desc);
+						TracyPlot("DXGI SharedMemory MB", (double)desc.SharedSystemMemory / 1048576.0);
+						TracyPlot("DXGI DedicatedVideo MB", (double)desc.DedicatedVideoMemory / 1048576.0);
+					}
+				}
+			}
+
 			m_framestate_index = i;
 			FrameMark;
 		}
@@ -622,6 +637,21 @@ namespace core
 			ScopeTimer t(d.wait_time);
 			m_swapchain->waitFrameLatency();
 			m_p_frame_rate_controller->update();
+		}
+
+		{
+			Microsoft::WRL::ComPtr<IDXGIDevice> dxgiDevice;
+			Microsoft::WRL::ComPtr<IDXGIAdapter> adapter;
+			if (SUCCEEDED(m_device->GetD3D11Device()->QueryInterface(IID_PPV_ARGS(&dxgiDevice))))
+			{
+				if (SUCCEEDED(dxgiDevice->GetAdapter(&adapter)))
+				{
+					DXGI_ADAPTER_DESC desc{};
+					adapter->GetDesc(&desc);
+					TracyPlot("DXGI SharedMemory MB", (double)desc.SharedSystemMemory / 1048576.0);
+					TracyPlot("DXGI DedicatedVideo MB", (double)desc.DedicatedVideoMemory / 1048576.0);
+				}
+			}
 		}
 
 		m_framestate_index = i;
