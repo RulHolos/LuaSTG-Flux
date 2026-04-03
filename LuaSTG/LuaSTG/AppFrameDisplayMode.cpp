@@ -10,11 +10,9 @@ namespace luastg
 		auto* swapchain = GetAppModel()->getSwapChain();
 
 		swapchain->setVSync(vsync);
-		bool const result = swapchain->setCanvasSize(window_size);
-
 		window->setWindowMode(window_size);
 
-		return result;
+		return true;
 	}
 
 	// TODO: 废弃
@@ -24,12 +22,10 @@ namespace luastg
 		auto* swapchain = GetAppModel()->getSwapChain();
 
 		swapchain->setVSync(vsync);
-		bool const result = swapchain->setCanvasSize(window_size);
-
 		window->setWindowMode(window_size);
 		window->setFullScreenMode();
 
-		return result;
+		return true;
 	}
 
 	bool AppFrame::SetDisplayModeBorderlessFullscreen(bool vsync)
@@ -38,11 +34,9 @@ namespace luastg
 		auto* swapchain = GetAppModel()->getSwapChain();
 
 		swapchain->setVSync(vsync);
-		bool const result = swapchain->setCanvasSize(window->getSize());
-
 		window->setBorderlessFullScreenMode();
 
-		return result;
+		return true;
 	}
 
 	bool AppFrame::InitializationApplySettingStage1()
