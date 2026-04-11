@@ -653,6 +653,26 @@ void luastg::binding::ResourceManager::Register(lua_State* L) noexcept
 			LRES.CacheTTFFontString(luaL_checkstring(L, 1), str, len);
 			return 0;
 		}
+
+		static int TransferResource(lua_State* L) noexcept
+		{
+			const char* src_pool_name = luaL_checkstring(L, 1);
+			ResourceType type = static_cast<ResourceType>(luaL_checkinteger(L, 2));
+			const char* res_name = luaL_checkstring(L, 3);
+			const char* dst_pool_name = luaL_checkstring(L, 4);
+
+			ResourcePool* src = LRES.GetPool(src_pool_name);
+			if (!src)
+				return luaL_error(L, "TransferResource: source pool '%s' not found", src_pool_name);
+			ResourcePool* dst = LRES.GetPool(dst_pool_name);
+			if (!dst)
+				return luaL_error(L, "TransferResource: destination pool '%s' not found", dst_pool_name);
+
+			if (!src->TransferResourceTo(type, res_name, dst))
+				return luaL_error(L, "TransferResource: failed to transfer '%s' from '%s' to '%s'", res_name, src_pool_name, dst_pool_name);
+
+			return 0;
+		}
 	};
 
 	luaL_Reg const lib[] = {
@@ -694,6 +714,7 @@ void luastg::binding::ResourceManager::Register(lua_State* L) noexcept
 		{ "SetFontState", &Wrapper::SetFontState },
 
 		{ "CacheTTFString", &Wrapper::CacheTTFString },
+		{ "TransferResource", &Wrapper::TransferResource },
 		{ NULL, NULL },
 	};
 

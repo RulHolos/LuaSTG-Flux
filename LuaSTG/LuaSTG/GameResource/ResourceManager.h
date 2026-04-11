@@ -132,6 +132,8 @@ namespace luastg
         bool LoadFX(const char* name, const char* path) noexcept;
         // 模型
         bool LoadModel(const char* name, const char* path) noexcept;
+
+        bool TransferResourceTo(ResourceType t, const char* name, ResourcePool* dest) noexcept;
         
         core::SmartReference<IResourceTexture> GetTexture(std::string_view name) noexcept;
         core::SmartReference<IResourceSprite> GetSprite(std::string_view name) noexcept;

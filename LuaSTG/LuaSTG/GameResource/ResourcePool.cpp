@@ -131,6 +131,72 @@ namespace luastg
     }
 
     template<typename T>
+    inline bool transferResource(ResourcePool::dictionary_t<T>& src, ResourcePool::dictionary_t<T>& dst, const char* name)
+    {
+        auto it = src.find(std::string_view(name));
+        if (it == src.end())
+            return false;
+        auto [dit, inserted] = dst.emplace(it->first, it->second);
+        if (!inserted)
+            return false;
+        src.erase(it);
+        return true;
+    }
+
+    bool ResourcePool::TransferResourceTo(ResourceType t, const char* name, ResourcePool* dest) noexcept
+    {
+        if (!dest || dest == this)
+            return false;
+        bool result = false;
+        switch (t)
+        {
+        case ResourceType::Texture:
+            result = transferResource(m_TexturePool, dest->m_TexturePool, name);
+            break;
+        case ResourceType::Sprite:
+            result = transferResource(m_SpritePool, dest->m_SpritePool, name);
+            break;
+        case ResourceType::Animation:
+            result = transferResource(m_AnimationPool, dest->m_AnimationPool, name);
+            break;
+        case ResourceType::Music:
+            result = transferResource(m_MusicPool, dest->m_MusicPool, name);
+            break;
+        case ResourceType::SoundEffect:
+            result = transferResource(m_SoundSpritePool, dest->m_SoundSpritePool, name);
+            break;
+        case ResourceType::Particle:
+            result = transferResource(m_ParticlePool, dest->m_ParticlePool, name);
+            break;
+        case ResourceType::SpriteFont:
+            result = transferResource(m_SpriteFontPool, dest->m_SpriteFontPool, name);
+            break;
+        case ResourceType::TrueTypeFont:
+            result = transferResource(m_TTFFontPool, dest->m_TTFFontPool, name);
+            break;
+        case ResourceType::FX:
+            result = transferResource(m_FXPool, dest->m_FXPool, name);
+            break;
+        case ResourceType::Model:
+            result = transferResource(m_ModelPool, dest->m_ModelPool, name);
+            break;
+        default:
+            spdlog::warn("[luastg] TransferResource: Unknown resource type ({})", (int)t);
+            return false;
+        }
+        if (result)
+        {
+            if (ResourceMgr::GetResourceLoadingLog())
+                spdlog::info("[luastg] TransferResource: '{}' transferred from '{}' to '{}'", name, GetName(), dest->GetName());
+        }
+        else
+        {
+            spdlog::warn("[luastg] TransferResource: Failed to transfer '{}' from '{}' to '{}' (not found or already exists in destination)", name, GetName(), dest->GetName());
+        }
+        return result;
+    }
+
+    template<typename T>
     inline void listResourceName(lua_State* L, T& resource_set)
     {
         lua::stack_t S(L);
