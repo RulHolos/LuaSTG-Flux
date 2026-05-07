@@ -1,4 +1,5 @@
 #include "Core/Graphics/SwapChain_D3D11.hpp"
+#include "Core/Graphics/Direct3D11/Texture2D.hpp"
 #include "Core/i18n.hpp"
 #include "core/Configuration.hpp"
 #include "Platform/WindowsVersion.hpp"
@@ -2202,6 +2203,26 @@ namespace core::Graphics
 			return false;
 		}
 
+		return true;
+	}
+
+	bool SwapChain_D3D11::saveSnapshotToTexture(ITexture2D** pp_texture)
+	{
+		*pp_texture = nullptr;
+
+		SmartReference<Direct3D11::Texture2D> texture;
+		texture.attach(new Direct3D11::Texture2D);
+		if (!texture->initialize(m_device.get(), m_canvas_size, false))
+		{
+			i18n_core_system_call_report_error("SwapChain_D3D11::saveSnapshotToTexture");
+			return false;
+		}
+
+		Microsoft::WRL::ComPtr<ID3D11Resource> canvas_resource;
+		m_canvas_d3d11_rtv->GetResource(&canvas_resource);
+		m_device->GetD3D11DeviceContext()->CopyResource(texture->GetResource(), canvas_resource.Get());
+
+		*pp_texture = texture.detach();
 		return true;
 	}
 

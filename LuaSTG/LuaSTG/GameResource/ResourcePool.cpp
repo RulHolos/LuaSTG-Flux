@@ -330,6 +330,29 @@ namespace luastg
         return true;
     }
 
+    bool ResourcePool::StoreTexture(const char* name, core::Graphics::ITexture2D* p_texture) noexcept
+    {
+        m_TexturePool.erase(dictionary_key_t(name));
+
+        try
+        {
+            core::SmartReference<IResourceTexture> tRes;
+            tRes.attach(new ResourceTextureImpl(name, p_texture));
+            m_TexturePool.emplace(name, tRes);
+        }
+        catch (std::exception const& e)
+        {
+            spdlog::error("[luastg] StoreTexture: Failed to store texture '{}' ({})", name, e.what());
+            return false;
+        }
+
+        if (ResourceMgr::GetResourceLoadingLog()) {
+            spdlog::info("[luastg] StoreTexture: Texture '{}' stored ({})", name, getResourcePoolTypeName());
+        }
+
+        return true;
+    }
+
     // 创建渲染目标
 
     bool ResourcePool::CreateRenderTarget(const char* name, int width, int height, bool depth_buffer) noexcept

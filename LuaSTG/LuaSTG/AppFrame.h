@@ -186,6 +186,7 @@ namespace luastg {
 		bool RenderTTF(const char* name, const char* str, float left, float right, float bottom, float top, float scale, int format, core::Color4B c)noexcept;
 
 		void SnapShot(const char* path)noexcept;
+		void SnapShotToTexture(const char* tex_name)noexcept;
 		void SaveTexture(const char* tex_name, const char* path)noexcept;
 
 		// ---------- 绘制常用形状 ----------

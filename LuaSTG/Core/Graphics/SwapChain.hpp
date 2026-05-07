@@ -47,6 +47,7 @@ namespace core::Graphics
 		virtual bool present() = 0;
 
 		virtual bool saveSnapshotToFile(StringView path) = 0;
+		virtual bool saveSnapshotToTexture(ITexture2D** pp_texture) = 0;
 
 		static bool create(IWindow* p_window, IDevice* p_device, ISwapChain** pp_swapchain);
 	};

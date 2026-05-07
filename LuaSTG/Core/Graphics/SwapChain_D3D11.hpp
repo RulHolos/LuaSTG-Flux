@@ -154,6 +154,7 @@ namespace core::Graphics
 		bool present();
 
 		bool saveSnapshotToFile(StringView path);
+		bool saveSnapshotToTexture(ITexture2D** pp_texture);
 
 	public:
 		SwapChain_D3D11(Window_Win32* p_window, Direct3D11::Device* p_device);

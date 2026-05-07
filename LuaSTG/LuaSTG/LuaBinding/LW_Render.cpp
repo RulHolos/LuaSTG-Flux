@@ -50,6 +50,12 @@ void luastg::binding::Render::Register(lua_State* L) noexcept
             LAPP.SnapShot(path);
             return 0;
         }
+        static int SnapshotToTexture(lua_State* L) noexcept
+        {
+            const char* tex_name = luaL_checkstring(L, 1);
+            LAPP.SnapShotToTexture(tex_name);
+            return 0;
+        }
         static int SaveTexture(lua_State* L) noexcept
         {
             const char* tex_name = luaL_checkstring(L, 1);
@@ -85,6 +91,7 @@ void luastg::binding::Render::Register(lua_State* L) noexcept
         { "RenderTTF", &Wrapper::RenderTTF },
         //EX
         { "Snapshot", &Wrapper::Snapshot },
+        { "SnapshotToTexture", &Wrapper::SnapshotToTexture },
         { "SaveTexture", &Wrapper::SaveTexture },
         // END
         { NULL, NULL },
