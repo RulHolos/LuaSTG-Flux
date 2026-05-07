@@ -28,6 +28,7 @@ local _UpdateListFirst = lstg._UpdateListFirst
 local _UpdateListNext = lstg._UpdateListNext
 local _DetectListFirst = lstg._DetectListFirst
 local _DetectListNext = lstg._DetectListNext
+local _CollectGroup = lstg._CollectGroup
 local objects = lstg.ObjTable()
 ---@param group [0, 16]
 ---@param checking_world integer? optional world flag to check.
@@ -55,6 +56,13 @@ function lstg.ObjList(group, checking_world)
             end
         end
     end
+end
+---@param group integer
+---@param checking_world integer?
+---@param dest table pre-allocated table to fill
+---@return integer count number of objects written to `dest`
+function lstg.Collect_Group(group, checking_world, dest)
+    return _CollectGroup(group, checking_world, dest)
 end
 local _sin = lstg.sin
 local _cos = lstg.cos
@@ -115,27 +123,27 @@ function lstg.Render3D(img, x, y, z, rotationx, rotationy, rotationz, scalex, sc
     vy1 = -hh * crx
     vz1 = -hh * srx
     vx2 = -hw * cry + vz1 * sry
-    vz2 =  hw * sry + vz1 * cry
+    vz2 = hw * sry + vz1 * cry
     local x1 = vx2 * crz - vy1 * srz + x
     local y1 = vx2 * srz + vy1 * crz + y
     local z1 = vz2 + z
 
-    vx2 =  hw * cry + vz1 * sry
+    vx2 = hw * cry + vz1 * sry
     vz2 = -hw * sry + vz1 * cry
     local x2 = vx2 * crz - vy1 * srz + x
     local y2 = vx2 * srz + vy1 * crz + y
     local z2 = vz2 + z
 
-    vy1 =  hh * crx
-    vz1 =  hh * srx
-    vx2 =  hw * cry + vz1 * sry
+    vy1 = hh * crx
+    vz1 = hh * srx
+    vx2 = hw * cry + vz1 * sry
     vz2 = -hw * sry + vz1 * cry
     local x3 = vx2 * crz - vy1 * srz + x
     local y3 = vx2 * srz + vy1 * crz + y
     local z3 = vz2 + z
 
     vx2 = -hw * cry + vz1 * sry
-    vz2 =  hw * sry + vz1 * cry
+    vz2 = hw * sry + vz1 * cry
     local x4 = vx2 * crz - vy1 * srz + x
     local y4 = vx2 * srz + vy1 * crz + y
     local z4 = vz2 + z

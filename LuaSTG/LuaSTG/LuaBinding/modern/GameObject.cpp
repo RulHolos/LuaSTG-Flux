@@ -980,6 +980,54 @@ namespace luastg::binding {
 			}
 			return luaL_error(vm, "invalid parameters");
 		}
+
+		static int collectActiveObjects(lua_State* const vm) {
+			auto const group_raw = luaL_checkinteger(vm, 1);
+			luaL_checktype(vm, 3, LUA_TTABLE);
+
+			auto const old_len = static_cast<int>(lua_objlen(vm, 3));
+
+			lua_pushlightuserdata(vm, &game_object_tables_key);
+			lua_gettable(vm, LUA_REGISTRYINDEX);
+
+			#ifdef USING_MULTI_GAME_WORLD
+				bool const has_world = !lua_isnoneornil(vm, 2);
+				uint64_t const world_to_check = has_world ? static_cast<uint64_t>(luaL_checkinteger(vm, 2)) : 0;
+			#endif
+
+			int count = 0;
+
+			if (group_raw < 0 || group_raw >= 16) {
+				for (auto p = LPOOL.getUpdateListFirst(); p != nullptr; p = p->update_list_next) {
+					if (p->status != GameObjectStatus::Active) continue;
+					#ifdef USING_MULTI_GAME_WORLD
+						if (has_world && p->world != world_to_check) continue;
+					#endif
+					lua_rawgeti(vm, 4, static_cast<int>(p->id + 1));
+					lua_rawseti(vm, 3, ++count);
+				}
+			} else {
+				auto const group = static_cast<size_t>(group_raw);
+				for (auto p = LPOOL.getDetectListFirst(group); p != nullptr; p = p->detect_list_next) {
+					if (p->status != GameObjectStatus::Active) continue;
+					#ifdef USING_MULTI_GAME_WORLD
+						if (has_world && p->world != world_to_check) continue;
+					#endif
+					lua_rawgeti(vm, 4, static_cast<int>(p->id + 1));
+					lua_rawseti(vm, 3, ++count);
+				}
+			}
+
+			for (int i = count + 1; i <= old_len; ++i) {
+				lua_pushnil(vm);
+				lua_rawseti(vm, 3, i);
+			}
+
+			lua_pop(vm, 1);
+			lua_pushinteger(vm, count);
+			return 1;
+		}
+
 		static int getUpdateListFirst(lua_State* const vm) {
 			auto object = LPOOL.getUpdateListFirst();
 
@@ -1149,6 +1197,7 @@ namespace luastg::binding {
 		ctx.set_map_value(lstg_table, "_UpdateListNext"sv, &GameObjectBinding::getUpdateListNext);
 		ctx.set_map_value(lstg_table, "_DetectListFirst"sv, &GameObjectBinding::getDetectListFirst);
 		ctx.set_map_value(lstg_table, "_DetectListNext"sv, &GameObjectBinding::getDetectListNext);
+		ctx.set_map_value(lstg_table, "_CollectGroup"sv, &GameObjectBinding::collectActiveObjects);
 		ctx.set_map_value(lstg_table, "IsValid"sv, &GameObjectBinding::isValid);
 		ctx.set_map_value(lstg_table, "ObjTable"sv, &pushGameObjectTable);
 
