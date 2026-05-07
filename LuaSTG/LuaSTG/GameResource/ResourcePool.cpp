@@ -8,6 +8,7 @@
 #include "GameResource/Implement/ResourceFontImpl.hpp"
 #include "GameResource/Implement/ResourcePostEffectShaderImpl.hpp"
 #include "GameResource/Implement/ResourceModelImpl.hpp"
+#include "GameResource/Implement/ResourceVideoImpl.hpp"
 #include "core/FileSystem.hpp"
 #include "AppFrame.h"
 #include "lua/plus.hpp"
@@ -28,6 +29,7 @@ namespace luastg
         m_TTFFontPool.clear();
         m_FXPool.clear();
         m_ModelPool.clear();
+        m_VideoPool.clear();
         spdlog::info("[luastg] Resource pool '{}' cleared", getResourcePoolTypeName());
     }
 
@@ -93,6 +95,9 @@ namespace luastg
         case ResourceType::Model:
             removeResource(m_ModelPool, name);
             break;
+        case ResourceType::Video:
+            removeResource(m_VideoPool, name);
+            break;
         default:
             spdlog::warn("[luastg] RemoveResource: Attempted to remove non-existing resource ({})", (int)t);
             return;
@@ -123,6 +128,8 @@ namespace luastg
             return m_FXPool.find(name) != m_FXPool.end();
         case ResourceType::Model:
             return m_ModelPool.find(name) != m_ModelPool.end();
+        case ResourceType::Video:
+            return m_VideoPool.find(name) != m_VideoPool.end();
         default:
             spdlog::warn("[luastg] CheckRes: Attempted to index non-existing resource type ({})", (int)t);
             break;
@@ -179,6 +186,9 @@ namespace luastg
             break;
         case ResourceType::Model:
             result = transferResource(m_ModelPool, dest->m_ModelPool, name);
+            break;
+        case ResourceType::Video:
+            result = transferResource(m_VideoPool, dest->m_VideoPool, name);
             break;
         default:
             spdlog::warn("[luastg] TransferResource: Unknown resource type ({})", (int)t);
@@ -244,6 +254,9 @@ namespace luastg
             break;
         case ResourceType::Model:
             listResourceName(L, m_ModelPool);
+            break;
+        case ResourceType::Video:
+            listResourceName(L, m_VideoPool);
             break;
         default:
             spdlog::warn("[luastg] EnumRes: Attempted to enumerate through non-existing resource type ({})", (int)t);
@@ -978,6 +991,41 @@ namespace luastg
         return true;
     }
 
+    bool ResourcePool::LoadVideo(const char* name, const char* path) noexcept
+    {
+        if (m_VideoPool.find(std::string_view(name)) != m_VideoPool.end())
+        {
+            if (ResourceMgr::GetResourceLoadingLog())
+            {
+                spdlog::warn("[luastg] LoadVideo: Video '{}' already exists. Skipping loading", name);
+            }
+            return true;
+        }
+
+        try
+        {
+            core::SmartReference<IResourceVideo> tRes;
+            if (!ResourceVideoImpl::CreateFromFile(name, path, tRes))
+            {
+                return false;
+            }
+            m_VideoPool.emplace(name, tRes);
+        }
+        catch (std::exception const& e)
+        {
+            spdlog::error("[luastg] LoadVideo: Failed to load video '{}' ({})", name, e.what());
+            return false;
+        }
+
+        if (ResourceMgr::GetResourceLoadingLog())
+        {
+            spdlog::info("[luastg] LoadVideo: Loaded video '{}' from '{}' ({})",
+                name, path, getResourcePoolTypeName());
+        }
+
+        return true;
+    }
+
     // 查找并获取
 
     template<typename T>
@@ -1040,6 +1088,11 @@ namespace luastg
         return findResource(m_ModelPool, name);
 	}
 
+    core::SmartReference<IResourceVideo> ResourcePool::GetVideo(std::string_view name) noexcept
+	{
+        return findResource(m_VideoPool, name);
+	}
+
     ResourcePool::ResourcePool(ResourceMgr* mgr, ResourcePoolType t, std::string_view name)
         : m_pMgr(mgr)
         , m_iType(t)
@@ -1058,6 +1111,7 @@ namespace luastg
         , m_TTFFontPool(&m_memory_resource)
         , m_FXPool(&m_memory_resource)
         , m_ModelPool(&m_memory_resource)
+        , m_VideoPool(&m_memory_resource)
     {
 
     }

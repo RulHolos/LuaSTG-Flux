@@ -433,6 +433,7 @@ bool AppFrame::onUpdate()
 		if (tAbort)
 			m_pAppModel->requestExit();
 		m_ResourceMgr.UpdateSound();
+		m_ResourceMgr.UpdateVideo();
 	}
 
 	DiscordRPCManager::GetInstance().RunCallbacks();

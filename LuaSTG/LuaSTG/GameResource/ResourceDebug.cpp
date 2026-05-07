@@ -471,6 +471,40 @@ namespace luastg
 						ImGui::EndTabItem();
 					}
 
+					if (ImGui::BeginTabItem("Video"))
+					{
+						ImGui::Text("Total Resources: %u", p_pool->m_VideoPool.size());
+
+						static ImGuiTextFilter filter;
+						filter.Draw();
+
+						int res_i = 0;
+						for (auto& v : p_pool->m_VideoPool)
+						{
+							if (filter.PassFilter(v.second->GetResName().data()))
+							{
+								if (ImGui::TreeNode(*v.second,
+									"%d. %s",
+									res_i,
+									v.second->GetResName().data()
+								))
+								{
+									auto size = v.second->GetVideoSize();
+									ImGui::Text("Size: %ux%u", size.x, size.y);
+									ImGui::Text("Duration: %.1fs", v.second->GetTotalTime());
+									ImGui::Text("Position: %.1fs", v.second->GetTime());
+									ImGui::Text("State: %s",
+										v.second->IsPlaying() ? "Playing" :
+										v.second->IsPaused() ? "Paused" : "Stopped");
+									ImGui::TreePop();
+								}
+								res_i += 1;
+							}
+						}
+
+						ImGui::EndTabItem();
+					}
+
 					ImGui::EndTabBar();
 				}
 			}

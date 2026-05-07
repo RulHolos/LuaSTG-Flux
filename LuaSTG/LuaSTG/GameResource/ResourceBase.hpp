@@ -15,6 +15,7 @@ namespace luastg {
 		TrueTypeFont,
 		FX,
 		Model,
+		Video,
 	};
 
 	// 混合模式

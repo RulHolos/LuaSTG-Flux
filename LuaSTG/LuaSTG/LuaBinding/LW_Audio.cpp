@@ -1,6 +1,7 @@
 #include "LuaBinding/LuaWrapper.hpp"
 #include "lua/plus.hpp"
 #include "AppFrame.h"
+#include "GameResource/ResourceVideo.hpp"
 
 // 微软我日你仙人
 #ifdef PlaySound
@@ -385,6 +386,136 @@ void luastg::binding::Audio::Register(lua_State* L)noexcept
 			p->SetLoop(loop);
 			return 0;
 		}
+
+		// Video playback control
+
+		static int PlayVideo(lua_State* L) noexcept
+		{
+			const char* s = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceVideo> p = LRES.FindVideo(s);
+			if (!p)
+				return luaL_error(L, "video '%s' not found.", s);
+			if (!p->Play())
+				return luaL_error(L, "failed to play video '%s'.", s);
+			return 0;
+		}
+		static int StopVideo(lua_State* L) noexcept
+		{
+			const char* s = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceVideo> p = LRES.FindVideo(s);
+			if (!p)
+				return luaL_error(L, "video '%s' not found.", s);
+			p->Stop();
+			return 0;
+		}
+		static int PauseVideo(lua_State* L) noexcept
+		{
+			const char* s = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceVideo> p = LRES.FindVideo(s);
+			if (!p)
+				return luaL_error(L, "video '%s' not found.", s);
+			p->Pause();
+			return 0;
+		}
+		static int ResumeVideo(lua_State* L) noexcept
+		{
+			const char* s = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceVideo> p = LRES.FindVideo(s);
+			if (!p)
+				return luaL_error(L, "video '%s' not found.", s);
+			p->Resume();
+			return 0;
+		}
+		static int GetVideoState(lua_State* L) noexcept
+		{
+			const char* s = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceVideo> p = LRES.FindVideo(s);
+			if (!p)
+				return luaL_error(L, "video '%s' not found.", s);
+			if (p->IsPlaying())
+				lua_pushstring(L, "playing");
+			else if (p->IsPaused())
+				lua_pushstring(L, "paused");
+			else
+				lua_pushstring(L, "stopped");
+			return 1;
+		}
+		static int SeekVideo(lua_State* L) noexcept
+		{
+			const char* s = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceVideo> p = LRES.FindVideo(s);
+			if (!p)
+				return luaL_error(L, "video '%s' not found.", s);
+			double pos = luaL_checknumber(L, 2);
+			if (!p->Seek(pos))
+				return luaL_error(L, "failed to seek video '%s'.", s);
+			return 0;
+		}
+		static int UpdateVideo(lua_State* L) noexcept
+		{
+			const char* s = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceVideo> p = LRES.FindVideo(s);
+			if (!p)
+				return luaL_error(L, "video '%s' not found.", s);
+			p->Update();
+			return 0;
+		}
+		static int SetVideoVolume(lua_State* L) noexcept
+		{
+			const char* s = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceVideo> p = LRES.FindVideo(s);
+			if (!p)
+				return luaL_error(L, "video '%s' not found.", s);
+			p->SetVolume((float)luaL_checknumber(L, 2));
+			return 0;
+		}
+		static int GetVideoVolume(lua_State* L) noexcept
+		{
+			const char* s = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceVideo> p = LRES.FindVideo(s);
+			if (!p)
+				return luaL_error(L, "video '%s' not found.", s);
+			lua_pushnumber(L, p->GetVolume());
+			return 1;
+		}
+		static int SetVideoLoop(lua_State* L) noexcept
+		{
+			const char* s = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceVideo> p = LRES.FindVideo(s);
+			if (!p)
+				return luaL_error(L, "video '%s' not found.", s);
+			p->SetLooping(lua_toboolean(L, 2) != 0);
+			return 0;
+		}
+		static int GetVideoTime(lua_State* L) noexcept
+		{
+			const char* s = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceVideo> p = LRES.FindVideo(s);
+			if (!p)
+				return luaL_error(L, "video '%s' not found.", s);
+			lua_pushnumber(L, p->GetTime());
+			return 1;
+		}
+		static int GetVideoTotalTime(lua_State* L) noexcept
+		{
+			const char* s = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceVideo> p = LRES.FindVideo(s);
+			if (!p)
+				return luaL_error(L, "video '%s' not found.", s);
+			lua_pushnumber(L, p->GetTotalTime());
+			return 1;
+		}
+		static int GetVideoSize(lua_State* L) noexcept
+		{
+			const char* s = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceVideo> p = LRES.FindVideo(s);
+			if (!p)
+				return luaL_error(L, "video '%s' not found.", s);
+			core::Vector2U size = p->GetVideoSize();
+			lua_pushinteger(L, (lua_Integer)size.x);
+			lua_pushinteger(L, (lua_Integer)size.y);
+			return 2;
+		}
 	};
 
 	luaL_Reg const lib[] = {
@@ -415,6 +546,20 @@ void luastg::binding::Audio::Register(lua_State* L)noexcept
 		{ "SetBGMSpeed", &Wrapper::SetBGMSpeed },
 		{ "GetBGMSpeed", &Wrapper::GetBGMSpeed },
 		{ "SetBGMLoop", &Wrapper::SetBGMLoop },
+
+		{ "PlayVideo", &Wrapper::PlayVideo },
+		{ "StopVideo", &Wrapper::StopVideo },
+		{ "PauseVideo", &Wrapper::PauseVideo },
+		{ "ResumeVideo", &Wrapper::ResumeVideo },
+		{ "GetVideoState", &Wrapper::GetVideoState },
+		{ "SeekVideo", &Wrapper::SeekVideo },
+		{ "UpdateVideo", &Wrapper::UpdateVideo },
+		{ "SetVideoVolume", &Wrapper::SetVideoVolume },
+		{ "GetVideoVolume", &Wrapper::GetVideoVolume },
+		{ "SetVideoLoop", &Wrapper::SetVideoLoop },
+		{ "GetVideoTime", &Wrapper::GetVideoTime },
+		{ "GetVideoTotalTime", &Wrapper::GetVideoTotalTime },
+		{ "GetVideoSize", &Wrapper::GetVideoSize },
 		{ NULL, NULL },
 	};
 

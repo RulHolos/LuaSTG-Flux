@@ -55,6 +55,7 @@ set(LUASTG_ENGINE_SOURCES
     LuaSTG/GameResource/ResourcePostEffectShader.hpp
     LuaSTG/GameResource/ResourceModel.hpp
     LuaSTG/GameResource/ResourceModel.cpp
+    LuaSTG/GameResource/ResourceVideo.hpp
 
     LuaSTG/GameResource/ResourceDebug.cpp
     LuaSTG/GameResource/ResourceManager.cpp
@@ -82,6 +83,8 @@ set(LUASTG_ENGINE_SOURCES
     LuaSTG/GameResource/Implement/ResourcePostEffectShaderImpl.cpp
     LuaSTG/GameResource/Implement/ResourceModelImpl.hpp
     LuaSTG/GameResource/Implement/ResourceModelImpl.cpp
+    LuaSTG/GameResource/Implement/ResourceVideoImpl.hpp
+    LuaSTG/GameResource/Implement/ResourceVideoImpl.cpp
 
     LuaSTG/LuaBinding/LuaAppFrame.hpp
     LuaSTG/LuaBinding/LuaCustomLoader.cpp
@@ -237,6 +240,9 @@ target_link_libraries(LuaSTG PRIVATE
     LuaSTG.InternalLuaScriptsFileSystem
     lua_sqlite3
     discord-rpc
+    mfplat
+    mfreadwrite
+    mfuuid
 )
 if (LUASTG_LINK_YY_THUNKS)
     target_link_libraries(LuaSTG PRIVATE YY_Thunks)

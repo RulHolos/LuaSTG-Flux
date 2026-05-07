@@ -8,6 +8,7 @@
 #include "GameResource/ResourceFont.hpp"
 #include "GameResource/ResourcePostEffectShader.hpp"
 #include "GameResource/ResourceModel.hpp"
+#include "GameResource/ResourceVideo.hpp"
 #include "lua.hpp"
 #include "xxhash.h"
 
@@ -87,6 +88,7 @@ namespace luastg
         dictionary_t<core::SmartReference<IResourceFont>> m_TTFFontPool;
         dictionary_t<core::SmartReference<IResourcePostEffectShader>> m_FXPool;
         dictionary_t<core::SmartReference<IResourceModel>> m_ModelPool;
+        dictionary_t<core::SmartReference<IResourceVideo>> m_VideoPool;
     private:
         const char* getResourcePoolTypeName();
     public:
@@ -133,6 +135,8 @@ namespace luastg
         bool LoadFX(const char* name, const char* path) noexcept;
         // 模型
         bool LoadModel(const char* name, const char* path) noexcept;
+        // Chinese words but for video
+        bool LoadVideo(const char* name, const char* path) noexcept;
 
         bool TransferResourceTo(ResourceType t, const char* name, ResourcePool* dest) noexcept;
         
@@ -146,6 +150,7 @@ namespace luastg
         core::SmartReference<IResourceFont> GetTTFFont(std::string_view name) noexcept;
         core::SmartReference<IResourcePostEffectShader> GetFX(std::string_view name) noexcept;
         core::SmartReference<IResourceModel> GetModel(std::string_view name) noexcept;
+        core::SmartReference<IResourceVideo> GetVideo(std::string_view name) noexcept;
     public:
         ResourcePool(ResourceMgr* mgr, ResourcePoolType t, std::string_view name = {});
         ResourcePool& operator=(const ResourcePool&) = delete;
@@ -189,10 +194,12 @@ namespace luastg
         core::SmartReference<IResourceFont> FindTTFFont(const char* name) noexcept;
         core::SmartReference<IResourcePostEffectShader> FindFX(const char* name) noexcept;
         core::SmartReference<IResourceModel> FindModel(const char* name) noexcept;
+        core::SmartReference<IResourceVideo> FindVideo(const char* name) noexcept;
         
         bool GetTextureSize(const char* name, core::Vector2U& out) noexcept;
         void CacheTTFFontString(const char* name, const char* text, size_t len) noexcept;
         void UpdateSound();
+        void UpdateVideo();
     private:
         static bool g_ResourceLoadingLog;
         float m_GlobalImageScaleFactor = 1.0f;

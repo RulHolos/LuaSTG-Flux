@@ -3,6 +3,7 @@
 #include "LuaBinding/PostEffectShader.hpp"
 #include "AppFrame.h"
 #include "GameResource/LegacyBlendStateHelper.hpp"
+#include "GameResource/ResourceVideo.hpp"
 
 namespace luastg {
 	inline core::Graphics::IRenderer* LR2D() { return LAPP.GetAppModel()->getRenderer(); }
@@ -564,6 +565,51 @@ namespace luastg {
 		return 0;
 	}
 
+	static int lib_drawVideo(lua_State* L) {
+		validate_render_scope();
+		const char* name = luaL_checkstring(L, 1);
+		core::SmartReference<IResourceVideo> p = LRESMGR().FindVideo(name);
+		if (!p) {
+			return luaL_error(L, "can't find video '%s'", name);
+		}
+		float const hscale = (float)luaL_optnumber(L, 4, 1.0);
+		p->Render(
+			(float)luaL_checknumber(L, 2), (float)luaL_checknumber(L, 3),
+			(float)(luaL_optnumber(L, 5, 0.0) * L_DEG_TO_RAD),
+			hscale, (float)luaL_optnumber(L, 6, hscale),
+			(float)luaL_optnumber(L, 7, 0.5));
+		return 0;
+	}
+
+	static int lib_drawVideoRect(lua_State* L) {
+		validate_render_scope();
+		const char* name = luaL_checkstring(L, 1);
+		core::SmartReference<IResourceVideo> p = LRESMGR().FindVideo(name);
+		if (!p) {
+			return luaL_error(L, "can't find video '%s'", name);
+		}
+		p->RenderRect(
+			(float)luaL_checknumber(L, 2), (float)luaL_checknumber(L, 3),
+			(float)luaL_checknumber(L, 4), (float)luaL_checknumber(L, 5),
+			(float)luaL_optnumber(L, 6, 0.5));
+		return 0;
+	}
+
+	static int lib_drawVideo4V(lua_State* L) {
+		validate_render_scope();
+		const char* name = luaL_checkstring(L, 1);
+		core::SmartReference<IResourceVideo> p = LRESMGR().FindVideo(name);
+		if (!p) {
+			return luaL_error(L, "can't find video '%s'", name);
+		}
+		p->Render4V(
+			(float)luaL_checknumber(L, 2), (float)luaL_checknumber(L, 3), (float)luaL_checknumber(L, 4),
+			(float)luaL_checknumber(L, 5), (float)luaL_checknumber(L, 6), (float)luaL_checknumber(L, 7),
+			(float)luaL_checknumber(L, 8), (float)luaL_checknumber(L, 9), (float)luaL_checknumber(L, 10),
+			(float)luaL_checknumber(L, 11), (float)luaL_checknumber(L, 12), (float)luaL_checknumber(L, 13));
+		return 0;
+	}
+
 #define MKFUNC(X) {#X, &lib_##X}
 
 	static luaL_Reg const lib_func[] = {
@@ -595,6 +641,10 @@ namespace luastg {
 		MKFUNC(drawSpriteSequence),
 
 		MKFUNC(drawTexture),
+
+		MKFUNC(drawVideo),
+		MKFUNC(drawVideoRect),
+		MKFUNC(drawVideo4V),
 
 		{ NULL, NULL },
 	};
@@ -835,6 +885,9 @@ namespace luastg {
 		{ "RenderAnimation", &lib_drawSpriteSequence },
 		{ "RenderTexture", &lib_drawTexture },
 		{ "RenderModel", &lib_drawModel },
+		{ "RenderVideo", &lib_drawVideo },
+		{ "RenderVideoRect", &lib_drawVideoRect },
+		{ "RenderVideo4V", &lib_drawVideo4V },
 		{ "SetFog", &compat_SetFog },
 		{ "SetZBufferEnable", &compat_SetZBufferEnable },
 		{ "ClearZBuffer", &compat_ClearZBuffer },

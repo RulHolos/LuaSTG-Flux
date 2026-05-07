@@ -355,6 +355,18 @@ void luastg::binding::ResourceManager::Register(lua_State* L) noexcept
 			}
 			return 0;
 		}
+		static int LoadVideo(lua_State* L) noexcept
+		{
+			const char* name = luaL_checkstring(L, 1);
+			const char* video_path = luaL_checkstring(L, 2);
+
+			ResourcePool* pActivedPool = LRES.GetActivedPool();
+			if (!pActivedPool)
+				return luaL_error(L, "can't load resource at this time.");
+			if (!pActivedPool->LoadVideo(name, video_path))
+				return luaL_error(L, "load video failed (name='%s', path='%s').", name, video_path);
+			return 0;
+		}
 		static int CreateRenderTarget(lua_State* L) noexcept
 		{
 			const char* name = luaL_checkstring(L, 1);
@@ -692,6 +704,7 @@ void luastg::binding::ResourceManager::Register(lua_State* L) noexcept
 		{ "LoadTrueTypeFont", &Wrapper::LoadTrueTypeFont },
 		{ "LoadFX", &Wrapper::LoadFX },
 		{ "LoadModel", &Wrapper::LoadModel },
+		{ "LoadVideo", &Wrapper::LoadVideo },
 		{ "CreateRenderTarget", &Wrapper::CreateRenderTarget },
 		{ "IsRenderTarget", &Wrapper::IsRenderTarget },
 		{ "SetTexturePreMulAlphaState", &Wrapper::SetTexturePreMulAlphaState },

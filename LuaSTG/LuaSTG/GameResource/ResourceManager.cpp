@@ -401,6 +401,31 @@ namespace luastg
 		return tRet;
 	}
 
+	core::SmartReference<IResourceVideo> ResourceMgr::FindVideo(const char* name) noexcept
+	{
+		core::SmartReference<IResourceVideo> tRet;
+		if (m_pActiveCustomPool)
+		{
+			if ((tRet = m_pActiveCustomPool->GetVideo(name)))
+				return tRet;
+		}
+
+		if ((tRet = m_StageResourcePool.GetVideo(name)))
+            return tRet;
+        if ((tRet = m_GlobalResourcePool.GetVideo(name)))
+            return tRet;
+		
+		for (auto const& kv : m_CustomPools)
+		{
+			auto p = kv.second.get();
+			if (p == m_pActiveCustomPool)
+				continue;
+			if ((tRet = p->GetVideo(name)))
+				return tRet;
+		}
+		return tRet;
+	}
+
 	// 其他资源操作
 
 	bool ResourceMgr::GetTextureSize(const char* name, core::Vector2U& out) noexcept {
@@ -428,6 +453,23 @@ namespace luastg
 		for (auto& snd : m_StageResourcePool.m_SoundSpritePool)
 		{
 			snd.second->FlushCommand();
+		}
+	}
+
+	void ResourceMgr::UpdateVideo()
+	{
+		auto update_pool = [](ResourcePool& pool) {
+			for (auto& v : pool.m_VideoPool)
+			{
+				v.second->Update();
+			}
+		};
+		update_pool(m_GlobalResourcePool);
+		update_pool(m_StageResourcePool);
+		std::lock_guard lock(m_CustomPoolsMutex);
+		for (auto& kv : m_CustomPools)
+		{
+			update_pool(*kv.second);
 		}
 	}
 
