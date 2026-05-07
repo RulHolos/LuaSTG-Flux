@@ -138,6 +138,8 @@ namespace luastg
         // Chinese words but for video
         bool LoadVideo(const char* name, const char* path) noexcept;
 
+        void UpdateSpritesOnRenderTargetResize(core::Graphics::ITexture2D* texture, core::Vector2U old_size, core::Vector2U new_size) noexcept;
+
         bool TransferResourceTo(ResourceType t, const char* name, ResourcePool* dest) noexcept;
         
         core::SmartReference<IResourceTexture> GetTexture(std::string_view name) noexcept;

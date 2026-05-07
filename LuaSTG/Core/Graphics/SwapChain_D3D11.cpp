@@ -1917,7 +1917,16 @@ namespace core::Graphics
 
 		if (!updateLetterBoxingRendererTransform()) return false;
 
-		// TODO: 对于现代交换链模型，由于使用了 DirectComposition，还需要重新设置一次 Content
+		// WTF Kuanlan?
+		// Update DirectComposition once to avoid wrong compositor reference
+		if (dcomp_visual_swap_chain && dcomp_desktop_device)
+		{
+			HRNew;
+			HRGet = dcomp_visual_swap_chain->SetContent(dxgi_swapchain.Get());
+			HRCheckCallReturnBool("IDCompositionVisual2::SetContent");
+			if (!commitDirectComposition())
+				return false;
+		}
 
 		return true;
 	}

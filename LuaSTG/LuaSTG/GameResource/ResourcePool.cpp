@@ -1093,6 +1093,30 @@ namespace luastg
         return findResource(m_VideoPool, name);
 	}
 
+    void ResourcePool::UpdateSpritesOnRenderTargetResize(core::Graphics::ITexture2D* texture, core::Vector2U old_size, core::Vector2U new_size) noexcept
+    {
+        if (!texture || (old_size.x == 0 || old_size.y == 0))
+            return;
+        float const sx = static_cast<float>(new_size.x) / static_cast<float>(old_size.x);
+        float const sy = static_cast<float>(new_size.y) / static_cast<float>(old_size.y);
+        for (auto& [key, sprite_res] : m_SpritePool)
+        {
+            auto* sprite = sprite_res->GetSprite();
+            if (sprite->getTexture() != texture)
+                continue;
+            auto rect = sprite->getTextureRect();
+            auto center = sprite->getTextureCenter();
+            rect.a.x *= sx;
+            rect.a.y *= sy;
+            rect.b.x *= sx;
+            rect.b.y *= sy;
+            center.x *= sx;
+            center.y *= sy;
+            sprite->setTextureRect(rect);
+            sprite->setTextureCenter(center);
+        }
+    }
+
     ResourcePool::ResourcePool(ResourceMgr* mgr, ResourcePoolType t, std::string_view name)
         : m_pMgr(mgr)
         , m_iType(t)

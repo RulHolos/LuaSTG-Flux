@@ -122,9 +122,15 @@ namespace luastg
         int failed_count = 0;
         for (auto* rt : m_AutoSizeRenderTarget)
         {
+            auto* texture = rt->GetTexture();
+            auto const old_size = texture ? texture->getSize() : core::Vector2U();
             if (!rt->ResizeRenderTarget(size))
             {
                 failed_count += 1;
+            }
+            else if (texture && (old_size.x != size.x || old_size.y != size.y))
+            {
+                m_ResourceMgr.UpdateSpritesOnRenderTargetResize(texture, old_size, size);
             }
         }
         return failed_count == 0;

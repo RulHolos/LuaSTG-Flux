@@ -165,6 +165,17 @@ namespace luastg
 
 	// 自动查找资源池资源
 
+	void ResourceMgr::UpdateSpritesOnRenderTargetResize(core::Graphics::ITexture2D* texture, core::Vector2U old_size, core::Vector2U new_size) noexcept
+	{
+		m_GlobalResourcePool.UpdateSpritesOnRenderTargetResize(texture, old_size, new_size);
+		m_StageResourcePool.UpdateSpritesOnRenderTargetResize(texture, old_size, new_size);
+		std::lock_guard<std::mutex> lk(m_CustomPoolsMutex);
+		for (auto& [name, pool] : m_CustomPools)
+		{
+			pool->UpdateSpritesOnRenderTargetResize(texture, old_size, new_size);
+		}
+	}
+
 	// help.
 	core::SmartReference<IResourceTexture> ResourceMgr::FindTexture(const char* name) noexcept {
 		core::SmartReference<IResourceTexture> tRet;
