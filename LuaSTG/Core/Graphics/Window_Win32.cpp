@@ -44,8 +44,9 @@ namespace {
 
 	void setAllowWindowCorner(HWND const window, bool const allow) {
 		DWM_WINDOW_CORNER_PREFERENCE const attr = allow ? DWMWCP_DEFAULT : DWMWCP_DONOTROUND;
-		HRESULT const hr = gHR = dwmapi_loader.SetWindowAttribute(window, DWMWA_WINDOW_CORNER_PREFERENCE, &attr, sizeof(attr));
-		if (FAILED(hr)) {
+		HRESULT const hr = dwmapi_loader.SetWindowAttribute(window, DWMWA_WINDOW_CORNER_PREFERENCE, &attr, sizeof(attr));
+		if (FAILED(hr) && hr != E_INVALIDARG) { // Unsupported attribute on Windows 10, not an error
+			gHR = hr;
 			std::string msg;
 			msg.reserve(64);
 			msg.append("DwmSetWindowAttribute -> ");

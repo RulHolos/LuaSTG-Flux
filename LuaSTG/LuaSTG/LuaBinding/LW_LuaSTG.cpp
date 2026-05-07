@@ -136,7 +136,7 @@ void luastg::binding::BuiltInFunction::Register(lua_State* L)noexcept
 			}
 			else if (window_mode == "borderless")
 			{
-				bool const result = LAPP.SetDisplayModeBorderlessFullscreen(vsync);
+				bool const result = LAPP.SetDisplayModeBorderlessFullscreen(size, vsync);
 				lua_pushboolean(L, result);
 			}
 			else if (window_mode == "fullscreen")

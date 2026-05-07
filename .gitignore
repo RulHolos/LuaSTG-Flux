@@ -17,3 +17,5 @@ packages/*
 LuaSTG/backup/*
 LuaSTG/custom/*
 DirectX/DirectXSDK/backup/*
+
+data/thlib-ryannlib/

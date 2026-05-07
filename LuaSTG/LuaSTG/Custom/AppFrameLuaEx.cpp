@@ -33,7 +33,7 @@ namespace luastg
         }
         if (!is_launch_loaded)
         {
-            spdlog::error("[luastg] Launch file not found", file_name);
+            spdlog::warn("[luastg] Launch file not found", file_name);
         }
 #endif
 

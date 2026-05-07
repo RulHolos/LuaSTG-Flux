@@ -11,8 +11,9 @@ namespace luastg
 
 		swapchain->setVSync(vsync);
 		window->setWindowMode(window_size);
+		bool const result = swapchain->setCanvasSize(window_size);
 
-		return true;
+		return result;
 	}
 
 	// TODO: 废弃
@@ -22,21 +23,23 @@ namespace luastg
 		auto* swapchain = GetAppModel()->getSwapChain();
 
 		swapchain->setVSync(vsync);
+		bool const result = swapchain->setCanvasSize(window_size);
 		window->setWindowMode(window_size);
 		window->setFullScreenMode();
 
-		return true;
+		return result;
 	}
 
-	bool AppFrame::SetDisplayModeBorderlessFullscreen(bool vsync)
+	bool AppFrame::SetDisplayModeBorderlessFullscreen(core::Vector2U canvas_size, bool vsync)
 	{
 		auto* window = GetAppModel()->getWindow();
 		auto* swapchain = GetAppModel()->getSwapChain();
 
 		swapchain->setVSync(vsync);
 		window->setBorderlessFullScreenMode();
+		bool const result = swapchain->setCanvasSize(canvas_size);
 
-		return true;
+		return result;
 	}
 
 	bool AppFrame::InitializationApplySettingStage1()
@@ -134,8 +137,11 @@ namespace luastg
 			auto& gs = core::ConfigurationLoader::getInstance().getGraphicsSystemRef();
 			gs.setWidth(width);
 			gs.setHeight(height);
+			spdlog::info("[luastg] SetResolution: resolution set to {}x{}", width, height);
 		}
 		else if (m_iStatus == AppStatus::Running)
 			spdlog::warn("[luastg] SetResolution: launch-only function called at runtime");
+		else
+			spdlog::warn("[luastg] SetResolution: function called at invalid time");
 	}
 }
