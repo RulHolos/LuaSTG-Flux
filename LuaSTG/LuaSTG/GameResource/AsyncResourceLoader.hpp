@@ -88,6 +88,10 @@ namespace luastg {
         bool is_rect = false;
     };
 
+    struct VideoLoadParams {
+        std::string path;
+    };
+
     using ResourceLoadParams = std::variant<
         TextureLoadParams,
         SpriteLoadParams,
@@ -98,7 +102,8 @@ namespace luastg {
         TrueTypeFontLoadParams,
         FXLoadParams,
         ModelLoadParams,
-        ParticleLoadParams
+        ParticleLoadParams,
+        VideoLoadParams
     >;
 
     struct ResourceLoadRequest {
@@ -235,6 +240,7 @@ namespace luastg {
         ResourceLoadResult LoadFXWorker(const ResourceLoadRequest& request);
         ResourceLoadResult LoadModelWorker(const ResourceLoadRequest& request);
         ResourceLoadResult LoadParticleWorker(const ResourceLoadRequest& request);
+        ResourceLoadResult LoadVideoWorker(const ResourceLoadRequest& request);
         
         void CompleteTexture(std::shared_ptr<ResourceLoadingTask> task, size_t index, ResourceLoadResult& result);
         void CompleteSprite(std::shared_ptr<ResourceLoadingTask> task, size_t index, ResourceLoadResult& result);
@@ -246,5 +252,6 @@ namespace luastg {
         void CompleteFX(std::shared_ptr<ResourceLoadingTask> task, size_t index, ResourceLoadResult& result);
         void CompleteModel(std::shared_ptr<ResourceLoadingTask> task, size_t index, ResourceLoadResult& result);
         void CompleteParticle(std::shared_ptr<ResourceLoadingTask> task, size_t index, ResourceLoadResult& result);
+        void CompleteVideo(std::shared_ptr<ResourceLoadingTask> task, size_t index, ResourceLoadResult& result);
     };
 }

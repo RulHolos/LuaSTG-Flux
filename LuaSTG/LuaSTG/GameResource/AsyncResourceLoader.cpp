@@ -7,6 +7,7 @@
 #include "GameResource/Implement/ResourceSoundEffectImpl.hpp"
 #include "GameResource/Implement/ResourceFontImpl.hpp"
 #include "GameResource/Implement/ResourceParticleImpl.hpp"
+#include "GameResource/Implement/ResourceVideoImpl.hpp"
 #include "core/FileSystem.hpp"
 #include "core/AudioDecoder.hpp"
 #include "AppFrame.h"
@@ -254,6 +255,9 @@ namespace luastg
                 break;
             case ResourceType::Particle:
                 CompleteParticle(item.task, item.request_index, item.result);
+                break;
+            case ResourceType::Video:
+                CompleteVideo(item.task, item.request_index, item.result);
                 break;
             default:
                 break;
@@ -505,6 +509,9 @@ namespace luastg
             case ResourceType::Particle:
                 result = LoadParticleWorker(request);
                 break;
+            case ResourceType::Video:
+                result = LoadVideoWorker(request);
+                break;
             default:
                 result.success = false;
                 result.error_message = "Unsupported resource type";
@@ -721,6 +728,26 @@ namespace luastg
         result.requires_gpu = false;
         
         const auto& params = std::get<ParticleLoadParams>(request.params);
+        
+        if (!core::FileSystemManager::hasFile(params.path))
+        {
+            result.success = false;
+            result.error_message = "File not found: " + params.path;
+            return result;
+        }
+        
+        result.success = true;
+        return result;
+    }
+    
+    ResourceLoadResult AsyncResourceLoader::LoadVideoWorker(const ResourceLoadRequest& request)
+    {
+        ResourceLoadResult result;
+        result.name = request.name;
+        result.type = ResourceType::Video;
+        result.requires_gpu = false;
+        
+        const auto& params = std::get<VideoLoadParams>(request.params);
         
         if (!core::FileSystemManager::hasFile(params.path))
         {
@@ -1383,6 +1410,55 @@ namespace luastg
             {
                 result.success = false;
                 result.error_message = "Modern API particle loading not implemented in async loader";
+            }
+        }
+        catch (const std::exception& e)
+        {
+            result.success = false;
+            result.error_message = e.what();
+        }
+    }
+    
+    void AsyncResourceLoader::CompleteVideo(std::shared_ptr<ResourceLoadingTask> task, size_t index, ResourceLoadResult& result)
+    {
+        if (!result.success)
+        {
+            return;
+        }
+        
+        const auto& request = task->GetRequests()[index];
+        const auto& params = std::get<VideoLoadParams>(request.params);
+        
+        try
+        {
+            if (task->UseResourcePool())
+            {
+                auto pool = request.target_pool ? request.target_pool : task->GetTargetPool();
+                if (!pool)
+                {
+                    result.success = false;
+                    result.error_message = "No active resource pool";
+                    return;
+                }
+                
+                result.success = pool->LoadVideo(
+                    request.name.c_str(),
+                    params.path.c_str()
+                );
+                
+                if (result.success)
+                {
+                    result.registered_to_pool = true;
+                }
+                else
+                {
+                    result.error_message = "Failed to load video";
+                }
+            }
+            else
+            {
+                result.success = false;
+                result.error_message = "Modern API video loading not implemented in async loader";
             }
         }
         catch (const std::exception& e)

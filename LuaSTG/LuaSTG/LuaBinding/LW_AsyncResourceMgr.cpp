@@ -649,6 +649,25 @@ namespace luastg::binding
                 break;
             }
             
+            case ResourceType::Video:
+            {
+                VideoLoadParams params;
+                if (std::holds_alternative<VideoLoadParams>(request.params))
+                {
+                    params = std::get<VideoLoadParams>(request.params);
+                }
+                
+                lua_getfield(L, table_index, "path");
+                if (lua_isstring(L, -1))
+                {
+                    params.path = lua_tostring(L, -1);
+                }
+                lua_pop(L, 1);
+                
+                request.params = params;
+                break;
+            }
+            
             default:
                 break;
             }
@@ -1062,6 +1081,40 @@ namespace luastg::binding
             }
         }
         
+        static int LoadVideoAsync(lua_State* L) noexcept
+        {
+            try
+            {
+                int defaults_index = (lua_gettop(L) >= 2 && lua_istable(L, 2)) ? 2 : 0;
+                auto requests = ParseLoadRequests(L, 1, defaults_index, ResourceType::Video);
+                
+                if (requests.empty())
+                {
+                    return luaL_error(L, "No valid load requests");
+                }
+                
+                auto* loader = LAPP.GetAsyncResourceLoader();
+                if (!loader)
+                {
+                    return luaL_error(L, "AsyncResourceLoader not initialized");
+                }
+                
+                auto* target_pool = GetPoolFromLua(L, 3);
+                auto task = loader->SubmitTask(std::move(requests), true, target_pool);
+                if (!task)
+                {
+                    return luaL_error(L, "Failed to submit loading task");
+                }
+                
+                LuaLoadingTask::create(L, task);
+                return 1;
+            }
+            catch (const std::exception& e)
+            {
+                return luaL_error(L, "LoadVideoAsync failed: %s", e.what());
+            }
+        }
+        
         static void Register(lua_State* L) noexcept
         {
             // 注册 LoadingTask 类
@@ -1109,6 +1162,10 @@ namespace luastg::binding
                 static int LoadParticleAsync(lua_State* L) noexcept
                 {
                     return AsyncResourceManager::LoadParticleAsync(L);
+                }
+                static int LoadVideoAsync(lua_State* L) noexcept
+                {
+                    return AsyncResourceManager::LoadVideoAsync(L);
                 }
                 static int GetAsyncLoaderThreadCount(lua_State* L) noexcept
                 {
@@ -1175,6 +1232,7 @@ namespace luastg::binding
                 { "LoadFXAsync", &Wrapper::LoadFXAsync },
                 { "LoadModelAsync", &Wrapper::LoadModelAsync },
                 { "LoadParticleAsync", &Wrapper::LoadParticleAsync },
+                { "LoadVideoAsync", &Wrapper::LoadVideoAsync },
                 { "GetAsyncLoaderThreadCount", &Wrapper::GetAsyncLoaderThreadCount },
                 { "SetAsyncLoaderMaxItemsPerFrame", &Wrapper::SetAsyncLoaderMaxItemsPerFrame },
                 { "GetAsyncLoaderMaxItemsPerFrame", &Wrapper::GetAsyncLoaderMaxItemsPerFrame },
