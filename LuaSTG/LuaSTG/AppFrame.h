@@ -3,6 +3,7 @@
 #include "Core/Graphics/Font.hpp"
 #include "core/AudioEngine.hpp"
 #include "GameResource/ResourceManager.h"
+#include "GameResource/AsyncResourceLoader.hpp"
 #include "GameObject/GameObjectPool.h"
 #include "Platform/DirectInput.hpp"
 
@@ -53,6 +54,8 @@ namespace luastg {
 
 		// 资源管理器
 		ResourceMgr m_ResourceMgr;
+
+		std::unique_ptr<AsyncResourceLoader> m_async_resource_loader;
 
 		// 对象池
 		std::unique_ptr<GameObjectPool> m_GameObjectPool;
@@ -250,6 +253,8 @@ namespace luastg {
 		lua_State* GetLuaEngine()noexcept { return L; }
 
 		ResourceMgr& GetResourceMgr()noexcept { return m_ResourceMgr; }
+
+		AsyncResourceLoader* GetAsyncResourceLoader() noexcept { return m_async_resource_loader.get(); }
 
 		GameObjectPool& GetGameObjectPool()noexcept { return *m_GameObjectPool; }
 

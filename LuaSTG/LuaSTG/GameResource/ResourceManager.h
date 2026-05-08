@@ -28,6 +28,7 @@ namespace luastg
     class ResourcePool
     {
         friend class ResourceMgr;
+        friend class AsyncResourceLoader;
     public:
         struct dictionary_key_t
         {
@@ -139,8 +140,6 @@ namespace luastg
         bool LoadVideo(const char* name, const char* path) noexcept;
 
         void UpdateSpritesOnRenderTargetResize(core::Graphics::ITexture2D* texture, core::Vector2U old_size, core::Vector2U new_size) noexcept;
-
-        bool TransferResourceTo(ResourceType t, const char* name, ResourcePool* dest) noexcept;
         
         core::SmartReference<IResourceTexture> GetTexture(std::string_view name) noexcept;
         core::SmartReference<IResourceSprite> GetSprite(std::string_view name) noexcept;
@@ -153,6 +152,8 @@ namespace luastg
         core::SmartReference<IResourcePostEffectShader> GetFX(std::string_view name) noexcept;
         core::SmartReference<IResourceModel> GetModel(std::string_view name) noexcept;
         core::SmartReference<IResourceVideo> GetVideo(std::string_view name) noexcept;
+
+        bool TransferResourceTo(ResourceType t, const char* name, ResourcePool* dest) noexcept;
     public:
         ResourcePool(ResourceMgr* mgr, ResourcePoolType t, std::string_view name = {});
         ResourcePool& operator=(const ResourcePool&) = delete;
@@ -197,6 +198,8 @@ namespace luastg
         core::SmartReference<IResourcePostEffectShader> FindFX(const char* name) noexcept;
         core::SmartReference<IResourceModel> FindModel(const char* name) noexcept;
         core::SmartReference<IResourceVideo> FindVideo(const char* name) noexcept;
+
+        void UpdateSpritesOnRenderTargetResize(core::Graphics::ITexture2D* texture, core::Vector2U old_size, core::Vector2U new_size) noexcept;
         
         bool GetTextureSize(const char* name, core::Vector2U& out) noexcept;
         void CacheTTFFontString(const char* name, const char* text, size_t len) noexcept;

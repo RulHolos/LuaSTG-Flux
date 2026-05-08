@@ -56,6 +56,8 @@ set(LUASTG_ENGINE_SOURCES
     LuaSTG/GameResource/ResourceModel.hpp
     LuaSTG/GameResource/ResourceModel.cpp
     LuaSTG/GameResource/ResourceVideo.hpp
+    LuaSTG/GameResource/AsyncResourceLoader.hpp
+    LuaSTG/GameResource/AsyncResourceLoader.cpp
 
     LuaSTG/GameResource/ResourceDebug.cpp
     LuaSTG/GameResource/ResourceManager.cpp
@@ -105,6 +107,7 @@ set(LUASTG_ENGINE_SOURCES
     LuaSTG/LuaBinding/LW_Renderer.cpp
     LuaSTG/LuaBinding/LW_StopWatch.cpp
     LuaSTG/LuaBinding/LW_ResourceMgr.cpp
+    LuaSTG/LuaBinding/LW_AsyncResourceMgr.cpp
     LuaSTG/LuaBinding/LW_Platform.cpp
     LuaSTG/LuaBinding/LW_GameObjectManager.cpp
     LuaSTG/LuaBinding/PostEffectShader.hpp
@@ -145,6 +148,8 @@ set(LUASTG_ENGINE_SOURCES
     LuaSTG/LuaBinding/modern/Sprite.cpp
     LuaSTG/LuaBinding/modern/SpriteRenderer.hpp
     LuaSTG/LuaBinding/modern/SpriteRenderer.cpp
+    LuaSTG/LuaBinding/modern/AsyncTexture2D.cpp
+    LuaSTG/LuaBinding/modern/AsyncSprite.cpp
     LuaSTG/LuaBinding/modern/Clipboard.hpp
     LuaSTG/LuaBinding/modern/Clipboard.cpp
     LuaSTG/LuaBinding/modern/FileSystemWatcher.hpp

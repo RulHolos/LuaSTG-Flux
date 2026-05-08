@@ -361,6 +361,11 @@ namespace core {
 					assert_type_is_unsigned_integer(frame_rate, "/timing/frame_rate"sv);
 					loader.timing.setFrameRate(frame_rate.get<uint32_t>());
 				}
+				if (timing.contains("async_loader_threads"sv)) {
+					auto const& async_loader_threads = timing.at("async_loader_threads"sv);
+					assert_type_is_unsigned_integer(async_loader_threads, "/timing/async_loader_threads"sv);
+					loader.timing.setAsyncLoaderThreads(async_loader_threads.get<uint32_t>());
+				}
 			}
 
 			if (root.contains("window"sv)) {

@@ -176,6 +176,24 @@ bool AppFrame::Init()noexcept
 		return false;
 	}
 
+	//////////////////////////////////////// Initialize async resource loader
+
+	spdlog::info("[luastg] Initialize the asynchronous resource loader");
+	try {
+		auto const& timing_config = core::ConfigurationLoader::getInstance().getTiming();
+		size_t thread_count = timing_config.getAsyncLoaderThreads();
+
+		if (thread_count > 0) {
+			spdlog::info("[luastg] Starting {} threads for asynchronous resource loading", thread_count);
+		}
+
+		m_async_resource_loader = std::make_unique<AsyncResourceLoader>(thread_count);
+	}
+	catch (const std::exception& e) {
+		spdlog::error("[luastg] Failed to initialize asynchronous resource loader: {}", e.what());
+		return false;
+	}
+
 	//////////////////////////////////////// Initialize Lua
 
 	spdlog::info("[luastg] Initializing LuaJIT");
@@ -269,6 +287,9 @@ void AppFrame::Shutdown()noexcept
 
 	m_GameObjectPool = nullptr;
 	spdlog::info("[luastg] Object pool destroyed");
+
+	m_async_resource_loader.reset();
+	spdlog::info("[luastg] Asynchronous resource loader shutdown");
 
 	if (L)
 	{
@@ -409,6 +430,11 @@ bool AppFrame::onUpdate()
 		}
 
 		UpdateInput();
+	}
+
+	if (m_async_resource_loader) {
+		tracy_zone_scoped_with_name("AsyncResourceLoader-Update");
+		m_async_resource_loader->Update();
 	}
 
 #if (defined(_DEBUG) && defined(LuaSTG_enable_GameObjectManager_Debug))

@@ -116,8 +116,10 @@ namespace core {
 		class Timing {
 		public:
 			GetterSetterPrimitive(Timing, uint32_t, frame_rate, FrameRate);
+			GetterSetterPrimitive(Timing, uint32_t, async_loader_threads, AsyncLoaderThreads);
 		private:
 			uint32_t frame_rate{ 60 };
+			uint32_t async_loader_threads{ 0 };
 		};
 		/* TODO*/ struct Display {
 			std::string device_name;

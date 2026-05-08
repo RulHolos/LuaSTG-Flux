@@ -19,6 +19,11 @@ namespace luastg
 
     void ResourcePool::Clear() noexcept
     {
+        if (auto* loader = LAPP.GetAsyncResourceLoader())
+        {
+            loader->ClearTasksForPool(this);
+        }
+
         m_TexturePool.clear();
         m_SpritePool.clear();
         m_AnimationPool.clear();

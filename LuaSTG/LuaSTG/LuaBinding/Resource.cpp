@@ -740,7 +740,7 @@ namespace luastg::binding
 	};
 }
 
-int luaopen_LuaSTG_Sub(lua_State* L)
+int luaopen_LuaSTG_Flux(lua_State* L)
 {
 	luastg::binding::ResourceTexture::registerClass(L);
 	luastg::binding::ResourceSprite::registerClass(L);

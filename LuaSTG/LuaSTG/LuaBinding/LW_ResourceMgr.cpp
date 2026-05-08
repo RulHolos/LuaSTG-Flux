@@ -669,9 +669,9 @@ void luastg::binding::ResourceManager::Register(lua_State* L) noexcept
 		static int TransferResource(lua_State* L) noexcept
 		{
 			const char* src_pool_name = luaL_checkstring(L, 1);
-			ResourceType type = static_cast<ResourceType>(luaL_checkinteger(L, 2));
-			const char* res_name = luaL_checkstring(L, 3);
-			const char* dst_pool_name = luaL_checkstring(L, 4);
+			const char* dst_pool_name = luaL_checkstring(L, 2);
+			ResourceType type = static_cast<ResourceType>(luaL_checkinteger(L, 3));
+			const char* res_name = luaL_checkstring(L, 4);
 
 			ResourcePool* src = LRES.GetPool(src_pool_name);
 			if (!src)
