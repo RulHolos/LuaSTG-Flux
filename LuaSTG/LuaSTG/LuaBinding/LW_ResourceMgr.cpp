@@ -367,6 +367,27 @@ void luastg::binding::ResourceManager::Register(lua_State* L) noexcept
 				return luaL_error(L, "load video failed (name='%s', path='%s').", name, video_path);
 			return 0;
 		}
+		static int SetVideoState(lua_State* L) noexcept
+		{
+			core::SmartReference<IResourceVideo> p = LRES.FindVideo(luaL_checkstring(L, 1));
+			if (!p)
+				return luaL_error(L, "video '%s' not found.", luaL_checkstring(L, 1));
+
+			p->SetBlendMode(TranslateBlendMode(L, 2));
+			if (lua_gettop(L) == 3)
+				p->GetSprite()->setColor(*Color::Cast(L, 3));
+			else if (lua_gettop(L) == 6)
+			{
+				core::Color4B tColors[] = {
+					*Color::Cast(L, 3),
+					*Color::Cast(L, 4),
+					*Color::Cast(L, 5),
+					*Color::Cast(L, 6)
+				};
+				p->GetSprite()->setColor(tColors);
+			}
+			return 0;
+		}
 		static int CreateRenderTarget(lua_State* L) noexcept
 		{
 			const char* name = luaL_checkstring(L, 1);
@@ -705,6 +726,7 @@ void luastg::binding::ResourceManager::Register(lua_State* L) noexcept
 		{ "LoadFX", &Wrapper::LoadFX },
 		{ "LoadModel", &Wrapper::LoadModel },
 		{ "LoadVideo", &Wrapper::LoadVideo },
+		{ "SetVideoState", &Wrapper::SetVideoState },
 		{ "CreateRenderTarget", &Wrapper::CreateRenderTarget },
 		{ "IsRenderTarget", &Wrapper::IsRenderTarget },
 		{ "SetTexturePreMulAlphaState", &Wrapper::SetTexturePreMulAlphaState },
