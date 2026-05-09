@@ -36,8 +36,8 @@ cmake --workflow --preset windows-amd64-release
 $ConfigFilePath = [System.IO.Path]::Combine($ProjectRoot, "LuaSTG", "LuaSTG", "LConfig.h")
 $ConfigFile = [System.IO.File]::ReadAllText($ConfigFilePath, [System.Text.Encoding]::UTF8)
 $VersionMajor = "0"
-$VersionMinor = "2"
-$VersionPatch = "3"
+$VersionMinor = "3"
+$VersionPatch = "0"
 foreach ($Line in $ConfigFile.Split("`n")) {
     if ($Line.Contains("LUASTG_VERSION_MAJOR")) {
         $VersionMajor = $Line.Replace("#define", "").Replace("LUASTG_VERSION_MAJOR", "").Trim()
