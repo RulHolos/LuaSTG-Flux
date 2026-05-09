@@ -7,6 +7,7 @@
 #include <ranges>
 #include <algorithm>
 #include <tuple>
+#include <span>
 
 // 对象池信息
 #define LOBJPOOL_SIZE   32768 // 最大对象数 //32768(full) //16384(half)
@@ -309,6 +310,8 @@ namespace luastg
 		// 回调所有 -> 更新所有运动
 		void updateMovements();
 
+		void partialUpdateMovements(std::span<const int32_t> groups, bool has_world, uint64_t world);
+
 		// 对象更新:传统模式新旧帧衔接
 		void updateNextLegacy();
 
@@ -317,6 +320,8 @@ namespace luastg
 
 		// 渲染所有游戏对象
 		void render();
+
+		void partialRender(std::span<const int32_t> groups, std::span<const double> layer_ranges, bool has_world, uint64_t world);
 
 		/// @brief 设置舞台边界
 		inline void SetBound(double const l, double const r, double const b, double const t) noexcept {

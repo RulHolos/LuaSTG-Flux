@@ -188,6 +188,149 @@ namespace luastg
 		dispatchOnAfterBatchRender();
 		m_is_rendering = false;
 	}
+	void GameObjectPool::partialUpdateMovements(
+		std::span<const int32_t> const groups,
+		bool const has_world,
+		uint64_t const world_param)
+	{
+		tracy_zone_scoped_with_name("LOBJMGR.PartialObjFrame");
+
+		dispatchOnBeforeBatchUpdate();
+
+		bool const filter_group = !groups.empty();
+		uint32_t group_mask = 0;
+		if (filter_group) {
+			for (auto const g : groups) {
+				if (g >= 0 && g < LOBJPOOL_GROUPN) {
+					group_mask |= (1u << static_cast<uint32_t>(g));
+				}
+			}
+		}
+
+#ifdef USING_MULTI_GAME_WORLD
+		uint64_t const world_flag = has_world ? world_param : static_cast<uint64_t>(GetWorldFlag());
+#else
+		(void)has_world;
+		(void)world_param;
+#endif
+
+		auto const super_pause_time = GetSuperPauseTime();
+		for (auto p = m_update_list.first(); p != nullptr; p = p->update_list_next) {
+			if (super_pause_time > 0 && !p->ignore_super_pause) {
+				continue;
+			}
+#ifdef USING_MULTI_GAME_WORLD
+			if (!CheckWorlds(static_cast<uint64_t>(p->world), world_flag)) {
+				continue;
+			}
+#endif
+			if (filter_group) {
+				auto const g = p->group;
+				if (g < 0 || g >= LOBJPOOL_GROUPN || !(group_mask & (1u << static_cast<uint32_t>(g)))) {
+					continue;
+				}
+			}
+			{
+				LSTG_TRACY_FRAME_ZONE(p);
+				if (p->features.has_callback_update) {
+					p->dispatchOnUpdate();
+				}
+			}
+		}
+
+		dispatchOnAfterBatchUpdate();
+
+		for (auto p = m_update_list.first(); p != nullptr; p = p->update_list_next) {
+			if (super_pause_time > 0 && !p->ignore_super_pause) {
+				continue;
+			}
+#ifdef USING_MULTI_GAME_WORLD
+			if (!CheckWorlds(static_cast<uint64_t>(p->world), world_flag)) {
+				continue;
+			}
+#endif
+			if (filter_group) {
+				auto const g = p->group;
+				if (g < 0 || g >= LOBJPOOL_GROUPN || !(group_mask & (1u << static_cast<uint32_t>(g)))) {
+					continue;
+				}
+			}
+			{
+				LSTG_TRACY_FRAME_ZONE(p);
+				p->UpdateV2();
+			}
+		}
+	}
+	void GameObjectPool::partialRender(
+		std::span<const int32_t> const groups,
+		std::span<const double> const layer_ranges,
+		bool const has_world,
+		uint64_t const world_param)
+	{
+		tracy_zone_scoped_with_name("LOBJMGR.PartialRender");
+
+		bool const filter_group = !groups.empty();
+		uint32_t group_mask = 0;
+		if (filter_group) {
+			for (auto const g : groups) {
+				if (g >= 0 && g < LOBJPOOL_GROUPN) {
+					group_mask |= (1u << static_cast<uint32_t>(g));
+				}
+			}
+		}
+
+		bool const filter_layers = !layer_ranges.empty();
+
+#ifdef USING_MULTI_GAME_WORLD
+		uint64_t const world_flag = has_world ? world_param : static_cast<uint64_t>(GetWorldFlag());
+#else
+		(void)has_world;
+		(void)world_param;
+#endif
+
+		m_is_rendering = true;
+		dispatchOnBeforeBatchRender();
+
+		for (auto& p : m_render_list) {
+			if (p->hide) {
+				continue;
+			}
+#ifdef USING_MULTI_GAME_WORLD
+			if (!CheckWorlds(static_cast<uint64_t>(p->world), world_flag)) {
+				continue;
+			}
+#endif
+			if (filter_group) {
+				auto const g = p->group;
+				if (g < 0 || g >= LOBJPOOL_GROUPN || !(group_mask & (1u << static_cast<uint32_t>(g)))) {
+					continue;
+				}
+			}
+			if (filter_layers) {
+				double const layer = p->layer;
+				bool in_range = false;
+				for (size_t i = 0; i + 1 < layer_ranges.size(); i += 2) {
+					if (layer >= layer_ranges[i] && layer <= layer_ranges[i + 1]) {
+						in_range = true;
+						break;
+					}
+				}
+				if (!in_range) {
+					continue;
+				}
+			}
+			if (p->features.has_callback_render) {
+				LSTG_TRACY_RENDER_ZONE(p);
+				p->dispatchOnRender();
+			} else {
+				LSTG_TRACY_RENDER_ZONE(p);
+				p->Render();
+			}
+		}
+
+		dispatchOnAfterBatchRender();
+		m_is_rendering = false;
+	}
 	void GameObjectPool::UpdateXY() noexcept {
 		tracy_zone_scoped_with_name("LOBJMGR.UpdateXY");
 		auto const super_pause_time = GetSuperPauseTime();

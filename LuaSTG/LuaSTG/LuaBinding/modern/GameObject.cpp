@@ -910,6 +910,63 @@ namespace luastg::binding {
 			GameObjectManagerCallbacks::getInstance().lua_vm.pop_back();
 			return 0;
 		}
+		static int partialUpdateGameObjectManager(lua_State* const vm) {
+			lua::stack_t const ctx(vm);
+
+			int32_t group_buf[LOBJPOOL_GROUPN]{};
+			int32_t group_count = 0;
+			if (ctx.is_table(1)) {
+				int32_t const n = static_cast<int32_t>(ctx.get_array_size(1));
+				for (int32_t i = 1; i <= n && group_count < static_cast<int32_t>(LOBJPOOL_GROUPN); i += 1) {
+					group_buf[group_count++] = ctx.get_array_value<int32_t>(1, i);
+				}
+			}
+
+			bool const has_world = !lua_isnoneornil(vm, 2);
+			uint64_t const world = has_world ? static_cast<uint64_t>(luaL_checkinteger(vm, 2)) : 0u;
+
+			GameObjectManagerCallbacks::getInstance().lua_vm.push_back(vm);
+			LPOOL.partialUpdateMovements(
+				std::span<const int32_t>(group_buf, static_cast<size_t>(group_count)),
+				has_world,
+				world);
+			GameObjectManagerCallbacks::getInstance().lua_vm.pop_back();
+			return 0;
+		}
+		static int partialRenderGameObjectManager(lua_State* const vm) {
+			lua::stack_t const ctx(vm);
+
+			int32_t group_buf[LOBJPOOL_GROUPN]{};
+			int32_t group_count = 0;
+			if (ctx.is_table(1)) {
+				int32_t const n = static_cast<int32_t>(ctx.get_array_size(1));
+				for (int32_t i = 1; i <= n && group_count < static_cast<int32_t>(LOBJPOOL_GROUPN); i += 1) {
+					group_buf[group_count++] = ctx.get_array_value<int32_t>(1, i);
+				}
+			}
+
+			double layer_range_buf[64]{};
+			int32_t layer_range_count = 0;
+			if (ctx.is_table(2)) {
+				int32_t const n = static_cast<int32_t>(ctx.get_array_size(2));
+				for (int32_t i = 1; i + 1 <= n && layer_range_count + 1 < 64; i += 2) {
+					layer_range_buf[layer_range_count++] = ctx.get_array_value<double>(2, i);
+					layer_range_buf[layer_range_count++] = ctx.get_array_value<double>(2, i + 1);
+				}
+			}
+
+			bool const has_world = !lua_isnoneornil(vm, 3);
+			uint64_t const world = has_world ? static_cast<uint64_t>(luaL_checkinteger(vm, 3)) : 0u;
+
+			GameObjectManagerCallbacks::getInstance().lua_vm.push_back(vm);
+			LPOOL.partialRender(
+				std::span<const int32_t>(group_buf, static_cast<size_t>(group_count)),
+				std::span<const double>(layer_range_buf, static_cast<size_t>(layer_range_count)),
+				has_world,
+				world);
+			GameObjectManagerCallbacks::getInstance().lua_vm.pop_back();
+			return 0;
+		}
 		static int boundCheckGameObjectManager(lua_State* const vm) {
 			// TODO: 移动到 GameObjectManager 绑定
 			// version 2
@@ -1191,6 +1248,8 @@ namespace luastg::binding {
 		ctx.set_map_value(lstg_table, "ResetPool"sv, &GameObjectBinding::resetGameObjectManager);
 		ctx.set_map_value(lstg_table, "ObjFrame"sv, &GameObjectBinding::updateGameObjectManager);
 		ctx.set_map_value(lstg_table, "ObjRender"sv, &GameObjectBinding::renderGameObjectManager);
+		ctx.set_map_value(lstg_table, "PartialObjFrame"sv, &GameObjectBinding::partialUpdateGameObjectManager);
+		ctx.set_map_value(lstg_table, "PartialObjRender"sv, &GameObjectBinding::partialRenderGameObjectManager);
 		ctx.set_map_value(lstg_table, "BoundCheck"sv, &GameObjectBinding::boundCheckGameObjectManager);
 		ctx.set_map_value(lstg_table, "CollisionCheck"sv, &GameObjectBinding::intersectDetectGameObjectManager);
 		ctx.set_map_value(lstg_table, "_UpdateListFirst"sv, &GameObjectBinding::getUpdateListFirst);
