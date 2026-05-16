@@ -178,6 +178,16 @@ namespace core::Graphics::Common {
 
 	// FreeTypeGlyphManager
 
+	uint32_t FreeTypeGlyphManager::getFontDataCount() {
+		return (uint32_t)m_font.size();
+	}
+
+	IData* FreeTypeGlyphManager::getFontData(uint32_t const index) {
+		if (index < m_font.size())
+			return m_font[index].buffer.get();
+		return nullptr;
+	}
+
 	FreeTypeGlyphManager::FreeTypeGlyphManager(IDevice* const p_device, TrueTypeFontInfo const* const p_arr_info, size_t const info_count)
 		: m_device(p_device) {
 		if (!openFonts(p_arr_info, info_count)) {

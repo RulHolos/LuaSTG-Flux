@@ -18,6 +18,7 @@
 #include "LuaBinding/modern/FileSystemWatcher.hpp"
 #include "LuaBinding/modern/GameObject.hpp"
 #include "LuaBinding/modern/Well512.hpp"
+#include "LuaBinding/modern/RichText.hpp"
 
 namespace luastg::binding
 {
@@ -99,5 +100,6 @@ namespace luastg::binding
 		FileSystemWatcher::registerClass(L);
 		GameObject::registerClass(L);
 		Well512::registerClass(L);
+		RichText::registerClass(L);
 	}
 }

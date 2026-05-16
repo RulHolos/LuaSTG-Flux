@@ -158,6 +158,8 @@ set(LUASTG_ENGINE_SOURCES
     LuaSTG/LuaBinding/modern/GameObject.cpp
     LuaSTG/LuaBinding/modern/Well512.hpp
     LuaSTG/LuaBinding/modern/Well512.cpp
+    LuaSTG/LuaBinding/modern/RichText.hpp
+    LuaSTG/LuaBinding/modern/RichText.cpp
 
     LuaSTG/LuaBinding/generated/BlendModeX.cpp
     LuaSTG/LuaBinding/generated/BlendModeX.hpp

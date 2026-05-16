@@ -38,6 +38,9 @@ namespace core::Graphics
 
 		virtual bool getGlyph(uint32_t codepoint, GlyphInfo* p_ref_info, bool no_render) = 0;
 
+		virtual uint32_t getFontDataCount() { return 0; }
+		virtual IData* getFontData(uint32_t /*index*/) { return nullptr; }
+
 		static bool create(IDevice* p_device, TrueTypeFontInfo const* p_arr_info, size_t info_count, IGlyphManager** output);
 	};
 

@@ -83,6 +83,9 @@ namespace core::Graphics::Common {
 
 		bool getGlyph(uint32_t codepoint, GlyphInfo* p_ref_info, bool no_render) override;
 
+		uint32_t getFontDataCount() override;
+		IData* getFontData(uint32_t index) override;
+
 		// FreeTypeGlyphManager
 
 		FreeTypeGlyphManager(IDevice* p_device, TrueTypeFontInfo const* p_arr_info, size_t info_count);
