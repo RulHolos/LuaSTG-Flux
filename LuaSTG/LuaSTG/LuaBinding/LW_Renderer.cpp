@@ -565,6 +565,105 @@ namespace luastg {
 		return 0;
 	}
 
+	static int lib_setModelAmbient(lua_State* L) {
+		const char* name = luaL_checkstring(L, 1);
+		float const r = (float)luaL_checknumber(L, 2);
+		float const g = (float)luaL_checknumber(L, 3);
+		float const b = (float)luaL_checknumber(L, 4);
+		float const brightness = (float)luaL_optnumber(L, 5, 1.0);
+		core::SmartReference<IResourceModel> pmodres = LRESMGR().FindModel(name);
+		if (!pmodres)
+			return luaL_error(L, "lstg.Renderer.setModelAmbient: can't find model '%s'", name);
+		pmodres->GetModel()->setAmbient(core::Vector3F(r, g, b), brightness);
+		return 0;
+	}
+
+	static int lib_setModelDirectionalLight(lua_State* L) {
+		const char* name = luaL_checkstring(L, 1);
+		float const dx = (float)luaL_checknumber(L, 2);
+		float const dy = (float)luaL_checknumber(L, 3);
+		float const dz = (float)luaL_checknumber(L, 4);
+		float const r = (float)luaL_checknumber(L, 5);
+		float const g = (float)luaL_checknumber(L, 6);
+		float const b = (float)luaL_checknumber(L, 7);
+		float const brightness = (float)luaL_optnumber(L, 8, 1.0);
+		core::SmartReference<IResourceModel> pmodres = LRESMGR().FindModel(name);
+		if (!pmodres)
+			return luaL_error(L, "lstg.Renderer.setModelDirectionalLight: can't find model '%s'", name);
+		pmodres->GetModel()->setDirectionalLight(core::Vector3F(dx, dy, dz), core::Vector3F(r, g, b), brightness);
+		return 0;
+	}
+
+	static int lib_addModelPointLight(lua_State* L) {
+		const char* name = luaL_checkstring(L, 1);
+		float const px = (float)luaL_checknumber(L, 2);
+		float const py = (float)luaL_checknumber(L, 3);
+		float const pz = (float)luaL_checknumber(L, 4);
+		float const r = (float)luaL_checknumber(L, 5);
+		float const g = (float)luaL_checknumber(L, 6);
+		float const b = (float)luaL_checknumber(L, 7);
+		float const brightness = (float)luaL_optnumber(L, 8, 1.0);
+		float const range = (float)luaL_optnumber(L, 9, 10.0);
+		core::SmartReference<IResourceModel> pmodres = LRESMGR().FindModel(name);
+		if (!pmodres)
+			return luaL_error(L, "lstg.Renderer.addModelPointLight: can't find model '%s'", name);
+		pmodres->GetModel()->addPointLight(core::Vector3F(px, py, pz), core::Vector3F(r, g, b), brightness, range);
+		return 0;
+	}
+
+	static int lib_clearModelPointLights(lua_State* L) {
+		const char* name = luaL_checkstring(L, 1);
+		core::SmartReference<IResourceModel> pmodres = LRESMGR().FindModel(name);
+		if (!pmodres)
+			return luaL_error(L, "lstg.Renderer.clearModelPointLights: can't find model '%s'", name);
+		pmodres->GetModel()->clearPointLights();
+		return 0;
+	}
+
+	static int lib_addScenePointLight(lua_State* L) {
+		float const px = (float)luaL_checknumber(L, 1);
+		float const py = (float)luaL_checknumber(L, 2);
+		float const pz = (float)luaL_checknumber(L, 3);
+		float const r = (float)luaL_checknumber(L, 4);
+		float const g = (float)luaL_checknumber(L, 5);
+		float const b = (float)luaL_checknumber(L, 6);
+		float const brightness = (float)luaL_optnumber(L, 7, 1.0);
+		float const range = (float)luaL_optnumber(L, 8, 10.0);
+		int32_t const idx = LR2D()->addScenePointLight(core::Vector3F(px, py, pz), core::Vector3F(r, g, b), brightness, range);
+		if (idx < 0) {
+			lua_pushnil(L);
+		} else {
+			lua_pushinteger(L, (lua_Integer)(idx + 1));
+		}
+		return 1;
+	}
+
+	static int lib_setScenePointLight(lua_State* L) {
+		int32_t const idx = (int32_t)luaL_checkinteger(L, 1) - 1;
+		float const px = (float)luaL_checknumber(L, 2);
+		float const py = (float)luaL_checknumber(L, 3);
+		float const pz = (float)luaL_checknumber(L, 4);
+		float const r = (float)luaL_checknumber(L, 5);
+		float const g = (float)luaL_checknumber(L, 6);
+		float const b = (float)luaL_checknumber(L, 7);
+		float const brightness = (float)luaL_optnumber(L, 8, 1.0);
+		float const range = (float)luaL_optnumber(L, 9, 10.0);
+		if (!LR2D()->setScenePointLight(idx, core::Vector3F(px, py, pz), core::Vector3F(r, g, b), brightness, range))
+			return luaL_error(L, "lstg.Renderer.setScenePointLight: index %d out of range", idx + 1);
+		return 0;
+	}
+
+	static int lib_getScenePointLightCount(lua_State* L) {
+		lua_pushinteger(L, (lua_Integer)LR2D()->getScenePointLightCount());
+		return 1;
+	}
+
+	static int lib_clearScenePointLights(lua_State* L) {
+		(void)L;
+		LR2D()->clearScenePointLights();
+		return 0;
+	}
+
 	static int lib_drawVideo(lua_State* L) {
 		validate_render_scope();
 		const char* name = luaL_checkstring(L, 1);
@@ -645,6 +744,16 @@ namespace luastg {
 		MKFUNC(drawVideo),
 		MKFUNC(drawVideoRect),
 		MKFUNC(drawVideo4V),
+
+		MKFUNC(drawModel),
+		MKFUNC(setModelAmbient),
+		MKFUNC(setModelDirectionalLight),
+		MKFUNC(addModelPointLight),
+		MKFUNC(clearModelPointLights),
+		MKFUNC(addScenePointLight),
+		MKFUNC(setScenePointLight),
+		MKFUNC(getScenePointLightCount),
+		MKFUNC(clearScenePointLights),
 
 		{ NULL, NULL },
 	};
@@ -885,6 +994,14 @@ namespace luastg {
 		{ "RenderAnimation", &lib_drawSpriteSequence },
 		{ "RenderTexture", &lib_drawTexture },
 		{ "RenderModel", &lib_drawModel },
+		{ "SetModelAmbient", &lib_setModelAmbient },
+		{ "SetModelDirectionalLight", &lib_setModelDirectionalLight },
+		{ "AddModelPointLight", &lib_addModelPointLight },
+		{ "ClearModelPointLights", &lib_clearModelPointLights },
+		{ "AddScenePointLight", &lib_addScenePointLight },
+		{ "SetScenePointLight", &lib_setScenePointLight },
+		{ "GetScenePointLightCount", &lib_getScenePointLightCount },
+		{ "ClearScenePointLights", &lib_clearScenePointLights },
 		{ "RenderVideo", &lib_drawVideo },
 		{ "RenderVideoRect", &lib_drawVideoRect },
 		{ "RenderVideo4V", &lib_drawVideo4V },

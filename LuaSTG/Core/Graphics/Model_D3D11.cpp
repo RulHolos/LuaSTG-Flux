@@ -195,8 +195,7 @@ namespace core::Graphics
         }
 
         // // built-in: light
-
-        cbo_def.ByteWidth = 4 * sizeof(DirectX::XMFLOAT4);
+        cbo_def.ByteWidth = 515 * sizeof(DirectX::XMFLOAT4); // 1 ambient + 3 sunshine + 255 pos + 255 color + 1 count
         hr = device->CreateBuffer(&cbo_def, NULL, &cbo_light);
         if (FAILED(hr))
         {
@@ -670,6 +669,28 @@ namespace core::Graphics
         sunshine.dir = DirectX::XMFLOAT4(direction.x, direction.y, direction.z, 0.0f);
         sunshine.color = DirectX::XMFLOAT4(color.x, color.y, color.z, brightness);
     }
+    void Model_D3D11::addPointLight(Vector3F const& pos, Vector3F const& color, float brightness, float range)
+    {
+        if (point_lights.size() >= MAX_POINT_LIGHTS)
+        {
+            spdlog::warn("[core] Model_D3D11::addPointLight: maximum of {} point lights already reached", MAX_POINT_LIGHTS);
+            return;
+        }
+        PointLight pl{};
+        pl.pos = pos;
+        pl.range = range;
+        pl.color = color;
+        pl.brightness = brightness;
+        point_lights.push_back(pl);
+    }
+    void Model_D3D11::clearPointLights()
+    {
+        point_lights.clear();
+    }
+    std::vector<PointLight> Model_D3D11::takeEmbeddedLights()
+    {
+        return std::move(embedded_lights_);
+    }
     void Model_D3D11::setScaling(Vector3F const& scale)
     {
         t_scale_ = DirectX::XMMatrixScaling(scale.x, scale.y, scale.z);
@@ -1139,7 +1160,63 @@ namespace core::Graphics
 
         if (!createModelBlock(model)) return false;
 
+        loadLights(model);
+
         return true;
+    }
+
+    void Model_D3D11::loadLights(tinygltf::Model& model)
+    {
+        for (tinygltf::Node const& node : model.nodes)
+        {
+            if (node.light < 0 || node.light >= static_cast<int>(model.lights.size()))
+                continue;
+
+            tinygltf::Light const& light = model.lights[node.light];
+            if (light.type != "point")
+                continue;
+
+            if (embedded_lights_.size() >= MAX_POINT_LIGHTS)
+            {
+                spdlog::warn("[core] gltf model '{}': more than {} point lights defined; excess lights are ignored",
+                    gltf_path, MAX_POINT_LIGHTS);
+                break;
+            }
+
+            float px = 0.0f, py = 0.0f, pz = 0.0f;
+            if (node.translation.size() >= 3)
+            {
+            #pragma warning(disable:4244)
+                px = (float)node.translation[0];
+                py = (float)node.translation[1];
+                pz = -(float)node.translation[2];
+            #pragma warning(default:4244)
+            }
+
+            float cr = 1.0f, cg = 1.0f, cb = 1.0f;
+            if (light.color.size() >= 3)
+            {
+            #pragma warning(disable:4244)
+                cr = (float)light.color[0];
+                cg = (float)light.color[1];
+                cb = (float)light.color[2];
+            #pragma warning(default:4244)
+            }
+
+            float brightness = (float)light.intensity;
+
+            float range = (light.range > 0.0) ? (float)light.range : 50.0f;
+
+            PointLight pl{};
+            pl.pos = { px, py, pz };
+            pl.range = range;
+            pl.color = { cr, cg, cb };
+            pl.brightness = brightness;
+            embedded_lights_.push_back(pl);
+
+            spdlog::info("[core] gltf model '{}': loaded point light '{}' pos=({},{},{}) range={} brightness={}",
+                gltf_path, light.name, px, py, pz, range, brightness);
+        }
     }
     void Model_D3D11::onDeviceCreate()
     {
@@ -1153,14 +1230,53 @@ namespace core::Graphics
         model_block.clear();
     }
 
-    void Model_D3D11::draw(IRenderer::FogState fog)
+    void Model_D3D11::draw(IRenderer::FogState fog, std::span<PointLight const> scene_lights)
     {
         auto* context = m_device->GetD3D11DeviceContext();
 
         // common data
 
-        context->UpdateSubresource(shared_->cbo_light.Get(), 0, NULL, &sunshine, 0, 0);
+        struct LightCBuffer
+        {
+            DirectX::XMFLOAT4 ambient;
+            DirectX::XMFLOAT4 sunshine_pos;
+            DirectX::XMFLOAT4 sunshine_dir;
+            DirectX::XMFLOAT4 sunshine_color;
+            DirectX::XMFLOAT4 point_light_pos[MAX_POINT_LIGHTS]; // xyz=pos, w=range
+            DirectX::XMFLOAT4 point_light_color[MAX_POINT_LIGHTS]; // rgb=color, a=brightness
+            DirectX::XMFLOAT4 point_light_count; // x = count
+        };
+        static_assert(sizeof(LightCBuffer) == 515 * sizeof(DirectX::XMFLOAT4),
+            "LightCBuffer size mismatch");
+
+        LightCBuffer lcb{};
+        lcb.ambient = sunshine.ambient;
+        lcb.sunshine_pos = sunshine.pos;
+        lcb.sunshine_dir = sunshine.dir;
+        lcb.sunshine_color = sunshine.color;
+
+        uint32_t slot = 0u;
         DirectX::XMMATRIX const t_locwo_ = DirectX::XMMatrixMultiply(DirectX::XMMatrixMultiply(t_scale_, t_mbrot_), t_trans_);
+        auto write_light = [&](PointLight const& pl, bool model_local)
+        {
+            if (slot >= MAX_POINT_LIGHTS) return;
+            DirectX::XMFLOAT3 wpos = { pl.pos.x, pl.pos.y, pl.pos.z };
+            if (model_local)
+            {
+                DirectX::XMVECTOR v = DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&wpos), t_locwo_);
+                DirectX::XMStoreFloat3(&wpos, v);
+            }
+            lcb.point_light_pos[slot] = DirectX::XMFLOAT4(wpos.x, wpos.y, wpos.z, pl.range);
+            lcb.point_light_color[slot] = DirectX::XMFLOAT4(pl.color.x, pl.color.y, pl.color.z, pl.brightness);
+            ++slot;
+        };
+        for (PointLight const& pl : point_lights)
+            write_light(pl, true);
+        for (PointLight const& pl : scene_lights)
+            write_light(pl, false);
+        lcb.point_light_count.x = static_cast<float>(slot);
+
+        context->UpdateSubresource(shared_->cbo_light.Get(), 0, NULL, &lcb, 0, 0);
 
         auto set_state_matrix_from_block = [&](ModelBlock& mblock)
         {

@@ -1653,6 +1653,8 @@ namespace core::Graphics
 		try
 		{
 			*pp_model = new Model_D3D11(m_device.get(), m_model_shared.get(), path);
+			for (PointLight const& pl : static_cast<Model_D3D11*>(*pp_model)->takeEmbeddedLights())
+				addScenePointLight(pl.pos, pl.color, pl.brightness, pl.range);
 			return true;
 		}
 		catch (const std::exception&)
@@ -1675,7 +1677,7 @@ namespace core::Graphics
 			return false;
 		}
 
-		static_cast<Model_D3D11*>(p_model)->draw(_state_set.fog_state);
+		static_cast<Model_D3D11*>(p_model)->draw(_state_set.fog_state, _scene_point_lights);
 
 		if (!beginBatch())
 		{
@@ -1683,6 +1685,32 @@ namespace core::Graphics
 		}
 
 		return true;
+	}
+	int32_t Renderer_D3D11::addScenePointLight(Vector3F const& pos, Vector3F const& color, float brightness, float range)
+	{
+		if (static_cast<int32_t>(_scene_point_lights.size()) >= static_cast<int32_t>(Model_D3D11::MAX_POINT_LIGHTS))
+		{
+			spdlog::warn("[core] Renderer::addScenePointLight: maximum of {} scene point lights already reached", Model_D3D11::MAX_POINT_LIGHTS);
+			return -1;
+		}
+		int32_t const idx = static_cast<int32_t>(_scene_point_lights.size());
+		_scene_point_lights.push_back(PointLight{ pos, range, color, brightness });
+		return idx;
+	}
+	bool Renderer_D3D11::setScenePointLight(int32_t index, Vector3F const& pos, Vector3F const& color, float brightness, float range)
+	{
+		if (index < 0 || static_cast<size_t>(index) >= _scene_point_lights.size())
+			return false;
+		_scene_point_lights[index] = PointLight{ pos, range, color, brightness };
+		return true;
+	}
+	int32_t Renderer_D3D11::getScenePointLightCount() const
+	{
+		return static_cast<int32_t>(_scene_point_lights.size());
+	}
+	void Renderer_D3D11::clearScenePointLights()
+	{
+		_scene_point_lights.clear();
 	}
 
 	ISamplerState* Renderer_D3D11::getKnownSamplerState(SamplerState state)

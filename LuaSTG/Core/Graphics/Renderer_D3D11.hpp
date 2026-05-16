@@ -182,6 +182,8 @@ namespace core::Graphics
 		bool _state_dirty = false;
 		bool _batch_scope = false;
 
+		std::vector<PointLight> _scene_point_lights;
+
 		bool createBuffers();
 		bool createStates();
 		bool createShaders();
@@ -212,6 +214,7 @@ namespace core::Graphics
 		void setRenderAttachment(IRenderTarget* p_rt, IDepthStencilBuffer* p_ds);
 
 		void setOrtho(BoxF const& box);
+		inline BoxF getOrtho() { return _camera_state_set.ortho; }
 		void setPerspective(Vector3F const& eye, Vector3F const& lookat, Vector3F const& headup, float fov, float aspect, float znear, float zfar);
 
 		inline BoxF getViewport() { return _state_set.viewport; }
@@ -243,6 +246,11 @@ namespace core::Graphics
 
 		bool createModel(StringView path, IModel** pp_model);
 		bool drawModel(IModel* p_model);
+
+		int32_t addScenePointLight(Vector3F const& pos, Vector3F const& color, float brightness, float range);
+		bool setScenePointLight(int32_t index, Vector3F const& pos, Vector3F const& color, float brightness, float range);
+		void clearScenePointLights();
+		int32_t getScenePointLightCount() const;
 
 		ISamplerState* getKnownSamplerState(SamplerState state);
 

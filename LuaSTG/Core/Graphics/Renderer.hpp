@@ -7,6 +7,14 @@ namespace core::Graphics
 {
 	struct IRenderer;
 
+	struct PointLight
+	{
+		Vector3F pos;
+		float range;
+		Vector3F color;
+		float brightness;
+	};
+
 	struct IPostEffectShader : public IReferenceCounted
 	{
 		virtual bool setFloat(StringView name, float value) = 0;
@@ -21,6 +29,9 @@ namespace core::Graphics
 	{
 		virtual void setAmbient(Vector3F const& color, float brightness) = 0;
 		virtual void setDirectionalLight(Vector3F const& direction, Vector3F const& color, float brightness) = 0;
+
+		virtual void addPointLight(Vector3F const& pos, Vector3F const& color, float brightness, float range) = 0;
+		virtual void clearPointLights() = 0;
 
 		virtual void setScaling(Vector3F const& scale) = 0;
 		virtual void setPosition(Vector3F const& pos) = 0;
@@ -136,6 +147,7 @@ namespace core::Graphics
 		virtual void setRenderAttachment(IRenderTarget* p_rt, IDepthStencilBuffer* p_ds) = 0;
 
 		virtual void setOrtho(BoxF const& box) = 0;
+		virtual BoxF getOrtho() = 0;
 		virtual void setPerspective(Vector3F const& eye, Vector3F const& lookat, Vector3F const& headup, float fov, float aspect, float znear, float zfar) = 0;
 
 		virtual BoxF getViewport() = 0; // 应该严格限制该方法的用途
@@ -167,6 +179,11 @@ namespace core::Graphics
 
 		virtual bool createModel(StringView path, IModel** pp_model) = 0;
 		virtual bool drawModel(IModel* p_model) = 0;
+
+		virtual int32_t addScenePointLight(Vector3F const& pos, Vector3F const& color, float brightness, float range) = 0;
+		virtual bool setScenePointLight(int32_t index, Vector3F const& pos, Vector3F const& color, float brightness, float range) = 0;
+		virtual void clearScenePointLights() = 0;
+		virtual int32_t getScenePointLightCount() const = 0;
 
 		virtual ISamplerState* getKnownSamplerState(SamplerState state) = 0;
 

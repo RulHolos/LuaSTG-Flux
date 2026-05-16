@@ -95,6 +95,9 @@ cbuffer lightInfo : register(b3)
     float4 sunshine_pos;
     float4 sunshine_dir;
     float4 sunshine_color;
+    float4 point_light_pos[255];
+    float4 point_light_color[255];
+    float4 point_light_count;
 };
 
 SamplerState sampler0 : register(s0);
@@ -103,10 +106,22 @@ Texture2D texture0 : register(t0);
 float4 ApplySimpleLight(float4 norm, float4 wpos, float4 solid_color)
 {
     float3 v_normal = normalize(norm.xyz);
-    float light_factor = max(0.0f, dot(v_normal, -sunshine_dir.xyz));
-    //float3 pixel_to_eye = normalize(CameraPos.xyz - wpos.xyz);
-    //float reflact_factor = pow(max(0.0f, dot(reflect(sunshine_dir, v_normal), pixel_to_eye)), 10.0f);
-    return float4((ambient.rgb * ambient.a + sunshine_color.rgb * sunshine_color.a * light_factor) * solid_color.rgb, solid_color.a);
+    float sun_factor = max(0.0f, dot(v_normal, -sunshine_dir.xyz));
+    float3 accumulated = ambient.rgb * ambient.a + sunshine_color.rgb * sunshine_color.a * sun_factor;
+
+    int n = (int)point_light_count.x;
+    for (int i = 0; i < n; i++)
+    {
+        float3 light_vec = point_light_pos[i].xyz - wpos.xyz;
+        float dist = length(light_vec);
+        float range = point_light_pos[i].w;
+        float attenuation = (range > 0.0f) ? saturate(1.0f - (dist * dist) / (range * range)) : 0.0f;
+        attenuation *= attenuation;
+        float nl = max(0.0f, dot(v_normal, normalize(light_vec)));
+        accumulated += point_light_color[i].rgb * point_light_color[i].a * nl * attenuation;
+    }
+
+    return float4(accumulated * solid_color.rgb, solid_color.a);
 }
 
 float4 ApplyFog(float4 wpos, float4 solid_color)

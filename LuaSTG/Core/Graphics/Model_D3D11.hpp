@@ -3,6 +3,7 @@
 #include "Core/Graphics/Renderer.hpp"
 #include "Core/Graphics/Direct3D11/Device.hpp"
 #include "tiny_gltf.h"
+#include <span>
 
 #define IDX(x) (size_t)static_cast<uint8_t>(x)
 
@@ -157,6 +158,8 @@ namespace core::Graphics
         std::vector<ModelBlock> model_block;
 
         Sunshine sunshine;
+        std::vector<PointLight> point_lights;
+        std::vector<PointLight> embedded_lights_;
 
         std::vector<DirectX::XMMATRIX> mTRS_stack;
 
@@ -164,6 +167,7 @@ namespace core::Graphics
         bool createImage(tinygltf::Model& model);
         bool createSampler(tinygltf::Model& model);
         bool createModelBlock(tinygltf::Model& model);
+        void loadLights(tinygltf::Model& model);
 
         bool createResources();
         void onDeviceCreate();
@@ -171,14 +175,19 @@ namespace core::Graphics
 
     public:
 
+        static constexpr uint32_t MAX_POINT_LIGHTS = 255u;
+
         void setAmbient(Vector3F const& color, float brightness);
         void setDirectionalLight(Vector3F const& direction, Vector3F const& color, float brightness);
+        void addPointLight(Vector3F const& pos, Vector3F const& color, float brightness, float range);
+        void clearPointLights();
+        std::vector<PointLight> takeEmbeddedLights();
         void setScaling(Vector3F const& scale);
         void setPosition(Vector3F const& pos);
         void setRotationRollPitchYaw(float roll, float pitch, float yaw);
         void setRotationQuaternion(Vector4F const& quat);
 
-        void draw(IRenderer::FogState fog);
+        void draw(IRenderer::FogState fog, std::span<PointLight const> scene_lights);
 
     public:
         Model_D3D11(Direct3D11::Device* p_device, ModelSharedComponent_D3D11* p_model_shared, StringView path);
