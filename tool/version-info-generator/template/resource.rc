@@ -70,7 +70,7 @@ BEGIN
             VALUE "FileDescription", "LuaSTG Flux"
             VALUE "FileVersion", "${VERSION}.0"
             VALUE "InternalName", "LuaSTG Flux"
-            VALUE "LegalCopyright", "Copyright 2025-2025 ${ORGNIZATION}"
+            VALUE "LegalCopyright", "Copyright 2025-2026 ${ORGNIZATION}"
             VALUE "OriginalFilename", "LuaSTGFlux.exe"
             VALUE "ProductName", "LuaSTG Flux"
             VALUE "ProductVersion", "${VERSION}.0"
