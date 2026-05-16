@@ -37,6 +37,8 @@
 #include "LuaBinding/LuaWrapper.hpp"
 #include "lua/plus.hpp"
 #include "Core/Graphics/Sprite.hpp"
+#include "LuaBinding/LuaWrapperMisc.hpp"
+#include "GameResource/LegacyBlendStateHelper.hpp"
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -941,7 +943,11 @@ namespace luastg::binding {
 		float layoutWidth{ 0.f };
 		float layoutHeight{ 0.f };
 		float maxFitWidth{ 0.f };
+		float maxFitHeight{ 0.f };
 		float effectiveSizeScale{ 1.f };
+
+		luastg::BlendMode blendMode{ luastg::BlendMode::MulAlpha };
+		core::Color4B vertexColor{ 255, 255, 255, 255 };
 
 		core::Color4B fillColor{ 255, 255, 255, 255 };
 		float outlineWidth{ 0.f };
@@ -1097,7 +1103,7 @@ namespace luastg::binding {
 					if (std::abs(newUPP - unitPerPixel) > 1e-5f) {
 						unitPerPixel = newUPP;
 						sprite->setUnitsPerPixel(unitPerPixel);
-						if (layoutWidth > 0.f || layoutHeight > 0.f || maxFitWidth > 0.f) {
+						if (layoutWidth > 0.f || layoutHeight > 0.f || maxFitWidth > 0.f || maxFitHeight > 0.f) {
 							layoutDirty = true;
 							renderDirty = true;
 						}
@@ -1123,6 +1129,9 @@ namespace luastg::binding {
 				core::Vector2F(wx + ax, wy + ay),
 				core::Vector2F(sx, sy),
 				rot);
+			auto const bd = luastg::translateLegacyBlendState(blendMode);
+			spriteRenderer->setLegacyBlendState(bd.vertex_color_blend_state, bd.blend_state);
+			spriteRenderer->setColor(vertexColor);
 			spriteRenderer->draw(renderer);
 			return true;
 		}
@@ -1214,6 +1223,7 @@ namespace luastg::binding {
 			float layoutWidthPx = layoutWidth > 0.f ? layoutWidth / unitPerPixel : 0.f;
 			float layoutHeightPx = layoutHeight > 0.f ? layoutHeight / unitPerPixel : 0.f;
 			float maxFitWidthPx = maxFitWidth > 0.f ? maxFitWidth / unitPerPixel : 0.f;
+			float maxFitHeightPx = maxFitHeight > 0.f ? maxFitHeight / unitPerPixel : 0.f;
 			float maxW = layoutWidthPx > 0.f ? std::max(1.f, layoutWidthPx - padL - padR) : 100000.f;
 			float maxH = layoutHeightPx > 0.f ? std::max(1.f, layoutHeightPx - padT - padB) : 100000.f;
 
@@ -1241,6 +1251,34 @@ namespace luastg::binding {
 							fmtToUse = scaledFmt.Get();
 						else
 							sizeScale = 1.f;
+					}
+				}
+			}
+			if (maxFitHeightPx > 0.f) {
+				Microsoft::WRL::ComPtr<IDWriteTextLayout> hMeasureLayout;
+				if (SUCCEEDED(dwriteFactory->CreateTextLayout(
+						parsed.plainText.c_str(), (UINT32)parsed.plainText.size(),
+						fmtToUse, maxW, 100000.f, &hMeasureLayout))) {
+					for (auto const& run : parsed.runs)
+						if (run.style.size.has_value())
+							hMeasureLayout->SetFontSize(run.style.size.value() * sizeScale, { run.start, run.length });
+					DWRITE_TEXT_METRICS m{};
+					hMeasureLayout->GetMetrics(&m);
+					float totalH = m.height + padT + padB;
+					if (totalH > maxFitHeightPx && m.height > 0.f) {
+						float newScale = std::max(sizeScale * std::max(1.f, maxFitHeightPx - padT - padB) / m.height, 1.f / fontSize);
+						if (newScale < sizeScale) {
+							sizeScale = newScale;
+							float scaledSize = std::max(1.f, fontSize * sizeScale);
+							scaledFmt.Reset();
+							if (SUCCEEDED(dwriteFactory->CreateTextFormat(
+									fontFamily.c_str(), fontCollection.Get(),
+									DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
+									DWRITE_FONT_STRETCH_NORMAL, scaledSize, L"", &scaledFmt)))
+								fmtToUse = scaledFmt.Get();
+							else
+								sizeScale = 1.f;
+						}
 					}
 				}
 			}
@@ -1615,6 +1653,13 @@ namespace luastg::binding {
 			ctx.push_value(lua::stack_index_t(1));
 			return 1;
 		}
+		static int setState(lua_State* vm) {
+			auto* self = as(vm, 1);
+			self->data->blendMode = luastg::TranslateBlendMode(vm, 2);
+			self->data->vertexColor = *Color::Cast(vm, 3);
+			lua::stack_t(vm).push_value(lua::stack_index_t(1));
+			return 1;
+		}
 		static int setFillColor(lua_State* vm) {
 			auto* self = as(vm, 1);
 			auto* color = Color::Cast(vm, 2);
@@ -1698,6 +1743,15 @@ namespace luastg::binding {
 			lua::stack_t ctx(vm);
 			auto* self = as(vm, 1);
 			self->data->maxFitWidth = std::max(0.f, ctx.get_value<float>(2, 0.f));
+			self->data->layoutDirty = true;
+			self->data->renderDirty = true;
+			ctx.push_value(lua::stack_index_t(1));
+			return 1;
+		}
+		static int setMaxHeight(lua_State* vm) {
+			lua::stack_t ctx(vm);
+			auto* self = as(vm, 1);
+			self->data->maxFitHeight = std::max(0.f, ctx.get_value<float>(2, 0.f));
 			self->data->layoutDirty = true;
 			self->data->renderDirty = true;
 			ctx.push_value(lua::stack_index_t(1));
@@ -1893,6 +1947,7 @@ namespace luastg::binding {
 		lua::stack_t ctx(vm);
 
 		auto methods = ctx.create_module(class_name);
+		ctx.set_map_value(methods, "setState", &RichTextBinding::setState);
 		ctx.set_map_value(methods, "setText", &RichTextBinding::setText);
 		ctx.set_map_value(methods, "setFillColor", &RichTextBinding::setFillColor);
 		ctx.set_map_value(methods, "setOutline", &RichTextBinding::setOutline);
@@ -1901,6 +1956,7 @@ namespace luastg::binding {
 		ctx.set_map_value(methods, "setFontSize", &RichTextBinding::setFontSize);
 		ctx.set_map_value(methods, "setTextWrap", &RichTextBinding::setTextWrap);
 		ctx.set_map_value(methods, "setMaxWidth", &RichTextBinding::setMaxWidth);
+		ctx.set_map_value(methods, "setMaxHeight", &RichTextBinding::setMaxHeight);
 		ctx.set_map_value(methods, "setHAlign", &RichTextBinding::setHAlign);
 		ctx.set_map_value(methods, "setVAlign", &RichTextBinding::setVAlign);
 		ctx.set_map_value(methods, "setAlignment", &RichTextBinding::setAlignment);
@@ -1914,7 +1970,7 @@ namespace luastg::binding {
 		ctx.set_map_value(methods, "create", &RichTextBinding::createFromFile);
 		ctx.set_map_value(methods, "createFromSystem",&RichTextBinding::createFromSystem);
 		ctx.set_map_value(methods, "createFromPool", &RichTextBinding::createFromPool);
-		ctx.set_map_value(methods, "destroy",         &RichTextBinding::destroy);
+		ctx.set_map_value(methods, "destroy", &RichTextBinding::destroy);
 
 		auto meta = ctx.create_metatable(class_name);
 		ctx.set_map_value(meta, "__gc", &RichTextBinding::__gc);
