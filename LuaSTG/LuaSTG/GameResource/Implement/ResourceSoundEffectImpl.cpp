@@ -58,6 +58,8 @@ namespace luastg {
 	bool ResourceSoundEffectImpl::IsStopped() { return m_state == core::AudioPlayerState::stopped; }
 	bool ResourceSoundEffectImpl::SetSpeed(float const speed) { return m_player->setSpeed(speed); }
 	float ResourceSoundEffectImpl::GetSpeed() { return m_player->getSpeed(); }
+	void ResourceSoundEffectImpl::SetVolume(float const v) { m_player->setVolume(v); }
+	float ResourceSoundEffectImpl::GetVolume() { return m_player->getVolume(); }
 
 	ResourceSoundEffectImpl::ResourceSoundEffectImpl(const char* name, core::IAudioPlayer* p_player)
 		: ResourceBaseImpl(ResourceType::SoundEffect, name)

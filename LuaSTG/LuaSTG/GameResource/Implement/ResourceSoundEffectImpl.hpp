@@ -15,6 +15,8 @@ namespace luastg {
 		bool IsStopped() override;
 		bool SetSpeed(float speed) override;
 		float GetSpeed() override;
+		void SetVolume(float v) override;
+		float GetVolume() override;
 
 		ResourceSoundEffectImpl(const char* name, core::IAudioPlayer* p_player);
 

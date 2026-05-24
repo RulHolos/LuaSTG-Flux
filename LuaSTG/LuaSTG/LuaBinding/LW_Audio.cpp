@@ -111,14 +111,38 @@ void luastg::binding::Audio::Register(lua_State* L)noexcept
 		}
 		static int SetSEVolume(lua_State* L)noexcept
 		{
-			float v = static_cast<float>(luaL_checknumber(L, 1));
-			v = std::clamp(v, 0.0f, 1.0f);
-			LAPP.SetSEVolume(v);
+			if (lua_gettop(L) <= 1)
+			{
+				float v = static_cast<float>(luaL_checknumber(L, 1));
+				v = std::clamp(v, 0.0f, 1.0f);
+				LAPP.SetSEVolume(v);
+			}
+			else
+			{
+				const char* s = luaL_checkstring(L, 1);
+				float v = static_cast<float>(luaL_checknumber(L, 2));
+				v = std::clamp(v, 0.0f, 1.0f);
+				core::SmartReference<IResourceSoundEffect> p = LRES.FindSound(s);
+				if (!p)
+					return luaL_error(L, "sound '%s' not found.", s);
+				p->SetVolume(v);
+			}
 			return 0;
 		}
 		static int GetSEVolume(lua_State* L)
 		{
-			lua_pushnumber(L, LAPP.GetSEVolume());
+			if (lua_gettop(L) == 0)
+			{
+				lua_pushnumber(L, LAPP.GetSEVolume());
+			}
+			else if (lua_gettop(L) == 1)
+			{
+				const char* s = luaL_checkstring(L, 1);
+				core::SmartReference<IResourceSoundEffect> p = LRES.FindSound(s);
+				if (!p)
+					return luaL_error(L, "sound '%s' not found.", s);
+				lua_pushnumber(L, p->GetVolume());
+			}
 			return 1;
 		}
 		static int SetSESpeed(lua_State* L) {

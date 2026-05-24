@@ -14,6 +14,8 @@ namespace luastg
 		virtual bool IsStopped() = 0;
 		virtual bool SetSpeed(float speed) = 0;
 		virtual float GetSpeed() = 0;
+		virtual void SetVolume(float v) = 0;
+		virtual float GetVolume() = 0;
 	};
 }
 
