@@ -667,7 +667,7 @@ namespace luastg
         SmartReference<IAudioPlayer> p_player;
         if (!LAPP.getAudioEngine()->createAudioPlayer(p_decoder.get(), AudioMixingChannel::sound_effect, p_player.put()))
         {
-            spdlog::error("[luastg] LoadSoundEffect: 无法创建音频播放器");
+            spdlog::error("[luastg] LoadSoundEffect: Unable to create audio player");
             return false;
         }
 
@@ -679,13 +679,13 @@ namespace luastg
         }
         catch (std::exception const& e)
         {
-            spdlog::error("[luastg] LoadSoundEffect: 加载音效 '{}' 失败 ({})", name, e.what());
+            spdlog::error("[luastg] LoadSoundEffect: Failed to load sound effect '{}' ({})", name, e.what());
             return false;
         }
     
         if (ResourceMgr::GetResourceLoadingLog())
         {
-            spdlog::info("[luastg] LoadSoundEffect: 已从 '{}' 加载音效 '{}' ({})", path, name, getResourcePoolTypeName());
+            spdlog::info("[luastg] LoadSoundEffect: Sound effect '{}' loaded from '{}' ({})", name, path, getResourcePoolTypeName());
         }
     
         return true;
@@ -700,7 +700,7 @@ namespace luastg
         {
             if (ResourceMgr::GetResourceLoadingLog())
             {
-                spdlog::warn("[luastg] LoadParticle: 粒子特效 '{}' 已存在，创建操作已取消", name);
+                spdlog::warn("[luastg] LoadParticle: Particle effect '{}' already exists; creation operation canceled", name);
             }
             return true;
         }
@@ -708,14 +708,14 @@ namespace luastg
         core::SmartReference<IResourceSprite> pSprite = m_pMgr->FindSprite(img_name);
         if (!pSprite)
         {
-            spdlog::error("[luastg] LoadParticle: 无法创建粒子特效 '{}'，找不到图片精灵 '{}'", name, img_name);
+            spdlog::error("[luastg] LoadParticle: Unable to create particle effect '{}', sprite '{}' not found", name, img_name);
             return false;
         }
     
         core::SmartReference<core::Graphics::ISprite> p_sprite;
         if (!pSprite->GetSprite()->clone(p_sprite.put()))
         {
-            spdlog::error("[luastg] LoadParticle: 无法创建粒子特效 '{}'，复制图片精灵 '{}' 失败", name, img_name);
+            spdlog::error("[luastg] LoadParticle: Unable to create particle effect '{}', failed to clone sprite '{}'", name, img_name);
             return false;
         }
 
@@ -727,13 +727,13 @@ namespace luastg
         }
         catch (std::exception const& e)
         {
-            spdlog::error("[luastg] LoadParticle: 创建粒子特效 '{}' 失败 ({})", name, e.what());
+            spdlog::error("[luastg] LoadParticle: Failed to create particle effect '{}' ({})", name, e.what());
             return false;
         }
     
         if (!_nolog && ResourceMgr::GetResourceLoadingLog())
         {
-            spdlog::info("[luastg] LoadParticle: 已创建粒子特效 '{}' ({})", name, getResourcePoolTypeName());
+            spdlog::info("[luastg] LoadParticle: Particle effect '{}' created ({})", name, getResourcePoolTypeName());
         }
     
         return true;
@@ -745,13 +745,13 @@ namespace luastg
         core::SmartReference<core::IData> src;
         if (!core::FileSystemManager::readFile(path, src.put()))
         {
-            spdlog::error("[luastg] LoadParticle:无法从 '{}' 加载粒子特效 '{}'，读取文件失败", path, name);
+            spdlog::error("[luastg] LoadParticle: Unable to load particle effect '{}' from '{}', failed to read file", name, path);
             return false;
         }
     
         if (src->size() != sizeof(hgeParticleSystemInfo))
         {
-            spdlog::error("[luastg] LoadParticle: 粒子特效定义文件 '{}' 格式不正确", path);
+            spdlog::error("[luastg] LoadParticle: Particle effect definition file '{}' has incorrect format", path);
             return false;
         }
         hgeParticleSystemInfo tInfo;
@@ -764,13 +764,13 @@ namespace luastg
     
         if (ResourceMgr::GetResourceLoadingLog())
         {
-            spdlog::info("[luastg] LoadParticle: 已从 '{}' 创建粒子特效 '{}' ({})", path, name, getResourcePoolTypeName());
+            spdlog::info("[luastg] LoadParticle: Particle effect '{}' created from '{}' ({})", name, path, getResourcePoolTypeName());
         }
     
         return true;
     }
 
-    // 加载纹理字体（HGE）
+    // Load texture font (HGE)
 
     bool ResourcePool::LoadSpriteFont(const char* name, const char* path, bool mipmaps) noexcept
     {
@@ -778,12 +778,12 @@ namespace luastg
         {
             if (ResourceMgr::GetResourceLoadingLog())
             {
-                spdlog::warn("[luastg] LoadSpriteFont: 纹理字体 '{}' 已存在，加载操作已取消", name);
+                spdlog::warn("[luastg] LoadSpriteFont: Texture font '{}' already exists; loading operation canceled", name);
             }
             return true;
         }
     
-        // 创建定义
+        // Create definition
         try
         {
             core::SmartReference<IResourceFont> tRes;
@@ -792,13 +792,13 @@ namespace luastg
         }
         catch (std::exception const& e)
         {
-            spdlog::error("[luastg] LoadSpriteFont: 无法加载 HGE 纹理字体 '{}' ({})", name, e.what());
+            spdlog::error("[luastg] LoadSpriteFont: Unable to load HGE texture font '{}' ({})", name, e.what());
             return false;
         }
     
         if (ResourceMgr::GetResourceLoadingLog())
         {
-            spdlog::info("[luastg] LoadSpriteFont: 已从 '{}' 加载 HGE 纹理字体 '{}' ({})", path, name, getResourcePoolTypeName());
+            spdlog::info("[luastg] LoadSpriteFont: HGE texture font '{}' loaded from '{}' ({})", name, path, getResourcePoolTypeName());
         }
     
         return true;
@@ -812,12 +812,12 @@ namespace luastg
         {
             if (ResourceMgr::GetResourceLoadingLog())
             {
-                spdlog::warn("[luastg] LoadSpriteFont: 纹理字体 '{}' 已存在，加载操作已取消", name);
+                spdlog::warn("[luastg] LoadSpriteFont: Texture font '{}' already exists; loading operation canceled", name);
             }
             return true;
         }
     
-        // 创建定义
+        // Create definition
         try
         {
             core::SmartReference<IResourceFont> tRes;
@@ -826,13 +826,13 @@ namespace luastg
         }
         catch (std::exception const& e)
         {
-            spdlog::error("[luastg] LoadSpriteFont: 无法加载 fancy2d 纹理字体 '{}' ({})", name, e.what());
+            spdlog::error("[luastg] LoadSpriteFont: Unable to load fancy2d texture font '{}' ({})", name, e.what());
             return false;
         }
     
         if (ResourceMgr::GetResourceLoadingLog())
         {
-            spdlog::info("[luastg] LoadSpriteFont: 已从 '{}' 和 '{}' 加载 fancy2d 纹理字体 '{}' ({})", path, tex_path, name, getResourcePoolTypeName());
+            spdlog::info("[luastg] LoadSpriteFont: Fancy2D texture font '{}' loaded from '{}' and '{}' ({})", name, path, tex_path, getResourcePoolTypeName());
         }
     
         return true;
@@ -846,7 +846,7 @@ namespace luastg
         {
             if (ResourceMgr::GetResourceLoadingLog())
             {
-                spdlog::warn("[luastg] LoadTTFFont: 矢量字体 '{}' 已存在，加载操作已取消", name);
+                spdlog::warn("[luastg] LoadTTFFont: TrueType font '{}' already exists; loading operation canceled", name);
             }
             return true;
         }
@@ -861,11 +861,11 @@ namespace luastg
         };
         if (!core::Graphics::IGlyphManager::create(LAPP.GetAppModel()->getDevice(), &create_info, 1, p_glyphmgr.put()))
         {
-            spdlog::error("[luastg] LoadTTFFont: 加载矢量字体 '{}' 失败", name);
+            spdlog::error("[luastg] LoadTTFFont: Failed to load TrueType font '{}'", name);
             return false;
         }
 
-        // 创建定义
+        // Create definition
         try
         {
             core::SmartReference<IResourceFont> tRes;
@@ -874,13 +874,13 @@ namespace luastg
         }
         catch (std::exception const& e)
         {
-            spdlog::error("[luastg] LoadTTFFont: 无法加载矢量字体 '{}' ({})", name, e.what());
+            spdlog::error("[luastg] LoadTTFFont: Unable to load TrueType font '{}' ({})", name, e.what());
             return false;
         }
     
         if (ResourceMgr::GetResourceLoadingLog())
         {
-            spdlog::info("[luastg] LoadTTFFont: 已从 '{}' 加载矢量字体 '{}' ({})", path, name, getResourcePoolTypeName());
+            spdlog::info("[luastg] LoadTTFFont: TrueType font '{}' loaded from '{}' ({})", name, path, getResourcePoolTypeName());
         }
     
         return true;
@@ -892,7 +892,7 @@ namespace luastg
         {
             if (ResourceMgr::GetResourceLoadingLog())
             {
-                spdlog::warn("[luastg] LoadTrueTypeFont: 矢量字体组 '{}' 已存在，加载操作已取消", name);
+                spdlog::warn("[luastg] LoadTrueTypeFont: TrueType font group '{}' already exists; loading operation canceled", name);
             }
             return true;
         }
@@ -900,11 +900,11 @@ namespace luastg
         core::SmartReference<core::Graphics::IGlyphManager> p_glyphmgr;
         if (!core::Graphics::IGlyphManager::create(LAPP.GetAppModel()->getDevice(), fonts, count, p_glyphmgr.put()))
         {
-            spdlog::error("[luastg] LoadTrueTypeFont: 加载矢量字体组 '{}' 失败", name);
+            spdlog::error("[luastg] LoadTrueTypeFont: Failed to load TrueType font group '{}'", name);
             return false;
         }
 
-        // 创建定义
+        // Create definition
         try
         {
             core::SmartReference<IResourceFont> tRes;
@@ -913,19 +913,19 @@ namespace luastg
         }
         catch (std::exception const& e)
         {
-            spdlog::error("[luastg] LoadTrueTypeFont: 无法加载矢量字体组 '{}' ({})", name, e.what());
+            spdlog::error("[luastg] LoadTrueTypeFont: Unable to load TrueType font group '{}' ({})", name, e.what());
             return false;
         }
     
         if (ResourceMgr::GetResourceLoadingLog())
         {
-            spdlog::info("[luastg] LoadTrueTypeFont: 已加载矢量字体组 '{}' ({})", name, getResourcePoolTypeName());
+            spdlog::info("[luastg] LoadTrueTypeFont: TrueType font group '{}' loaded ({})", name, getResourcePoolTypeName());
         }
     
         return true;
     }
 
-    // 加载后处理特效
+    // Load post-processing effects
 
     bool ResourcePool::LoadFX(const char* name, const char* path) noexcept
     {
@@ -933,7 +933,7 @@ namespace luastg
         {
             if (ResourceMgr::GetResourceLoadingLog())
             {
-                spdlog::warn("[luastg] LoadFX: 后处理特效 '{}' 已存在，加载操作已取消", name);
+                spdlog::warn("[luastg] LoadFX: Post-processing effect '{}' already exists; loading operation canceled", name);
             }
             return true;
         }
@@ -944,26 +944,26 @@ namespace luastg
             tRes.attach(new ResourcePostEffectShaderImpl(name, path));
             if (!tRes->GetPostEffectShader())
             {
-                spdlog::error("[luastg] LoadFX: 从 '{}' 加载后处理特效 '{}' 失败", path, name);
+                spdlog::error("[luastg] LoadFX: Failed to load post-processing effect '{}' from '{}'", name, path);
                 return false;
             }
             m_FXPool.emplace(name, tRes);
         }
         catch (std::exception const& e)
         {
-            spdlog::error("[luastg] LoadFX: 无法加载后处理特效 '{}' ({})", name, e.what());
+            spdlog::error("[luastg] LoadFX: Unable to load post-processing effect '{}' ({})", name, e.what());
             return false;
         }
 
         if (ResourceMgr::GetResourceLoadingLog())
         {
-            spdlog::info("[luastg] LoadFX: 已从 '{}' 加载后处理特效 '{}' ({})", path, name, getResourcePoolTypeName());
+            spdlog::info("[luastg] LoadFX: Loaded post-processing effect '{}' from '{}' ({})", name, path, getResourcePoolTypeName());
         }
     
         return true;
     }
 
-    // 加载模型
+    // Load models
 
     bool ResourcePool::LoadModel(const char* name, const char* path) noexcept
     {
@@ -971,7 +971,7 @@ namespace luastg
         {
             if (ResourceMgr::GetResourceLoadingLog())
             {
-                spdlog::warn("[luastg] LoadModel: 模型 '{}' 已存在，加载操作已取消", name);
+                spdlog::warn("[luastg] LoadModel: Model '{}' already exists; loading operation canceled", name);
             }
             return true;
         }
@@ -984,13 +984,13 @@ namespace luastg
         }
         catch (std::exception const& e)
         {
-            spdlog::error("[luastg] LoadModel: 无法加载模型 '{}' ({})", name, e.what());
+            spdlog::error("[luastg] LoadModel: Unable to load model '{}' ({})", name, e.what());
             return false;
         }
     
         if (ResourceMgr::GetResourceLoadingLog())
         {
-            spdlog::info("[luastg] LoadModel: 已从 '{}' 加载模型 '{}' ({})", path, name, getResourcePoolTypeName());
+            spdlog::info("[luastg] LoadModel: Loaded model '{}' from '{}' ({})", name, path, getResourcePoolTypeName());
         }
     
         return true;
@@ -1002,7 +1002,7 @@ namespace luastg
         {
             if (ResourceMgr::GetResourceLoadingLog())
             {
-                spdlog::warn("[luastg] LoadVideo: Video '{}' already exists. Skipping loading", name);
+                spdlog::warn("[luastg] LoadVideo: Video '{}' already exists; loading operation canceled", name);
             }
             return true;
         }
