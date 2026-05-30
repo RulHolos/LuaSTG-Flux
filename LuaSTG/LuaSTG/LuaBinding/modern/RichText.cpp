@@ -1084,12 +1084,6 @@ namespace luastg::binding {
 		bool drawAt(float wx, float wy, float sx, float sy, float rot) {
 			if (parsed.plainText.empty())
 				return true;
-			if (layoutDirty && !rebuildLayout())
-				return false;
-			if (renderDirty && !renderToTarget())
-				return false;
-			if (!spriteRenderer || !sprite)
-				return false;
 
 			auto* renderer = LAPP.GetAppModel()->getRenderer();
 
@@ -1102,14 +1096,20 @@ namespace luastg::binding {
 					float newUPP = orthoW / vpW;
 					if (std::abs(newUPP - unitPerPixel) > 1e-5f) {
 						unitPerPixel = newUPP;
-						sprite->setUnitsPerPixel(unitPerPixel);
-						if (layoutWidth > 0.f || layoutHeight > 0.f || maxFitWidth > 0.f || maxFitHeight > 0.f) {
-							layoutDirty = true;
-							renderDirty = true;
-						}
+						layoutDirty = true;
+						renderDirty = true;
 					}
 				}
 			}
+
+			if (layoutDirty && !rebuildLayout())
+				return false;
+			if (renderDirty && !renderToTarget())
+				return false;
+			if (!spriteRenderer || !sprite)
+				return false;
+
+			sprite->setUnitsPerPixel(unitPerPixel);
 
 			float ax = 0.f, ay = 0.f;
 			float worldW = (float)texWidth * unitPerPixel;
@@ -1150,7 +1150,7 @@ namespace luastg::binding {
 			if (FAILED(textLayout->GetMetrics(&m)))
 				return false;
 			float padL, padT, padR, padB;
-			computePadding(padL, padT, padR, padB);
+			computePadding(padL, padT, padR, padB, fontSize / unitPerPixel);
 			w = (m.width + padL + padR) * unitPerPixel;
 			if (layoutHeight == 0.f)
 				h = (m.height + padT + padB) * unitPerPixel;
@@ -1205,21 +1205,30 @@ namespace luastg::binding {
 			return SUCCEEDED(hr);
 		}
 
-		void computePadding(float& padLeft, float& padTop, float& padRight, float& padBottom) const {
+		void computePadding(float& padLeft, float& padTop, float& padRight, float& padBottom, float fontSizePx) const {
 			padLeft = outlineWidth + std::max(0.f, -shadowOffsetX) + shadowBlur * 2.f + 4.f;
 			padTop = outlineWidth + std::max(0.f, -shadowOffsetY) + shadowBlur * 2.f + 4.f;
 			padRight = outlineWidth + std::max(0.f, shadowOffsetX) + shadowBlur * 2.f + 4.f;
 			padBottom = outlineWidth + std::max(0.f, shadowOffsetY) + shadowBlur * 2.f + 4.f;
 			if (!parsed.rubies.empty())
-				padTop += fontSize * 0.5f + 3.f;
+				padTop += fontSizePx * 0.5f + 3.f;
 		}
 
 		bool rebuildLayout() {
 			if (!textFormat || parsed.plainText.empty())
 				return false;
 
+			float const fontSizePx = std::max(1.f, fontSize / unitPerPixel);
+
+			Microsoft::WRL::ComPtr<IDWriteTextFormat> pixelFmt;
+			if (FAILED(dwriteFactory->CreateTextFormat(
+					fontFamily.c_str(), fontCollection.Get(),
+					DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
+					DWRITE_FONT_STRETCH_NORMAL, fontSizePx, L"", &pixelFmt)))
+				return false;
+
 			float padL, padT, padR, padB;
-			computePadding(padL, padT, padR, padB);
+			computePadding(padL, padT, padR, padB, fontSizePx);
 			float layoutWidthPx = layoutWidth > 0.f ? layoutWidth / unitPerPixel : 0.f;
 			float layoutHeightPx = layoutHeight > 0.f ? layoutHeight / unitPerPixel : 0.f;
 			float maxFitWidthPx = maxFitWidth > 0.f ? maxFitWidth / unitPerPixel : 0.f;
@@ -1229,21 +1238,21 @@ namespace luastg::binding {
 
 			float sizeScale = 1.f;
 			Microsoft::WRL::ComPtr<IDWriteTextFormat> scaledFmt;
-			IDWriteTextFormat* fmtToUse = textFormat.Get();
+			IDWriteTextFormat* fmtToUse = pixelFmt.Get();
 			if (maxFitWidthPx > 0.f) {
 				Microsoft::WRL::ComPtr<IDWriteTextLayout> measureLayout;
 				if (SUCCEEDED(dwriteFactory->CreateTextLayout(
 						parsed.plainText.c_str(), (UINT32)parsed.plainText.size(),
-						textFormat.Get(), 100000.f, 100000.f, &measureLayout))) {
+						pixelFmt.Get(), 100000.f, 100000.f, &measureLayout))) {
 					for (auto const& run : parsed.runs)
 						if (run.style.size.has_value())
-							measureLayout->SetFontSize(run.style.size.value(), { run.start, run.length });
+							measureLayout->SetFontSize(run.style.size.value() / unitPerPixel, { run.start, run.length });
 					DWRITE_TEXT_METRICS m{};
 					measureLayout->GetMetrics(&m);
 					float totalW = m.width + padL + padR;
 					if (totalW > maxFitWidthPx && m.width > 0.f) {
-						sizeScale = std::max((maxFitWidthPx - padL - padR) / m.width, 1.f / fontSize);
-						float scaledSize = std::max(1.f, fontSize * sizeScale);
+						sizeScale = std::max((maxFitWidthPx - padL - padR) / m.width, 1.f / fontSizePx);
+						float scaledSize = std::max(1.f, fontSizePx * sizeScale);
 						if (SUCCEEDED(dwriteFactory->CreateTextFormat(
 								fontFamily.c_str(), fontCollection.Get(),
 								DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
@@ -1261,15 +1270,15 @@ namespace luastg::binding {
 						fmtToUse, maxW, 100000.f, &hMeasureLayout))) {
 					for (auto const& run : parsed.runs)
 						if (run.style.size.has_value())
-							hMeasureLayout->SetFontSize(run.style.size.value() * sizeScale, { run.start, run.length });
+							hMeasureLayout->SetFontSize(run.style.size.value() / unitPerPixel * sizeScale, { run.start, run.length });
 					DWRITE_TEXT_METRICS m{};
 					hMeasureLayout->GetMetrics(&m);
 					float totalH = m.height + padT + padB;
 					if (totalH > maxFitHeightPx && m.height > 0.f) {
-						float newScale = std::max(sizeScale * std::max(1.f, maxFitHeightPx - padT - padB) / m.height, 1.f / fontSize);
+						float newScale = std::max(sizeScale * std::max(1.f, maxFitHeightPx - padT - padB) / m.height, 1.f / fontSizePx);
 						if (newScale < sizeScale) {
 							sizeScale = newScale;
-							float scaledSize = std::max(1.f, fontSize * sizeScale);
+							float scaledSize = std::max(1.f, fontSizePx * sizeScale);
 							scaledFmt.Reset();
 							if (SUCCEEDED(dwriteFactory->CreateTextFormat(
 									fontFamily.c_str(), fontCollection.Get(),
@@ -1303,7 +1312,7 @@ namespace luastg::binding {
 				if (run.style.strikethrough)
 					textLayout->SetStrikethrough(TRUE, range);
 				if (run.style.size.has_value())
-					textLayout->SetFontSize(run.style.size.value() * sizeScale, range);
+					textLayout->SetFontSize(run.style.size.value() / unitPerPixel * sizeScale, range);
 				if (fontCollection)
 					textLayout->SetFontCollection(fontCollection.Get(), range);
 
@@ -1367,7 +1376,7 @@ namespace luastg::binding {
 			textLayout->GetMetrics(&metrics);
 
 			float padLeft, padTop, padRight, padBottom;
-			computePadding(padLeft, padTop, padRight, padBottom);
+			computePadding(padLeft, padTop, padRight, padBottom, fontSize / unitPerPixel);
 
 			uint32_t newW = std::max(1u, layoutWidth > 0.f
 				? (uint32_t)std::ceil(layoutWidth / unitPerPixel)
@@ -1520,7 +1529,7 @@ namespace luastg::binding {
 		}
 
 		void drawRubyAnnotations(ID2D1DeviceContext* ctx, ID2D1Factory* factory, float originX, float originY) {
-			float rubySize = fontSize * effectiveSizeScale * 0.5f;
+			float rubySize = (fontSize / unitPerPixel) * effectiveSizeScale * 0.5f;
 
 			Microsoft::WRL::ComPtr<IDWriteTextFormat> rubyFormat;
 			dwriteFactory->CreateTextFormat(
