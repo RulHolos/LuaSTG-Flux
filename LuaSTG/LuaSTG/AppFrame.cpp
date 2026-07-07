@@ -7,6 +7,7 @@
 #include "utf8.hpp"
 #include "core/Configuration.hpp"
 #include "DiscordRPC/DiscordRPCManager.hpp"
+#include "stb_image.h"
 
 using namespace luastg;
 
@@ -125,6 +126,45 @@ int AppFrame::LoadTextFile(lua_State* L_, const char* path, const char* packname
 	}
 	lua_pushlstring(L_, (char*)src->data(), src->size());
 	return 1;
+}
+
+int AppFrame::LoadCompressedTextFile(lua_State* L_, const char* path, const char *packname)noexcept
+{
+    if (ResourceMgr::GetResourceLoadingLog()) {
+        if (packname)
+            spdlog::info("[luastg] Reading compressed text file '{}' in package '{}'", packname, path);
+        else
+            spdlog::info("[luastg] Reading compressed text file '{}'", path);
+    }
+    bool loaded = false;
+    core::SmartReference<core::IData> src;
+    if (packname)
+    {
+		core::SmartReference<core::IFileSystemArchive> archive;
+        if (core::FileSystemManager::getFileSystemArchiveByPath(packname, archive.put())) {
+			loaded = archive->readFile(path, src.put());
+		}
+    }
+    else
+    {
+        loaded = core::FileSystemManager::readFile(path, src.put());
+    }
+    if (!loaded) {
+        spdlog::error("[luastg] Unable to load file '{}'", path);
+        return 0;
+    }
+    int decompressed_len;
+    char* decompressed_buf = stbi_zlib_decode_malloc((char*)src->data(), src->size(), &decompressed_len);
+    if (!decompressed_buf) {
+        spdlog::error("[luastg] Unable to allocate buffer for compressed text file '{}'", path);
+        return 0;
+    }
+    if (stbi_zlib_decode_buffer(decompressed_buf, decompressed_len, (char*)src->data(), src->size()) == -1) {
+        spdlog::error("[luastg] Unable to decompress text file '{}'", path);
+        return 0;
+    }
+    lua_pushlstring(L_, decompressed_buf, decompressed_len);
+    return 1;
 }
 
 #pragma endregion

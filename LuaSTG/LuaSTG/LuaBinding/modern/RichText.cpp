@@ -973,6 +973,8 @@ namespace luastg::binding {
 		uint32_t texWidth{ 0 };
 		uint32_t texHeight{ 0 };
 
+		friend class RichTextBinding;
+
 		bool initFromFile(std::string_view fontFilePath, float size) {
 			fontSize = size;
 			if (!createDWriteFactory())
@@ -1177,6 +1179,79 @@ namespace luastg::binding {
 				reinterpret_cast<IUnknown**>(dwriteFactory.GetAddressOf())));
 		}
 
+	public:
+		void tearDownFontLoaders() {
+			if (colLoader) {
+				dwriteFactory->UnregisterFontCollectionLoader(colLoader.Get());
+				colLoader.Reset();
+			}
+			if (fileLoader) {
+				dwriteFactory->UnregisterFontFileLoader(fileLoader.Get());
+				fileLoader.Reset();
+			}
+			fontCollection.Reset();
+			textFormat.Reset();
+			textLayout.Reset();
+		}
+
+		bool changeFontFromFile(std::string_view fontFilePath) {
+			tearDownFontLoaders();
+			fileLoader.Attach(new FontFileLoader());
+			if (FAILED(dwriteFactory->RegisterFontFileLoader(fileLoader.Get())))
+				return false;
+			colLoader.Attach(new FontCollectionLoader());
+			colLoader->init(dwriteFactory.Get(), fileLoader.Get(), { std::string(fontFilePath) });
+			if (FAILED(dwriteFactory->RegisterFontCollectionLoader(colLoader.Get())))
+				return false;
+			std::string key(fontFilePath);
+			if (FAILED(dwriteFactory->CreateCustomFontCollection(
+					colLoader.Get(), key.data(), (UINT32)key.size(), &fontCollection)))
+				return false;
+			if (!detectFontFamily())
+				return false;
+			return createTextFormat();
+		}
+
+		bool changeFontFromSystem(std::string_view familyNameUtf8) {
+			tearDownFontLoaders();
+			fontFamily = utf8::to_wstring(familyNameUtf8);
+			return createTextFormat();
+		}
+
+		bool changeFontFromPool(std::string_view resName) {
+			auto res = LRES.FindTTFFont(std::string(resName).c_str());
+			if (!res) return false;
+			auto* mgr = res->GetGlyphManager();
+			if (!mgr) return false;
+			uint32_t fontDataCount = mgr->getFontDataCount();
+			if (fontDataCount == 0) return false;
+			tearDownFontLoaders();
+			fileLoader.Attach(new FontFileLoader());
+			if (FAILED(dwriteFactory->RegisterFontFileLoader(fileLoader.Get())))
+				return false;
+			std::vector<std::string> keys;
+			for (uint32_t i = 0; i < fontDataCount; ++i) {
+				auto* fontData = mgr->getFontData(i);
+				if (!fontData) continue;
+				std::string key = "@pool:" + std::string(resName) + ":" + std::to_string(i);
+				fileLoader->preload(key, fontData);
+				keys.push_back(std::move(key));
+			}
+			if (keys.empty()) return false;
+			colLoader.Attach(new FontCollectionLoader());
+			colLoader->init(dwriteFactory.Get(), fileLoader.Get(), std::move(keys));
+			if (FAILED(dwriteFactory->RegisterFontCollectionLoader(colLoader.Get())))
+				return false;
+			std::string collKey = "@pool:" + std::string(resName);
+			if (FAILED(dwriteFactory->CreateCustomFontCollection(
+					colLoader.Get(), collKey.data(), (UINT32)collKey.size(), &fontCollection)))
+				return false;
+			if (!detectFontFamily())
+				return false;
+			return createTextFormat();
+		}
+
+	private:
 		bool detectFontFamily() {
 			if (!fontCollection)
 				return false;
@@ -1724,16 +1799,64 @@ namespace luastg::binding {
 			if (size <= 0.f)
 				return luaL_error(vm, "font size must be > 0");
 			self->data->fontSize = size;
-			self->data->textFormat.Reset();
 			self->data->textLayout.Reset();
-			HRESULT hr = self->data->dwriteFactory->CreateTextFormat(
-				self->data->fontFamily.c_str(),
-				self->data->fontCollection.Get(),
-				DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
-				DWRITE_FONT_STRETCH_NORMAL, size, L"",
-				&self->data->textFormat);
-			if (FAILED(hr))
-				return luaL_error(vm, "setFontSize: CreateTextFormat failed");
+			self->data->layoutDirty = true;
+			self->data->renderDirty = true;
+			ctx.push_value(lua::stack_index_t(1));
+			return 1;
+		}
+		static int setFont(lua_State* vm) {
+			lua::stack_t ctx(vm);
+			auto* self = as(vm, 1);
+			if (!self->data)
+				return luaL_error(vm, "setFont: RichText not initialized");
+			auto path = ctx.get_value<std::string_view>(2);
+			if (!lua_isnoneornil(vm, 3)) {
+				float size = ctx.get_value<float>(3);
+				if (size <= 0.f)
+					return luaL_error(vm, "font size must be > 0");
+				self->data->fontSize = size;
+			}
+			if (!self->data->changeFontFromFile(path))
+				return luaL_error(vm, "setFont: failed to load font '%s'", std::string(path).c_str());
+			self->data->layoutDirty = true;
+			self->data->renderDirty = true;
+			ctx.push_value(lua::stack_index_t(1));
+			return 1;
+		}
+		static int setFontFromSystem(lua_State* vm) {
+			lua::stack_t ctx(vm);
+			auto* self = as(vm, 1);
+			if (!self->data)
+				return luaL_error(vm, "setFontFromSystem: RichText not initialized");
+			auto family = ctx.get_value<std::string_view>(2);
+			if (!lua_isnoneornil(vm, 3)) {
+				float size = ctx.get_value<float>(3);
+				if (size <= 0.f)
+					return luaL_error(vm, "font size must be > 0");
+				self->data->fontSize = size;
+			}
+			if (!self->data->changeFontFromSystem(family))
+				return luaL_error(vm, "setFontFromSystem: failed to set font '%s'", std::string(family).c_str());
+			self->data->layoutDirty = true;
+			self->data->renderDirty = true;
+			ctx.push_value(lua::stack_index_t(1));
+			return 1;
+		}
+		static int setFontFromPool(lua_State* vm) {
+			lua::stack_t ctx(vm);
+			auto* self = as(vm, 1);
+			if (!self->data)
+				return luaL_error(vm, "setFontFromPool: RichText not initialized");
+			auto resName = ctx.get_value<std::string_view>(2);
+			if (!lua_isnoneornil(vm, 3)) {
+				float size = ctx.get_value<float>(3);
+				if (size <= 0.f)
+					return luaL_error(vm, "font size must be > 0");
+				self->data->fontSize = size;
+			}
+			if (!self->data->changeFontFromPool(resName))
+				return luaL_error(vm, "setFontFromPool: failed to use resource '%s'", std::string(resName).c_str());
 			self->data->layoutDirty = true;
 			self->data->renderDirty = true;
 			ctx.push_value(lua::stack_index_t(1));
@@ -1963,6 +2086,9 @@ namespace luastg::binding {
 		ctx.set_map_value(methods, "setShadow", &RichTextBinding::setShadow);
 		ctx.set_map_value(methods, "clearShadow", &RichTextBinding::clearShadow);
 		ctx.set_map_value(methods, "setFontSize", &RichTextBinding::setFontSize);
+		ctx.set_map_value(methods, "setFont", &RichTextBinding::setFont);
+		ctx.set_map_value(methods, "setFontFromSystem", &RichTextBinding::setFontFromSystem);
+		ctx.set_map_value(methods, "setFontFromPool", &RichTextBinding::setFontFromPool);
 		ctx.set_map_value(methods, "setTextWrap", &RichTextBinding::setTextWrap);
 		ctx.set_map_value(methods, "setMaxWidth", &RichTextBinding::setMaxWidth);
 		ctx.set_map_value(methods, "setMaxHeight", &RichTextBinding::setMaxHeight);

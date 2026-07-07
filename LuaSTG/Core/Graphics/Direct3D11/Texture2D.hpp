@@ -1,6 +1,7 @@
 #pragma once
 #include "core/implement/ReferenceCounted.hpp"
 #include "Core/Graphics/Device.hpp"
+#include <vector>
 
 // Texture2D
 namespace core::Graphics::Direct3D11 {
@@ -46,6 +47,7 @@ namespace core::Graphics::Direct3D11 {
 		[[nodiscard]] ID3D11ShaderResourceView* GetView() const noexcept { return m_view.Get(); }
 
 		bool initialize(Device* device, StringView path, bool mipmap);
+		bool initialize(Device* device, void const* data, size_t size, bool mipmap);
 		bool initialize(Device* device, Vector2U size, bool is_render_target);
 		bool createResource();
 
@@ -54,6 +56,7 @@ namespace core::Graphics::Direct3D11 {
 		SmartReference<ISamplerState> m_sampler;
 		SmartReference<IData> m_data;
 		std::string m_source_path;
+		std::vector<uint8_t> m_source_data;
 		Microsoft::WRL::ComPtr<ID3D11Texture2D> m_texture;
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_view;
 		Vector2U m_size{};

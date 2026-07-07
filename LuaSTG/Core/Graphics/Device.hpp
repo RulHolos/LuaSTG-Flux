@@ -150,13 +150,14 @@ namespace core::Graphics
 
 		virtual void* getNativeHandle() = 0;
 		virtual void* getNativeRendererHandle() = 0;
+		virtual void* getNativeDeviceContext() = 0;
 
 		virtual bool createVertexBuffer(uint32_t size_in_bytes, IBuffer** output) = 0;
 		virtual bool createIndexBuffer(uint32_t size_in_bytes, IBuffer** output) = 0;
 		virtual bool createConstantBuffer(uint32_t size_in_bytes, IBuffer** output) = 0;
 
 		virtual bool createTextureFromFile(StringView path, bool mipmap, ITexture2D** pp_texture) = 0;
-		//virtual bool createTextureFromMemory(void const* data, size_t size, bool mipmap, ITexture2D** pp_texture) = 0;
+		virtual bool createTextureFromMemory(void const* data, size_t size, bool mipmap, ITexture2D** pp_texture) = 0;
 		virtual bool createTexture(Vector2U size, ITexture2D** pp_texture) = 0;
 
 		virtual bool createRenderTarget(Vector2U size, IRenderTarget** pp_rt) = 0;

@@ -100,6 +100,7 @@ namespace luastg
         
         // 纹理
         bool LoadTexture(const char* name, const char* path, bool mipmaps = true) noexcept;
+        bool LoadTextureBin(const char* name, std::vector<uint8_t> data, bool mipmaps = true) noexcept;
         bool CreateTexture(const char* name, int width, int height) noexcept;
         bool StoreTexture(const char* name, core::Graphics::ITexture2D* p_texture) noexcept;
         // 渲染目标
