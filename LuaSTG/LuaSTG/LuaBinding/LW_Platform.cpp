@@ -111,6 +111,27 @@ void luastg::binding::Platform::Register(lua_State* L) noexcept
 			return 0;
 #endif
 		}
+
+		static int OpenFolder(lua_State* L)
+		{
+			const char* path = luaL_checkstring(L, 1);
+
+			std::string fixedPath(path);
+			std::replace(fixedPath.begin(), fixedPath.end(), '/', '\\');
+
+			HINSTANCE result = ShellExecuteW(
+				nullptr,
+				L"open",
+				utf8::to_wstring(fixedPath).c_str(),
+				nullptr,
+				nullptr,
+				SW_SHOWNORMAL
+			);
+
+			lua_pushboolean(L, (intptr_t)result > 32);
+			return 1;
+		}
+
 		static int api_MessageBox(lua_State* L)
 		{
 			char const* title = luaL_checkstring(L, 1);
@@ -130,6 +151,7 @@ void luastg::binding::Platform::Register(lua_State* L) noexcept
 		{ "GetLocalAppDataPath", &Wrapper::GetLocalAppDataPath },
 		{ "GetRoamingAppDataPath", &Wrapper::GetRoamingAppDataPath },
 		{ "Execute", &Wrapper::Execute },
+		{ "OpenFolder", &Wrapper::OpenFolder },
 		{ "MessageBox", &Wrapper::api_MessageBox },
 		{ NULL, NULL },
 	};
