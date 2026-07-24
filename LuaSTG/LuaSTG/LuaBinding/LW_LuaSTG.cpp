@@ -37,6 +37,18 @@ void luastg::binding::BuiltInFunction::Register(lua_State* L)noexcept
 {
 	struct Wrapper
 	{
+		static int SetEntryScript(lua_State* L)noexcept
+		{
+			if (LAPP.m_iStatus != AppStatus::Initializing)
+			{
+				spdlog::warn("lstg.SetEntryScript() was called outside of the engine initialization step. This call will result in a no-op");
+				return 0;
+			}
+
+			LAPP.m_sEntryScriptPathOverride = luaL_checkstring(L, 1);
+			return 0;
+		}
+
 		#pragma region 框架函数
 		// 框架函数
 		static int GetVersionNumber(lua_State* L)noexcept
@@ -242,6 +254,8 @@ void luastg::binding::BuiltInFunction::Register(lua_State* L)noexcept
 	};
 	
 	luaL_Reg tFunctions[] = {
+		{ "SetEntryScript", &Wrapper::SetEntryScript },
+
 		#pragma region 框架函数
 		{ "GetVersionNumber", &Wrapper::GetVersionNumber },
 		{ "GetVersionName", &Wrapper::GetVersionName },

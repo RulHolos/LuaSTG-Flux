@@ -47,8 +47,6 @@ namespace luastg {
 		, public IRenderTargetManager
 	{
 	private:
-		AppStatus m_iStatus = AppStatus::NotInitialized;
-
 		// 应用程序框架
 		core::SmartReference<core::IApplicationModel> m_pAppModel;
 		core::SmartReference<core::Graphics::ITextRenderer> m_pTextRenderer;
@@ -266,6 +264,10 @@ namespace luastg {
 		core::IApplicationModel* GetAppModel() { return m_pAppModel.get(); }
 		core::Graphics::IRenderer* GetRenderer2D() { return m_pAppModel->getRenderer(); }
 		core::IAudioEngine* getAudioEngine() { return m_audio_engine.get(); }
+
+		AppStatus m_iStatus = AppStatus::NotInitialized;
+
+		std::string_view m_sEntryScriptPathOverride;
 
 	public:
 		/// @brief 初始化框架

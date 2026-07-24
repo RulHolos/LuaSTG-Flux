@@ -42,32 +42,39 @@ namespace luastg
     
     bool AppFrame::OnLoadMainScriptAndFiles()
     {
+        if (!m_sEntryScriptPathOverride.empty())
+        {
+            core::SmartReference<core::IData> src;
+            if (!core::FileSystemManager::readFile(m_sEntryScriptPathOverride, src.put()))
+            {
+                spdlog::error("[luastg] Unable to load entry script '{}'", m_sEntryScriptPathOverride);
+                return false;
+            }
+
+            spdlog::info("[luastg] Loading script '{}'", m_sEntryScriptPathOverride);
+            return SafeCallScript((char const*)src->data(), src->size(), m_sEntryScriptPathOverride.data());
+        }
+
         spdlog::info("[luastg] Loading entry point candidates");
-        std::string_view entry_scripts[3] = {
+        constexpr std::string_view entry_scripts[] = {
             "core.lua",
             "main.lua",
             "src/main.lua",
+            "src/core.lua",
         };
-        std::string_view entry_script;
-        for (auto& v : entry_scripts)
+
+        for (std::string_view path : entry_scripts)
         {
-            if (core::FileSystemManager::hasFile(v))
+            core::SmartReference<core::IData> src;
+            if (core::FileSystemManager::readFile(path, src.put()))
             {
-                entry_script = v;
-                break;
+                spdlog::info("[luastg] Loading script '{}'", path);
+                return SafeCallScript((char const*)src->data(), src->size(), path.data());
             }
         }
-        if (entry_script.empty())
-        {
-            spdlog::error("[luastg] Cannot find any entry point candidates at '{}', '{}' or '{}'", entry_scripts[0], entry_scripts[1], entry_scripts[2]);
-            return true;
-        }
-        core::SmartReference<core::IData> src;
-        if (core::FileSystemManager::readFile(entry_script, src.put()))
-        {
-            spdlog::info("[luastg] Loading script '{}'", entry_script);
-            SafeCallScript((char const*)src->data(), src->size(), entry_script.data());
-        }
-        return true;
+
+        spdlog::error("[luastg] Cannot find or load any entry point candidates at '{}', '{}', '{}', or '{}'",
+            entry_scripts[0], entry_scripts[1], entry_scripts[2], entry_scripts[3]);
+        return false;
     }
 }
