@@ -361,6 +361,14 @@ namespace luastg::binding
 				if (lua_gettop(L) == 1) {
 					CreateAndPush(L, core::Color4B((uint32_t)luaL_checknumber(L, 1)));
 				}
+				else if (lua_gettop(L) == 3)
+				{
+					CreateAndPush(L, core::Color4B(
+						(uint8_t)std::clamp<lua_Integer>(luaL_checkinteger(L, 1), 0, 255),
+						(uint8_t)std::clamp<lua_Integer>(luaL_checkinteger(L, 2), 0, 255),
+						(uint8_t)std::clamp<lua_Integer>(luaL_checkinteger(L, 3), 0, 255)
+					));
+				}
 				else {
 					CreateAndPush(L, core::Color4B(
 						(uint8_t)std::clamp<lua_Integer>(luaL_checkinteger(L, 2), 0, 255),
