@@ -446,7 +446,26 @@ namespace luastg::binding {
 				break;
 			}
 
-			lua_rawget(vm, 1); // self[key]
+			//Old
+			//lua_rawget(vm, 1); // self[key]
+
+			//New
+			lua_pushvalue(vm, 2); //key
+			lua_rawget(vm, 1); //self[key]
+			if (!lua_isnil(vm, -1))
+				return 1; //found
+			lua_pop(vm, 1); //pop nil
+
+			//Fallback get in self[1]
+			lua_rawgeti(vm, 1, 1); //self[1] (class table)
+			if (lua_istable(vm, -1))
+			{
+				lua_pushvalue(vm, 2); //key
+				lua_gettable(vm, -2); //self[1][key] Not (lua_rawget since I need metatable fallback)
+				return 1;
+			}
+
+			lua_pushnil(vm);
 			return 1;
 		}
 		static int __newindex(lua_State* const vm) {
