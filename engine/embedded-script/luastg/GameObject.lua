@@ -32,35 +32,29 @@ local _DetectListFirst = lstg._DetectListFirst
 local _DetectListNext = lstg._DetectListNext
 local _CollectGroup = lstg._CollectGroup
 local objects = lstg.ObjTable()
-
-local function _UpdateListIterator(checking_world, last_id)
-    local id = (last_id == 0) and _UpdateListFirst(checking_world) or _UpdateListNext(last_id, checking_world)
-    if id ~= 0 then
-        return id, objects[id]
-    end
-end
-
-local function _DetectListIterator(state, last_id)
-    local group = bit.band(state, 15)
-    local w = bit.rshift(state, 4)
-    local checking_world = (w == 0) and nil or (w - 1)
-
-    local id = (last_id == 0) and _DetectListFirst(group, checking_world) or _DetectListNext(group, last_id, checking_world)
-    if id ~= 0 then
-        return id, objects[id]
-    end
-end
-
----@param group [0, 16]
----@param checking_world integer? optional world flag to check.
 function lstg.ObjList(group, checking_world)
     if group < 0 or group >= 16 then
-        return _UpdateListIterator, checking_world, 0
+        local id = _UpdateListFirst(checking_world)
+        return function()
+            if id == 0 then
+                return nil, nil
+            else
+                local i, o = id, objects[id]
+                id = _UpdateListNext(id, checking_world)
+                return i, o
+            end
+        end
     else
-        local w = (checking_world == nil) and 0 or (checking_world + 1)
-        local state = group + w * 16
-
-        return _DetectListIterator, state, 0
+        local id = _DetectListFirst(group, checking_world)
+        return function()
+            if id == 0 then
+                return nil, nil
+            else
+                local i, o = id, objects[id]
+                id = _DetectListNext(group, id, checking_world)
+                return i, o
+            end
+        end
     end
 end
 ---@param group integer
