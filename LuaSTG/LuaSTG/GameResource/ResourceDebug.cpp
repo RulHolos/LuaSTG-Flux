@@ -34,26 +34,37 @@ namespace luastg
 		if (ImGui::Begin("Resource Manager##lstg.ResourceManager", p_open))
 		{
 			static int timer = 0;
-
 			static int current_pool = 0;
-			static char const* const pool_names[] = {
-				"Global",
-				"Stage",
-			};
-			ImGui::Combo("Resource Set", &current_pool, pool_names, 2);
 
-			ResourcePool* p_pool = nullptr;
-			switch (current_pool)
+			std::vector<std::pair<std::string, ResourcePool*>> pool_list;
+			pool_list.reserve(2 + m_CustomPools.size());
+
+			pool_list.emplace_back("Global", &m_GlobalResourcePool);
+    		pool_list.emplace_back("Stage", &m_StageResourcePool);
+
+			for (auto const& [name, pool_ptr] : m_CustomPools)
+				pool_list.emplace_back(name, pool_ptr.get());
+			
+			if (current_pool >= static_cast<int>(pool_list.size()))
+				current_pool = 0;
+
+			std::string const preview_value = pool_list.empty() ? "" : pool_list[current_pool].first;
+
+			if (ImGui::BeginCombo("Resource Set", preview_value.c_str()))
 			{
-			case 0:
-				p_pool = &m_GlobalResourcePool;
-				break;
-			case 1:
-				p_pool = &m_StageResourcePool;
-				break;
-			default:
-				break;
+				for (int i = 0; i < static_cast<int>(pool_list.size()); ++i)
+				{
+					const bool is_selected = (current_pool == i);
+					if (ImGui::Selectable(pool_list[i].first.c_str(), is_selected))
+						current_pool = i;
+
+					if (is_selected)
+						ImGui::SetItemDefaultFocus();
+				}
+				ImGui::EndCombo();
 			}
+
+			ResourcePool* p_pool = pool_list.empty() ? nullptr : pool_list[current_pool].second;
 
 			auto draw_preview_scaling = [](float& scale) -> void
 			{
