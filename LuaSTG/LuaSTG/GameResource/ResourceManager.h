@@ -203,6 +203,7 @@ namespace luastg
         void UpdateSpritesOnRenderTargetResize(core::Graphics::ITexture2D* texture, core::Vector2U old_size, core::Vector2U new_size) noexcept;
         
         bool GetTextureSize(const char* name, core::Vector2U& out) noexcept;
+        bool GetTextureHandle(const char* name, size_t& out) noexcept;
         void CacheTTFFontString(const char* name, const char* text, size_t len) noexcept;
         void UpdateSound();
         void UpdateVideo();

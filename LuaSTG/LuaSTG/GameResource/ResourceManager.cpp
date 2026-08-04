@@ -446,6 +446,13 @@ namespace luastg
 		out = tRet->GetTexture()->getSize();
 		return true;
 	}
+	bool ResourceMgr::GetTextureHandle(const char* name, size_t& out) noexcept {
+		core::SmartReference<IResourceTexture> tRet = FindTexture(name);
+		if (!tRet)
+			return false;
+		out = reinterpret_cast<size_t>(tRet->GetTexture()->getNativeHandle());
+		return true;
+	}
 
 	void ResourceMgr::CacheTTFFontString(const char* name, const char* text, size_t len) noexcept {
 		core::SmartReference<IResourceFont> f = FindTTFFont(name);

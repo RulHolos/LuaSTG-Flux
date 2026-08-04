@@ -51,6 +51,12 @@ namespace luastg::binding {
 			ctx.push_value(self->data->getSize().y);
 			return 1;
 		}
+		static int getNativeHandle(lua_State* vm) {
+			lua::stack_t const ctx(vm);
+			auto const self = as(vm, 1);
+			ctx.push_value(reinterpret_cast<size_t>(self->data->getNativeHandle()));
+			return 1;
+		}
 
 		// static method
 
@@ -95,6 +101,7 @@ namespace luastg::binding {
 		auto const method_table = ctx.create_module(class_name);
 		ctx.set_map_value(method_table, "getWidth", &Texture2DBinding::getWidth);
 		ctx.set_map_value(method_table, "getHeight", &Texture2DBinding::getHeight);
+		ctx.set_map_value(method_table, "getNativeHandle", &Texture2DBinding::getNativeHandle);
 		ctx.set_map_value(method_table, "createFromFile", &Texture2DBinding::createFromFile);
 
 		// metatable

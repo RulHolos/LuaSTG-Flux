@@ -492,6 +492,15 @@ void luastg::binding::ResourceManager::Register(lua_State* L) noexcept
 			lua_pushinteger(L, (lua_Integer)size.y);
 			return 2;
 		}
+		static int GetTextureHandle(lua_State* L) noexcept
+		{
+			const char* name = luaL_checkstring(L, 1);
+			size_t handle;
+			if (!LRES.GetTextureHandle(name, handle))
+				return luaL_error(L, "texture '%s' not found.", name);
+			lua_pushinteger(L, (lua_Integer)handle);
+			return 1;
+		}
 		static int RemoveResource(lua_State* L) noexcept
 		{
 			const char* s = luaL_checkstring(L, 1);
@@ -748,6 +757,7 @@ void luastg::binding::ResourceManager::Register(lua_State* L) noexcept
 		{ "SetTexturePreMulAlphaState", &Wrapper::SetTexturePreMulAlphaState },
 		{ "SetTextureSamplerState", &Wrapper::SetTextureSamplerState },
 		{ "GetTextureSize", &Wrapper::GetTextureSize },
+		{ "GetTextureHandle", &Wrapper::GetTextureHandle },
 		{ "RemoveResource", &Wrapper::RemoveResource },
 		{ "CheckRes", &Wrapper::CheckRes },
 		{ "EnumRes", &Wrapper::EnumRes },

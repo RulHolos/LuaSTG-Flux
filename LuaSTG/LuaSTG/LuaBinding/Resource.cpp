@@ -50,6 +50,13 @@ namespace luastg::binding
 			S.push_value(result.y);
 			return 1;
 		}
+		static int api_getNativeHandle(lua_State* L)
+		{
+			lua::stack_t S(L);
+			auto* self = cast(L, 1);
+			S.push_value(reinterpret_cast<size_t>(self->data->GetTexture()->getNativeHandle()));
+			return 1;
+		}
 
 		static int api___gc(lua_State* L)
 		{
@@ -114,6 +121,7 @@ namespace luastg::binding
 			//S.set_map_value(method_table, "getSize", &api_getSize);
 			S.set_map_value(method_table, "getWidth", &api_getWidth);
 			S.set_map_value(method_table, "getHeight", &api_getHeight);
+			S.set_map_value(method_table, "getNativeHandle", &api_getNativeHandle);
 
 			// metatable
 
