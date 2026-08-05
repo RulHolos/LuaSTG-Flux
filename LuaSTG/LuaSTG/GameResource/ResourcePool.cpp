@@ -56,14 +56,7 @@ namespace luastg
 
     const char* ResourcePool::getResourcePoolTypeName()
     {
-        switch (m_iType) {
-            case ResourcePoolType::Global:
-                return "global";
-            case ResourcePoolType::Stage:
-                return "stage";
-            default:
-                return "none";
-        }
+        return m_name.c_str();
     }
 
     void ResourcePool::RemoveResource(ResourceType t, const char* name) noexcept
