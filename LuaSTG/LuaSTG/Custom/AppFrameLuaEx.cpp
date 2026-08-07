@@ -1,6 +1,7 @@
 #include "AppFrame.h"
 #include "Config.h"
 #include "core/FileSystem.hpp"
+#include "core/Configuration.hpp"
 
 #include "Platform/HResultChecker.hpp"
 
@@ -42,17 +43,21 @@ namespace luastg
     
     bool AppFrame::OnLoadMainScriptAndFiles()
     {
-        if (!m_sEntryScriptPathOverride.empty())
+        std::string entry_point = core::ConfigurationLoader::getInstance().getFileSystem().getEntryPoint();
+        if (entry_point.empty())
+            entry_point = m_sEntryScriptPathOverride;
+
+        if (!entry_point.empty())
         {
             core::SmartReference<core::IData> src;
-            if (!core::FileSystemManager::readFile(m_sEntryScriptPathOverride, src.put()))
+            if (!core::FileSystemManager::readFile(entry_point, src.put()))
             {
-                spdlog::error("[luastg] Unable to load entry script '{}'", m_sEntryScriptPathOverride);
+                spdlog::error("[luastg] Unable to load entry script '{}'", entry_point);
                 return false;
             }
 
-            spdlog::info("[luastg] Loading script '{}'", m_sEntryScriptPathOverride);
-            return SafeCallScript((char const*)src->data(), src->size(), m_sEntryScriptPathOverride.data());
+            spdlog::info("[luastg] Loading script '{}'", entry_point);
+            return SafeCallScript((char const*)src->data(), src->size(), entry_point.data());
         }
 
         spdlog::info("[luastg] Loading entry point candidates");

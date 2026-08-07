@@ -109,9 +109,11 @@ namespace core {
 		public:
 			inline std::vector<ResourceFileSystem> const& getResources() const noexcept { return resources; }
 			GetterSetterString(FileSystem, user, User);
+			GetterSetterString(FileSystem, entry_point, EntryPoint);
 		private:
 			std::vector<ResourceFileSystem> resources;
 			std::string user;
+			std::string entry_point;
 		};
 		class Timing {
 		public:

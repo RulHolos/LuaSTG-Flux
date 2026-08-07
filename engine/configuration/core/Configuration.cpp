@@ -351,6 +351,11 @@ namespace core {
 					assert_type_is_string(user, "/file_system/user"sv);
 					loader.file_system.setUser(user.get_ref<std::string const&>());
 				}
+				if (file_system.contains("entry_point"sv)) {
+					auto const& entry_point = file_system.at("entry_point"sv);
+					assert_type_is_string(entry_point, "/file_system/entry_point"sv);
+					loader.file_system.setEntryPoint(entry_point.get_ref<std::string const&>());
+				}
 			}
 
 			if (root.contains("timing"sv)) {
