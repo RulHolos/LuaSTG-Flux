@@ -6,9 +6,8 @@ add_library(Microsoft.D3DCompiler.Redist SHARED IMPORTED GLOBAL)
 
 CPMAddPackage(
     NAME Microsoft.Windows.SDK.CPP
-    VERSION 10.0.22621.3233
-    URL https://www.nuget.org/api/v2/package/Microsoft.Windows.SDK.CPP/10.0.22621.3233
-    URL_HASH SHA256=E4EFE1768EA61F4F999DBEF61B09895320629F975F9CEED8290A9633E0C31623
+    VERSION 10.0.28000.2526
+    URL https://www.nuget.org/api/v2/package/Microsoft.Windows.SDK.CPP/10.0.28000.2526
     DOWNLOAD_ONLY YES
 )
 
