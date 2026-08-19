@@ -1367,13 +1367,32 @@ namespace luastg::binding {
 				}
 			}
 
+			if (layoutWidthPx <= 0.f) {
+				Microsoft::WRL::ComPtr<IDWriteTextLayout> naturalLayout;
+				HRESULT nhr = dwriteFactory->CreateTextLayout(
+					parsed.plainText.c_str(), (UINT32)parsed.plainText.size(),
+					fmtToUse, 100000.f, 100000.f, &naturalLayout);
+
+				if (SUCCEEDED(nhr)) {
+					for (auto const& run : parsed.runs)
+						if (run.style.size.has_value())
+							naturalLayout->SetFontSize(run.style.size.value() / unitPerPixel * sizeScale, { run.start, run.length });
+
+					DWRITE_TEXT_METRICS naturalMetrics{};
+					naturalLayout->GetMetrics(&naturalMetrics);
+
+					if (naturalMetrics.width > 0.f)
+						maxW = naturalMetrics.width;
+				}
+			}
+
 			HRESULT hr = dwriteFactory->CreateTextLayout(
 				parsed.plainText.c_str(), (UINT32)parsed.plainText.size(),
 				fmtToUse, maxW, maxH, &textLayout);
 			if (FAILED(hr))
 				return false;
 
-			textLayout->SetTextAlignment(layoutWidthPx > 0.f ? hAlign : DWRITE_TEXT_ALIGNMENT_LEADING);
+			textLayout->SetTextAlignment(hAlign);
 			textLayout->SetParagraphAlignment(layoutHeightPx > 0.f ? vAlign : DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
 
 			for (auto const& run : parsed.runs) {
