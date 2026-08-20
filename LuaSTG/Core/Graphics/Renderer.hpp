@@ -30,6 +30,14 @@ namespace core::Graphics
 		Auto = 0,
 		Alpha,
 		Add,
+		Sub,
+		RevSub,
+		Mul,
+		Screen,
+		Min,
+		Max,
+		Inv,
+		One,
 		ScreenDoor,
 	};
 

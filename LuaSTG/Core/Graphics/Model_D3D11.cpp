@@ -393,6 +393,166 @@ namespace core::Graphics
             return false;
         }
 
+        // built-in: sub-blend
+
+        rt_blend_def.BlendEnable = TRUE;
+        rt_blend_def.SrcBlend = D3D11_BLEND_SRC_ALPHA;
+        rt_blend_def.DestBlend = D3D11_BLEND_ONE;
+        rt_blend_def.BlendOp = D3D11_BLEND_OP_SUBTRACT;
+        rt_blend_def.SrcBlendAlpha = D3D11_BLEND_ONE;
+        rt_blend_def.DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+        rt_blend_def.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+        for (auto& rt_blend : blend_def.RenderTarget)
+        {
+            rt_blend = rt_blend_def;
+        }
+        hr = device->CreateBlendState(&blend_def, &state_blend_sub);
+        if (FAILED(hr))
+        {
+            assert(false);
+            return false;
+        }
+
+        // built-in: revsub-blend
+
+        rt_blend_def.BlendEnable = TRUE;
+        rt_blend_def.SrcBlend = D3D11_BLEND_SRC_ALPHA;
+        rt_blend_def.DestBlend = D3D11_BLEND_ONE;
+        rt_blend_def.BlendOp = D3D11_BLEND_OP_REV_SUBTRACT;
+        rt_blend_def.SrcBlendAlpha = D3D11_BLEND_ONE;
+        rt_blend_def.DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+        rt_blend_def.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+        for (auto& rt_blend : blend_def.RenderTarget)
+        {
+            rt_blend = rt_blend_def;
+        }
+        hr = device->CreateBlendState(&blend_def, &state_blend_revsub);
+        if (FAILED(hr))
+        {
+            assert(false);
+            return false;
+        }
+
+        // built-in: mul-blend
+
+        rt_blend_def.BlendEnable = TRUE;
+        rt_blend_def.SrcBlend = D3D11_BLEND_DEST_COLOR;
+        rt_blend_def.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+        rt_blend_def.BlendOp = D3D11_BLEND_OP_ADD;
+        rt_blend_def.SrcBlendAlpha = D3D11_BLEND_ONE;
+        rt_blend_def.DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+        rt_blend_def.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+        for (auto& rt_blend : blend_def.RenderTarget)
+        {
+            rt_blend = rt_blend_def;
+        }
+        hr = device->CreateBlendState(&blend_def, &state_blend_mul);
+        if (FAILED(hr))
+        {
+            assert(false);
+            return false;
+        }
+
+        // built-in: screen-blend
+
+        rt_blend_def.BlendEnable = TRUE;
+        rt_blend_def.SrcBlend = D3D11_BLEND_SRC_ALPHA;
+        rt_blend_def.DestBlend = D3D11_BLEND_INV_SRC_COLOR;
+        rt_blend_def.BlendOp = D3D11_BLEND_OP_ADD;
+        rt_blend_def.SrcBlendAlpha = D3D11_BLEND_ONE;
+        rt_blend_def.DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+        rt_blend_def.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+        for (auto& rt_blend : blend_def.RenderTarget)
+        {
+            rt_blend = rt_blend_def;
+        }
+        hr = device->CreateBlendState(&blend_def, &state_blend_screen);
+        if (FAILED(hr))
+        {
+            assert(false);
+            return false;
+        }
+
+        // built-in: min-blend
+
+        rt_blend_def.BlendEnable = TRUE;
+        rt_blend_def.SrcBlend = D3D11_BLEND_ONE;
+        rt_blend_def.DestBlend = D3D11_BLEND_ONE;
+        rt_blend_def.BlendOp = D3D11_BLEND_OP_MIN;
+        rt_blend_def.SrcBlendAlpha = D3D11_BLEND_ONE;
+        rt_blend_def.DestBlendAlpha = D3D11_BLEND_ONE;
+        rt_blend_def.BlendOpAlpha = D3D11_BLEND_OP_MIN;
+        for (auto& rt_blend : blend_def.RenderTarget)
+        {
+            rt_blend = rt_blend_def;
+        }
+        hr = device->CreateBlendState(&blend_def, &state_blend_min);
+        if (FAILED(hr))
+        {
+            assert(false);
+            return false;
+        }
+
+        // built-in: max-blend
+
+        rt_blend_def.BlendEnable = TRUE;
+        rt_blend_def.SrcBlend = D3D11_BLEND_ONE;
+        rt_blend_def.DestBlend = D3D11_BLEND_ONE;
+        rt_blend_def.BlendOp = D3D11_BLEND_OP_MAX;
+        rt_blend_def.SrcBlendAlpha = D3D11_BLEND_ONE;
+        rt_blend_def.DestBlendAlpha = D3D11_BLEND_ONE;
+        rt_blend_def.BlendOpAlpha = D3D11_BLEND_OP_MAX;
+        for (auto& rt_blend : blend_def.RenderTarget)
+        {
+            rt_blend = rt_blend_def;
+        }
+        hr = device->CreateBlendState(&blend_def, &state_blend_max);
+        if (FAILED(hr))
+        {
+            assert(false);
+            return false;
+        }
+
+        // built-in: inv-blend
+
+        rt_blend_def.BlendEnable = TRUE;
+        rt_blend_def.SrcBlend = D3D11_BLEND_INV_DEST_COLOR;
+        rt_blend_def.DestBlend = D3D11_BLEND_INV_SRC_COLOR;
+        rt_blend_def.BlendOp = D3D11_BLEND_OP_ADD;
+        rt_blend_def.SrcBlendAlpha = D3D11_BLEND_ZERO;
+        rt_blend_def.DestBlendAlpha = D3D11_BLEND_ONE;
+        rt_blend_def.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+        for (auto& rt_blend : blend_def.RenderTarget)
+        {
+            rt_blend = rt_blend_def;
+        }
+        hr = device->CreateBlendState(&blend_def, &state_blend_inv);
+        if (FAILED(hr))
+        {
+            assert(false);
+            return false;
+        }
+
+        // built-in: one-blend (overwrite)
+
+        rt_blend_def.BlendEnable = TRUE;
+        rt_blend_def.SrcBlend = D3D11_BLEND_ONE;
+        rt_blend_def.DestBlend = D3D11_BLEND_ZERO;
+        rt_blend_def.BlendOp = D3D11_BLEND_OP_ADD;
+        rt_blend_def.SrcBlendAlpha = D3D11_BLEND_ONE;
+        rt_blend_def.DestBlendAlpha = D3D11_BLEND_ZERO;
+        rt_blend_def.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+        for (auto& rt_blend : blend_def.RenderTarget)
+        {
+            rt_blend = rt_blend_def;
+        }
+        hr = device->CreateBlendState(&blend_def, &state_blend_one);
+        if (FAILED(hr))
+        {
+            assert(false);
+            return false;
+        }
+
         return true;
     }
 
@@ -452,6 +612,14 @@ namespace core::Graphics
         state_blend.Reset();
         state_blend_alpha.Reset();
         state_blend_add.Reset();
+        state_blend_sub.Reset();
+        state_blend_revsub.Reset();
+        state_blend_mul.Reset();
+        state_blend_screen.Reset();
+        state_blend_min.Reset();
+        state_blend_max.Reset();
+        state_blend_inv.Reset();
+        state_blend_one.Reset();
 
         cbo_mvp.Reset();
         cbo_mlw.Reset();
@@ -1508,10 +1676,8 @@ namespace core::Graphics
             // OM
             context->OMSetDepthStencilState(shared_->state_ds_no_write.Get(), D3D11_DEFAULT_STENCIL_REFERENCE);
             FLOAT const blend_factor[4]{};
-            if (blend_mode_ == ModelBlendMode::Add)
-                context->OMSetBlendState(shared_->state_blend_add.Get(), blend_factor, D3D11_DEFAULT_SAMPLE_MASK);
-            else
-                context->OMSetBlendState(shared_->state_blend_alpha.Get(), blend_factor, D3D11_DEFAULT_SAMPLE_MASK);
+            ID3D11BlendState* blend_state = shared_->getBlendState(blend_mode_);
+            context->OMSetBlendState(blend_state, blend_factor, D3D11_DEFAULT_SAMPLE_MASK);
         };
         auto set_alpha_mode_blend_overlay = [&](ModelBlock& mblock, float const exclude_value)
         {
@@ -1680,7 +1846,7 @@ namespace core::Graphics
         };
 
         bool const force_blend_all = (model_color_.w < 0.999f) ||
-            (blend_mode_ == ModelBlendMode::Alpha) || (blend_mode_ == ModelBlendMode::Add) || (blend_mode_ == ModelBlendMode::ScreenDoor);
+            (blend_mode_ != ModelBlendMode::Auto);
 
         // pass 1 opaque object
 
