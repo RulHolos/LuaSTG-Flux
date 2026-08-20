@@ -577,6 +577,159 @@ void luastg::binding::ResourceManager::Register(lua_State* L) noexcept
 			}
 			return 0;
 		}
+		static int SetModelSubmeshColor(lua_State* L) noexcept
+		{
+			const char* name = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceModel> p = LRES.FindModel(name);
+			if (!p)
+				return luaL_error(L, "model '%s' not found.", name);
+
+			core::Color4B const* col = Color::Cast(L, 2);
+			core::Vector4F vcol(
+				col->r / 255.0f,
+				col->g / 255.0f,
+				col->b / 255.0f,
+				col->a / 255.0f
+			);
+
+			if (lua_gettop(L) >= 3 && !lua_isnoneornil(L, 3))
+			{
+				if (lua_isnumber(L, 3))
+				{
+					uint32_t idx = static_cast<uint32_t>(lua_tointeger(L, 3));
+					p->GetModel()->setSubmeshColor(vcol, idx);
+				}
+				else
+				{
+					const char* submesh_name = luaL_checkstring(L, 3);
+					p->GetModel()->setSubmeshColorByName(vcol, submesh_name);
+				}
+			}
+			else
+			{
+				p->GetModel()->setSubmeshColor(vcol, 0);
+			}
+			return 0;
+		}
+		static int ResetModelSubmeshColor(lua_State* L) noexcept
+		{
+			const char* name = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceModel> p = LRES.FindModel(name);
+			if (!p)
+				return luaL_error(L, "model '%s' not found.", name);
+
+			if (lua_gettop(L) >= 2 && !lua_isnoneornil(L, 2))
+			{
+				if (lua_isnumber(L, 2))
+				{
+					uint32_t idx = static_cast<uint32_t>(lua_tointeger(L, 2));
+					p->GetModel()->resetSubmeshColor(idx);
+				}
+				else
+				{
+					const char* submesh_name = luaL_checkstring(L, 2);
+					p->GetModel()->resetSubmeshColorByName(submesh_name);
+				}
+			}
+			else
+			{
+				p->GetModel()->resetSubmeshColor(0);
+			}
+			return 0;
+		}
+		static int SetModelSampler(lua_State* L) noexcept
+		{
+			const char* name = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceModel> p = LRES.FindModel(name);
+			if (!p)
+				return luaL_error(L, "model '%s' not found.", name);
+
+			const char* sampler_name = luaL_checkstring(L, 2);
+
+			if (lua_gettop(L) >= 3 && !lua_isnoneornil(L, 3))
+			{
+				if (lua_isnumber(L, 3))
+				{
+					uint32_t idx = static_cast<uint32_t>(lua_tointeger(L, 3));
+					p->GetModel()->setSubmeshSampler(sampler_name, idx);
+				}
+				else
+				{
+					const char* submesh_name = luaL_checkstring(L, 3);
+					p->GetModel()->setSubmeshSamplerByName(sampler_name, submesh_name);
+				}
+			}
+			else
+			{
+				p->GetModel()->setSubmeshSampler(sampler_name, 0);
+			}
+			return 0;
+		}
+		static int ResetModelSampler(lua_State* L) noexcept
+		{
+			const char* name = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceModel> p = LRES.FindModel(name);
+			if (!p)
+				return luaL_error(L, "model '%s' not found.", name);
+
+			if (lua_gettop(L) >= 2 && !lua_isnoneornil(L, 2))
+			{
+				if (lua_isnumber(L, 2))
+				{
+					uint32_t idx = static_cast<uint32_t>(lua_tointeger(L, 2));
+					p->GetModel()->resetSubmeshSampler(idx);
+				}
+				else
+				{
+					const char* submesh_name = luaL_checkstring(L, 2);
+					p->GetModel()->resetSubmeshSamplerByName(submesh_name);
+				}
+			}
+			else
+			{
+				p->GetModel()->resetSubmeshSampler(0);
+			}
+			return 0;
+		}
+		static int SetModelSubmeshVisible(lua_State* L) noexcept
+		{
+			const char* name = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceModel> p = LRES.FindModel(name);
+			if (!p)
+				return luaL_error(L, "model '%s' not found.", name);
+
+			bool visible = lua_toboolean(L, 2) != 0;
+
+			if (lua_gettop(L) >= 3 && !lua_isnoneornil(L, 3))
+			{
+				if (lua_isnumber(L, 3))
+				{
+					uint32_t idx = static_cast<uint32_t>(lua_tointeger(L, 3));
+					p->GetModel()->setSubmeshVisible(visible, idx);
+				}
+				else
+				{
+					const char* submesh_name = luaL_checkstring(L, 3);
+					p->GetModel()->setSubmeshVisibleByName(visible, submesh_name);
+				}
+			}
+			else
+			{
+				p->GetModel()->setSubmeshVisible(visible, 0);
+			}
+			return 0;
+		}
+		static int GetModelSubmeshVisible(lua_State* L) noexcept
+		{
+			const char* name = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceModel> p = LRES.FindModel(name);
+			if (!p)
+				return luaL_error(L, "model '%s' not found.", name);
+
+			uint32_t idx = static_cast<uint32_t>(luaL_checkinteger(L, 2));
+			lua_pushboolean(L, p->GetModel()->getSubmeshVisible(idx) ? 1 : 0);
+			return 1;
+		}
 		static int SetVideoState(lua_State* L) noexcept
 		{
 			core::SmartReference<IResourceVideo> p = LRES.FindVideo(luaL_checkstring(L, 1));
@@ -952,6 +1105,12 @@ void luastg::binding::ResourceManager::Register(lua_State* L) noexcept
 		{ "ResetModelTexture", &Wrapper::ResetModelTexture },
 		{ "SetModelUV", &Wrapper::SetModelUV },
 		{ "ResetModelUV", &Wrapper::ResetModelUV },
+		{ "SetModelSubmeshColor", &Wrapper::SetModelSubmeshColor },
+		{ "ResetModelSubmeshColor", &Wrapper::ResetModelSubmeshColor },
+		{ "SetModelSampler", &Wrapper::SetModelSampler },
+		{ "ResetModelSampler", &Wrapper::ResetModelSampler },
+		{ "SetModelSubmeshVisible", &Wrapper::SetModelSubmeshVisible },
+		{ "GetModelSubmeshVisible", &Wrapper::GetModelSubmeshVisible },
 		{ "LoadVideo", &Wrapper::LoadVideo },
 		{ "SetVideoState", &Wrapper::SetVideoState },
 		{ "CreateRenderTarget", &Wrapper::CreateRenderTarget },

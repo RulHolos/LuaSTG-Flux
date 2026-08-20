@@ -61,6 +61,17 @@ namespace core::Graphics
         Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend_inv;
         Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend_one;
 
+        Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler_linear_wrap;
+        Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler_linear_clamp;
+        Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler_point_wrap;
+        Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler_point_clamp;
+        Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler_linear_mirror;
+        Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler_point_mirror;
+        Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler_aniso_wrap;
+        Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler_aniso_clamp;
+
+        ID3D11SamplerState* getSampler(StringView name) const noexcept;
+
         ID3D11BlendState* getBlendState(ModelBlendMode mode) const noexcept
         {
             switch (mode)
@@ -138,6 +149,7 @@ namespace core::Graphics
             Microsoft::WRL::ComPtr<ID3D11Buffer> color_buffer;
             Microsoft::WRL::ComPtr<ID3D11Buffer> index_buffer;
             Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler;
+            Microsoft::WRL::ComPtr<ID3D11SamplerState> override_sampler;
             Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> image;
             Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> override_image;
             DirectX::XMFLOAT4 uv_transform = { 0.0f, 0.0f, 1.0f, 1.0f };
@@ -145,9 +157,11 @@ namespace core::Graphics
             DirectX::XMFLOAT4X4 local_matrix;
             DirectX::XMFLOAT4X4 local_matrix_normal; // notice: pair with local_matrix
             DirectX::XMFLOAT4 base_color;
+            DirectX::XMFLOAT4 override_color = { 1.0f, 1.0f, 1.0f, 1.0f };
             BOOL double_side = FALSE;
             BOOL alpha_blend = FALSE;
             BOOL alpha_mask = FALSE;
+            BOOL visible = TRUE;
             FLOAT alpha = 0.5f;
             UINT draw_count = 0;
             DXGI_FORMAT index_format = DXGI_FORMAT_R16_UINT;
@@ -256,6 +270,20 @@ namespace core::Graphics
         void setUVTransformByName(float u_offset, float v_offset, float u_scale, float v_scale, float angle, StringView name) override;
         void resetUVTransform(uint32_t submesh_index = 0) override;
         void resetUVTransformByName(StringView name) override;
+
+        void setSubmeshColor(Vector4F const& color, uint32_t submesh_index = 0) override;
+        void setSubmeshColorByName(Vector4F const& color, StringView name) override;
+        void resetSubmeshColor(uint32_t submesh_index = 0) override;
+        void resetSubmeshColorByName(StringView name) override;
+
+        void setSubmeshSampler(StringView sampler_name, uint32_t submesh_index = 0) override;
+        void setSubmeshSamplerByName(StringView sampler_name, StringView name) override;
+        void resetSubmeshSampler(uint32_t submesh_index = 0) override;
+        void resetSubmeshSamplerByName(StringView name) override;
+
+        void setSubmeshVisible(bool visible, uint32_t submesh_index = 0) override;
+        void setSubmeshVisibleByName(bool visible, StringView name) override;
+        bool getSubmeshVisible(uint32_t submesh_index) const override;
 
         void draw(IRenderer::FogState fog, std::span<PointLight const> scene_lights);
 

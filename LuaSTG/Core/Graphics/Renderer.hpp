@@ -74,6 +74,20 @@ namespace core::Graphics
 		virtual void setUVTransformByName(float u_offset, float v_offset, float u_scale, float v_scale, float angle, StringView name) = 0;
 		virtual void resetUVTransform(uint32_t submesh_index = 0) = 0;
 		virtual void resetUVTransformByName(StringView name) = 0;
+
+		virtual void setSubmeshColor(Vector4F const& color, uint32_t submesh_index = 0) = 0;
+		virtual void setSubmeshColorByName(Vector4F const& color, StringView name) = 0;
+		virtual void resetSubmeshColor(uint32_t submesh_index = 0) = 0;
+		virtual void resetSubmeshColorByName(StringView name) = 0;
+
+		virtual void setSubmeshSampler(StringView sampler_name, uint32_t submesh_index = 0) = 0;
+		virtual void setSubmeshSamplerByName(StringView sampler_name, StringView name) = 0;
+		virtual void resetSubmeshSampler(uint32_t submesh_index = 0) = 0;
+		virtual void resetSubmeshSamplerByName(StringView name) = 0;
+
+		virtual void setSubmeshVisible(bool visible, uint32_t submesh_index = 0) = 0;
+		virtual void setSubmeshVisibleByName(bool visible, StringView name) = 0;
+		virtual bool getSubmeshVisible(uint32_t submesh_index) const = 0;
 	};
 
 	struct IRenderer : public IReferenceCounted
