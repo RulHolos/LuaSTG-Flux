@@ -44,12 +44,14 @@ namespace core::Graphics
 
         Microsoft::WRL::ComPtr<ID3D11RasterizerState> state_rs_cull_none;
         Microsoft::WRL::ComPtr<ID3D11RasterizerState> state_rs_cull_back;
+        Microsoft::WRL::ComPtr<ID3D11RasterizerState> state_rs_cull_front;
         Microsoft::WRL::ComPtr<ID3D11DepthStencilState> state_ds_disable;
         Microsoft::WRL::ComPtr<ID3D11DepthStencilState> state_ds;
         Microsoft::WRL::ComPtr<ID3D11DepthStencilState> state_ds_no_write;
         Microsoft::WRL::ComPtr<ID3D11DepthStencilState> state_ds_dl;
         Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend;
         Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend_alpha;
+        Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend_add;
 
         Microsoft::WRL::ComPtr<ID3D11Buffer> cbo_mvp;
         Microsoft::WRL::ComPtr<ID3D11Buffer> cbo_mlw;
@@ -161,6 +163,9 @@ namespace core::Graphics
         std::vector<PointLight> point_lights;
         std::vector<PointLight> embedded_lights_;
 
+        DirectX::XMFLOAT4 model_color_{ 1.0f, 1.0f, 1.0f, 1.0f };
+        ModelBlendMode blend_mode_{ ModelBlendMode::Auto };
+
         std::vector<DirectX::XMMATRIX> mTRS_stack;
 
         bool processNode(tinygltf::Model& model, tinygltf::Node& node);
@@ -186,6 +191,12 @@ namespace core::Graphics
         void setPosition(Vector3F const& pos);
         void setRotationRollPitchYaw(float roll, float pitch, float yaw);
         void setRotationQuaternion(Vector4F const& quat);
+
+        void setColor(Vector4F const& color);
+        void setAlpha(float alpha);
+        void setBlendMode(ModelBlendMode mode);
+        Vector4F getColor() const;
+        ModelBlendMode getBlendMode() const;
 
         void draw(IRenderer::FogState fog, std::span<PointLight const> scene_lights);
 

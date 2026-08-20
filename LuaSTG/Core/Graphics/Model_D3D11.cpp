@@ -246,6 +246,17 @@ namespace core::Graphics
             return false;
         }
 
+        // built-in: cull-front
+
+        rs_def.CullMode = D3D11_CULL_FRONT;
+        rs_def.FrontCounterClockwise = TRUE;
+        hr = device->CreateRasterizerState(&rs_def, &state_rs_cull_front);
+        if (FAILED(hr))
+        {
+            assert(false);
+            return false;
+        }
+
         //// DS \\\\
 
         // built-in: depth-test
@@ -288,8 +299,9 @@ namespace core::Graphics
             return false;
         }
 
-        // built-in: depth-test less only, no write
+        // built-in: depth-test less-equal, no write
 
+        ds_def.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
         ds_def.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 
         hr = device->CreateDepthStencilState(&ds_def, &state_ds_no_write);
@@ -345,11 +357,36 @@ namespace core::Graphics
 
         rt_blend_def.BlendEnable = TRUE;
         rt_blend_def.SrcBlend = D3D11_BLEND_SRC_ALPHA;
+        rt_blend_def.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+        rt_blend_def.BlendOp = D3D11_BLEND_OP_ADD;
+        rt_blend_def.SrcBlendAlpha = D3D11_BLEND_ONE;
+        rt_blend_def.DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+        rt_blend_def.BlendOpAlpha = D3D11_BLEND_OP_ADD;
         for (auto& rt_blend : blend_def.RenderTarget)
         {
             rt_blend = rt_blend_def;
         }
         hr = device->CreateBlendState(&blend_def, &state_blend_alpha);
+        if (FAILED(hr))
+        {
+            assert(false);
+            return false;
+        }
+
+        // built-in: add-blend
+
+        rt_blend_def.BlendEnable = TRUE;
+        rt_blend_def.SrcBlend = D3D11_BLEND_SRC_ALPHA;
+        rt_blend_def.DestBlend = D3D11_BLEND_ONE;
+        rt_blend_def.BlendOp = D3D11_BLEND_OP_ADD;
+        rt_blend_def.SrcBlendAlpha = D3D11_BLEND_ONE;
+        rt_blend_def.DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+        rt_blend_def.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+        for (auto& rt_blend : blend_def.RenderTarget)
+        {
+            rt_blend = rt_blend_def;
+        }
+        hr = device->CreateBlendState(&blend_def, &state_blend_add);
         if (FAILED(hr))
         {
             assert(false);
@@ -407,9 +444,14 @@ namespace core::Graphics
 
         state_rs_cull_none.Reset();
         state_rs_cull_back.Reset();
+        state_rs_cull_front.Reset();
+        state_ds_disable.Reset();
         state_ds.Reset();
+        state_ds_no_write.Reset();
+        state_ds_dl.Reset();
         state_blend.Reset();
         state_blend_alpha.Reset();
+        state_blend_add.Reset();
 
         cbo_mvp.Reset();
         cbo_mlw.Reset();
@@ -1348,7 +1390,10 @@ namespace core::Graphics
             // PS
 
             FLOAT const alpha[8] = {
-                    mblock.base_color.x, mblock.base_color.y, mblock.base_color.z, mblock.base_color.w,
+                    mblock.base_color.x * model_color_.x,
+                    mblock.base_color.y * model_color_.y,
+                    mblock.base_color.z * model_color_.z,
+                    mblock.base_color.w * model_color_.w,
                     0.5f, 0.0f, 0.0f, 0.0f,
             };
             context->UpdateSubresource(shared_->cbo_alpha.Get(), 0, NULL, alpha, 0, 0);
@@ -1360,6 +1405,7 @@ namespace core::Graphics
             context->PSSetConstantBuffers(2, 2, ps_cbo);
 
             // OM
+            context->OMSetDepthStencilState(shared_->state_ds.Get(), D3D11_DEFAULT_STENCIL_REFERENCE);
             FLOAT const blend_factor[4]{};
             context->OMSetBlendState(shared_->state_blend.Get(), blend_factor, D3D11_DEFAULT_SAMPLE_MASK);
         };
@@ -1368,7 +1414,10 @@ namespace core::Graphics
             // PS
 
             FLOAT const alpha[8] = {
-                    mblock.base_color.x, mblock.base_color.y, mblock.base_color.z, mblock.base_color.w,
+                    mblock.base_color.x * model_color_.x,
+                    mblock.base_color.y * model_color_.y,
+                    mblock.base_color.z * model_color_.z,
+                    mblock.base_color.w * model_color_.w,
                     mblock.alpha, 0.0f, 0.0f, 0.0f,
             };
             context->UpdateSubresource(shared_->cbo_alpha.Get(), 0, NULL, alpha, 0, 0);
@@ -1380,6 +1429,7 @@ namespace core::Graphics
             context->PSSetConstantBuffers(2, 2, ps_cbo);
 
             // OM
+            context->OMSetDepthStencilState(shared_->state_ds.Get(), D3D11_DEFAULT_STENCIL_REFERENCE);
             FLOAT const blend_factor[4]{};
             context->OMSetBlendState(shared_->state_blend.Get(), blend_factor, D3D11_DEFAULT_SAMPLE_MASK);
         };
@@ -1388,7 +1438,10 @@ namespace core::Graphics
             // PS
 
             FLOAT const alpha[8] = {
-                    mblock.base_color.x, mblock.base_color.y, mblock.base_color.z, mblock.base_color.w,
+                    mblock.base_color.x * model_color_.x,
+                    mblock.base_color.y * model_color_.y,
+                    mblock.base_color.z * model_color_.z,
+                    mblock.base_color.w * model_color_.w,
                     value, 0.0f, 0.0f, 0.0f,
             };
             context->UpdateSubresource(shared_->cbo_alpha.Get(), 0, NULL, alpha, 0, 0);
@@ -1414,6 +1467,7 @@ namespace core::Graphics
             }
 
             // OM
+            context->OMSetDepthStencilState(shared_->state_ds.Get(), D3D11_DEFAULT_STENCIL_REFERENCE);
             FLOAT const blend_factor[4]{};
             context->OMSetBlendState(shared_->state_blend.Get(), blend_factor, D3D11_DEFAULT_SAMPLE_MASK);
         };
@@ -1422,7 +1476,10 @@ namespace core::Graphics
             // PS
 
             FLOAT const alpha[8] = {
-                    mblock.base_color.x, mblock.base_color.y, mblock.base_color.z, mblock.base_color.w,
+                    mblock.base_color.x * model_color_.x,
+                    mblock.base_color.y * model_color_.y,
+                    mblock.base_color.z * model_color_.z,
+                    mblock.base_color.w * model_color_.w,
                     0.5f, 0.0f, 0.0f, 0.0f,
             };
             context->UpdateSubresource(shared_->cbo_alpha.Get(), 0, NULL, alpha, 0, 0);
@@ -1433,16 +1490,38 @@ namespace core::Graphics
             };
             context->PSSetConstantBuffers(2, 2, ps_cbo);
 
+            if (mblock.image)
+            {
+                if (mblock.color_buffer)
+                    context->PSSetShader(shared_->shader_pixel_vc[IDX(fog)].Get(), NULL, 0);
+                else
+                    context->PSSetShader(shared_->shader_pixel[IDX(fog)].Get(), NULL, 0);
+            }
+            else
+            {
+                if (mblock.color_buffer)
+                    context->PSSetShader(shared_->shader_pixel_nt_vc[IDX(fog)].Get(), NULL, 0);
+                else
+                    context->PSSetShader(shared_->shader_pixel_nt[IDX(fog)].Get(), NULL, 0);
+            }
+
             // OM
+            context->OMSetDepthStencilState(shared_->state_ds_no_write.Get(), D3D11_DEFAULT_STENCIL_REFERENCE);
             FLOAT const blend_factor[4]{};
-            context->OMSetBlendState(shared_->state_blend_alpha.Get(), blend_factor, D3D11_DEFAULT_SAMPLE_MASK);
+            if (blend_mode_ == ModelBlendMode::Add)
+                context->OMSetBlendState(shared_->state_blend_add.Get(), blend_factor, D3D11_DEFAULT_SAMPLE_MASK);
+            else
+                context->OMSetBlendState(shared_->state_blend_alpha.Get(), blend_factor, D3D11_DEFAULT_SAMPLE_MASK);
         };
         auto set_alpha_mode_blend_overlay = [&](ModelBlock& mblock, float const exclude_value)
         {
             // PS
 
             FLOAT const alpha[8] = {
-                    mblock.base_color.x, mblock.base_color.y, mblock.base_color.z, mblock.base_color.w,
+                    mblock.base_color.x * model_color_.x,
+                    mblock.base_color.y * model_color_.y,
+                    mblock.base_color.z * model_color_.z,
+                    mblock.base_color.w * model_color_.w,
                     exclude_value, 0.0f, 0.0f, 0.0f,
             };
             context->UpdateSubresource(shared_->cbo_alpha.Get(), 0, NULL, alpha, 0, 0);
@@ -1477,7 +1556,10 @@ namespace core::Graphics
             // PS
 
             FLOAT const alpha[8] = {
-                    mblock.base_color.x, mblock.base_color.y, mblock.base_color.z, mblock.base_color.w,
+                    mblock.base_color.x * model_color_.x,
+                    mblock.base_color.y * model_color_.y,
+                    mblock.base_color.z * model_color_.z,
+                    mblock.base_color.w * model_color_.w,
                     0.5f, 0.0f, 0.0f, 0.0f,
             };
             context->UpdateSubresource(shared_->cbo_alpha.Get(), 0, NULL, alpha, 0, 0);
@@ -1547,14 +1629,16 @@ namespace core::Graphics
             ID3D11ShaderResourceView* ps_srv[1] = { mblock.image.Get() };
             context->PSSetShaderResources(0, 1, ps_srv);
 
-            // OM
+            // OM & blend mode decision
+            bool const is_blend = mblock.alpha_blend || (model_color_.w < 0.999f) ||
+                (blend_mode_ == ModelBlendMode::Alpha) || (blend_mode_ == ModelBlendMode::Add) || (blend_mode_ == ModelBlendMode::ScreenDoor);
 
-            context->OMSetDepthStencilState(shared_->state_ds.Get(), D3D11_DEFAULT_STENCIL_REFERENCE);
-
-            // other
-            if (mblock.alpha_blend) {
-                //set_alpha_mode_blend(mblock);
-                set_alpha_mode_screen_door(mblock);
+            if (is_blend) {
+                if (blend_mode_ == ModelBlendMode::ScreenDoor) {
+                    set_alpha_mode_screen_door(mblock);
+                } else {
+                    set_alpha_mode_blend(mblock);
+                }
             }
             else if (mblock.alpha_mask) {
                 set_alpha_mode_mask(mblock);
@@ -1595,25 +1679,34 @@ namespace core::Graphics
             context->PSSetConstantBuffers(2, 2, ps_cbo);
         };
 
+        bool const force_blend_all = (model_color_.w < 0.999f) ||
+            (blend_mode_ == ModelBlendMode::Alpha) || (blend_mode_ == ModelBlendMode::Add) || (blend_mode_ == ModelBlendMode::ScreenDoor);
+
         // pass 1 opaque object
 
-        for (auto& mblock : model_block)
+        if (!force_blend_all)
         {
-            if (!mblock.alpha_mask && !mblock.alpha_blend)
+            for (auto& mblock : model_block)
             {
-                set_state_from_block(mblock);
-                draw_block(mblock);
+                if (!mblock.alpha_mask && !mblock.alpha_blend)
+                {
+                    set_state_from_block(mblock);
+                    draw_block(mblock);
+                }
             }
         }
 
         // pass 2 alpha mask object
 
-        for (auto& mblock : model_block)
+        if (!force_blend_all)
         {
-            if (mblock.alpha_mask)
+            for (auto& mblock : model_block)
             {
-                set_state_from_block(mblock);
-                draw_block(mblock);
+                if (mblock.alpha_mask)
+                {
+                    set_state_from_block(mblock);
+                    draw_block(mblock);
+                }
             }
         }
 
@@ -1621,16 +1714,50 @@ namespace core::Graphics
 
         for (auto& mblock : model_block)
         {
-            if (mblock.alpha_blend)
+            if (force_blend_all || mblock.alpha_blend)
             {
-                set_state_from_block(mblock);
-                draw_block(mblock);
+                if (mblock.double_side && blend_mode_ != ModelBlendMode::ScreenDoor)
+                {
+                    set_state_from_block(mblock);
+                    // Pass 3a: Draw back faces first
+                    context->RSSetState(shared_->state_rs_cull_front.Get());
+                    draw_block(mblock);
+                    // Pass 3b: Draw front faces
+                    context->RSSetState(shared_->state_rs_cull_back.Get());
+                    draw_block(mblock);
+                }
+                else
+                {
+                    set_state_from_block(mblock);
+                    draw_block(mblock);
+                }
             }
         }
         
         // unbind
 
         clear_state();
+    }
+
+    void Model_D3D11::setColor(Vector4F const& color)
+    {
+        model_color_ = DirectX::XMFLOAT4(color.x, color.y, color.z, color.w);
+    }
+    void Model_D3D11::setAlpha(float alpha)
+    {
+        model_color_.w = alpha;
+    }
+    void Model_D3D11::setBlendMode(ModelBlendMode mode)
+    {
+        blend_mode_ = mode;
+    }
+    Vector4F Model_D3D11::getColor() const
+    {
+        return Vector4F(model_color_.x, model_color_.y, model_color_.z, model_color_.w);
+    }
+    ModelBlendMode Model_D3D11::getBlendMode() const
+    {
+        return blend_mode_;
     }
 
     Model_D3D11::Model_D3D11(Direct3D11::Device* p_device, ModelSharedComponent_D3D11* p_model_shared, StringView path)
