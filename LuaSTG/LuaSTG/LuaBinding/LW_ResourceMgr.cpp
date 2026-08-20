@@ -382,6 +382,47 @@ void luastg::binding::ResourceManager::Register(lua_State* L) noexcept
 				return luaL_error(L, "load video failed (name='%s', path='%s').", name, video_path);
 			return 0;
 		}
+		static int SetModelState(lua_State* L) noexcept
+		{
+			const char* name = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceModel> p = LRES.FindModel(name);
+			if (!p)
+				return luaL_error(L, "model '%s' not found.", name);
+
+			if (lua_gettop(L) >= 2)
+			{
+				size_t len = 0;
+				const char* mode_str = luaL_checklstring(L, 2, &len);
+				core::Graphics::ModelBlendMode mode = core::Graphics::ModelBlendMode::Auto;
+				if (len == 0 || std::strcmp(mode_str, "auto") == 0 || std::strcmp(mode_str, "default") == 0) {
+					mode = core::Graphics::ModelBlendMode::Auto;
+				}
+				else if (std::strcmp(mode_str, "alpha") == 0 || std::strcmp(mode_str, "mul+alpha") == 0 || std::strcmp(mode_str, "blend") == 0 || std::strcmp(mode_str, "alpha+bal") == 0) {
+					mode = core::Graphics::ModelBlendMode::Alpha;
+				}
+				else if (std::strcmp(mode_str, "add") == 0 || std::strcmp(mode_str, "mul+add") == 0 || std::strcmp(mode_str, "add+add") == 0 || std::strcmp(mode_str, "add+alpha") == 0 || std::strcmp(mode_str, "additive") == 0) {
+					mode = core::Graphics::ModelBlendMode::Add;
+				}
+				else if (std::strcmp(mode_str, "dither") == 0 || std::strcmp(mode_str, "screendoor") == 0 || std::strcmp(mode_str, "screen_door") == 0) {
+					mode = core::Graphics::ModelBlendMode::ScreenDoor;
+				}
+				else {
+					return luaL_error(L, "invalid blend mode '%s' for model (expected '', 'alpha', 'add', or 'dither').", mode_str);
+				}
+				p->GetModel()->setBlendMode(mode);
+			}
+			if (lua_gettop(L) >= 3)
+			{
+				core::Color4B const* col = Color::Cast(L, 3);
+				p->GetModel()->setColor(core::Vector4F(
+					col->r / 255.0f,
+					col->g / 255.0f,
+					col->b / 255.0f,
+					col->a / 255.0f
+				));
+			}
+			return 0;
+		}
 		static int SetVideoState(lua_State* L) noexcept
 		{
 			core::SmartReference<IResourceVideo> p = LRES.FindVideo(luaL_checkstring(L, 1));
@@ -750,6 +791,7 @@ void luastg::binding::ResourceManager::Register(lua_State* L) noexcept
 		{ "LoadTrueTypeFont", &Wrapper::LoadTrueTypeFont },
 		{ "LoadFX", &Wrapper::LoadFX },
 		{ "LoadModel", &Wrapper::LoadModel },
+		{ "SetModelState", &Wrapper::SetModelState },
 		{ "LoadVideo", &Wrapper::LoadVideo },
 		{ "SetVideoState", &Wrapper::SetVideoState },
 		{ "CreateRenderTarget", &Wrapper::CreateRenderTarget },

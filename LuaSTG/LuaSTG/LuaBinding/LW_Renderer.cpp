@@ -569,52 +569,44 @@ namespace luastg {
 		return 0;
 	}
 
-	static int lib_setModelAlpha(lua_State* L) {
+	static int lib_setModelState(lua_State* L) {
 		const char* name = luaL_checkstring(L, 1);
-		float const alpha = (float)luaL_checknumber(L, 2);
 		core::SmartReference<IResourceModel> pmodres = LRESMGR().FindModel(name);
 		if (!pmodres)
-			return luaL_error(L, "lstg.Renderer.setModelAlpha: can't find model '%s'", name);
-		pmodres->GetModel()->setAlpha(alpha);
-		return 0;
-	}
+			return luaL_error(L, "lstg.Renderer.setModelState: can't find model '%s'", name);
 
-	static int lib_setModelColor(lua_State* L) {
-		const char* name = luaL_checkstring(L, 1);
-		float const r = (float)luaL_checknumber(L, 2);
-		float const g = (float)luaL_checknumber(L, 3);
-		float const b = (float)luaL_checknumber(L, 4);
-		float const a = (float)luaL_optnumber(L, 5, 1.0);
-		core::SmartReference<IResourceModel> pmodres = LRESMGR().FindModel(name);
-		if (!pmodres)
-			return luaL_error(L, "lstg.Renderer.setModelColor: can't find model '%s'", name);
-		pmodres->GetModel()->setColor(core::Vector4F(r, g, b, a));
-		return 0;
-	}
-
-	static int lib_setModelBlendMode(lua_State* L) {
-		const char* name = luaL_checkstring(L, 1);
-		const char* mode_str = luaL_checkstring(L, 2);
-		core::Graphics::ModelBlendMode mode = core::Graphics::ModelBlendMode::Auto;
-		if (std::strcmp(mode_str, "alpha") == 0 || std::strcmp(mode_str, "blend") == 0) {
-			mode = core::Graphics::ModelBlendMode::Alpha;
+		if (lua_gettop(L) >= 2)
+		{
+			size_t len = 0;
+			const char* mode_str = luaL_checklstring(L, 2, &len);
+			core::Graphics::ModelBlendMode mode = core::Graphics::ModelBlendMode::Auto;
+			if (len == 0 || std::strcmp(mode_str, "auto") == 0 || std::strcmp(mode_str, "default") == 0) {
+				mode = core::Graphics::ModelBlendMode::Auto;
+			}
+			else if (std::strcmp(mode_str, "alpha") == 0 || std::strcmp(mode_str, "mul+alpha") == 0 || std::strcmp(mode_str, "blend") == 0 || std::strcmp(mode_str, "alpha+bal") == 0) {
+				mode = core::Graphics::ModelBlendMode::Alpha;
+			}
+			else if (std::strcmp(mode_str, "add") == 0 || std::strcmp(mode_str, "mul+add") == 0 || std::strcmp(mode_str, "add+add") == 0 || std::strcmp(mode_str, "add+alpha") == 0 || std::strcmp(mode_str, "additive") == 0) {
+				mode = core::Graphics::ModelBlendMode::Add;
+			}
+			else if (std::strcmp(mode_str, "dither") == 0 || std::strcmp(mode_str, "screendoor") == 0 || std::strcmp(mode_str, "screen_door") == 0) {
+				mode = core::Graphics::ModelBlendMode::ScreenDoor;
+			}
+			else {
+				return luaL_error(L, "invalid blend mode '%s' for model (expected '', 'alpha', 'add', or 'dither').", mode_str);
+			}
+			pmodres->GetModel()->setBlendMode(mode);
 		}
-		else if (std::strcmp(mode_str, "add") == 0 || std::strcmp(mode_str, "additive") == 0) {
-			mode = core::Graphics::ModelBlendMode::Add;
+		if (lua_gettop(L) >= 3)
+		{
+			core::Color4B const* col = binding::Color::Cast(L, 3);
+			pmodres->GetModel()->setColor(core::Vector4F(
+				col->r / 255.0f,
+				col->g / 255.0f,
+				col->b / 255.0f,
+				col->a / 255.0f
+			));
 		}
-		else if (std::strcmp(mode_str, "dither") == 0 || std::strcmp(mode_str, "screendoor") == 0 || std::strcmp(mode_str, "screen_door") == 0) {
-			mode = core::Graphics::ModelBlendMode::ScreenDoor;
-		}
-		else if (std::strcmp(mode_str, "auto") == 0 || std::strcmp(mode_str, "default") == 0) {
-			mode = core::Graphics::ModelBlendMode::Auto;
-		}
-		else {
-			return luaL_error(L, "lstg.Renderer.setModelBlendMode: invalid blend mode '%s' (expected 'auto', 'alpha', 'add', or 'dither')", mode_str);
-		}
-		core::SmartReference<IResourceModel> pmodres = LRESMGR().FindModel(name);
-		if (!pmodres)
-			return luaL_error(L, "lstg.Renderer.setModelBlendMode: can't find model '%s'", name);
-		pmodres->GetModel()->setBlendMode(mode);
 		return 0;
 	}
 
@@ -799,9 +791,7 @@ namespace luastg {
 		MKFUNC(drawVideo4V),
 
 		MKFUNC(drawModel),
-		MKFUNC(setModelAlpha),
-		MKFUNC(setModelColor),
-		MKFUNC(setModelBlendMode),
+		MKFUNC(setModelState),
 		MKFUNC(setModelAmbient),
 		MKFUNC(setModelDirectionalLight),
 		MKFUNC(addModelPointLight),
@@ -1050,9 +1040,7 @@ namespace luastg {
 		{ "RenderAnimation", &lib_drawSpriteSequence },
 		{ "RenderTexture", &lib_drawTexture },
 		{ "RenderModel", &lib_drawModel },
-		{ "SetModelAlpha", &lib_setModelAlpha },
-		{ "SetModelColor", &lib_setModelColor },
-		{ "SetModelBlendMode", &lib_setModelBlendMode },
+		{ "SetModelState", &lib_setModelState },
 		{ "SetModelAmbient", &lib_setModelAmbient },
 		{ "SetModelDirectionalLight", &lib_setModelDirectionalLight },
 		{ "AddModelPointLight", &lib_addModelPointLight },
