@@ -59,6 +59,21 @@ namespace core::Graphics
 		virtual void setBlendMode(ModelBlendMode mode) = 0;
 		virtual Vector4F getColor() const = 0;
 		virtual ModelBlendMode getBlendMode() const = 0;
+
+		virtual uint32_t getSubmeshCount() const = 0;
+		virtual StringView getSubmeshNodeName(uint32_t index) const = 0;
+		virtual StringView getSubmeshMeshName(uint32_t index) const = 0;
+		virtual StringView getSubmeshMaterialName(uint32_t index) const = 0;
+
+		virtual void setTexture(ITexture2D* p_texture, uint32_t submesh_index = 0) = 0;
+		virtual void setTextureByName(ITexture2D* p_texture, StringView name) = 0;
+		virtual void resetTexture(uint32_t submesh_index = 0) = 0;
+		virtual void resetTextureByName(StringView name) = 0;
+
+		virtual void setUVTransform(float u_offset, float v_offset, float u_scale = 1.0f, float v_scale = 1.0f, float angle = 0.0f, uint32_t submesh_index = 0) = 0;
+		virtual void setUVTransformByName(float u_offset, float v_offset, float u_scale, float v_scale, float angle, StringView name) = 0;
+		virtual void resetUVTransform(uint32_t submesh_index = 0) = 0;
+		virtual void resetUVTransformByName(StringView name) = 0;
 	};
 
 	struct IRenderer : public IReferenceCounted

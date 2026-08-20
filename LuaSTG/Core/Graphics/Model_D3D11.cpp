@@ -203,6 +203,15 @@ namespace core::Graphics
             return false;
         }
 
+        // // built-in: uv transform
+        cbo_def.ByteWidth = 2 * sizeof(DirectX::XMFLOAT4);
+        hr = device->CreateBuffer(&cbo_def, NULL, &cbo_uv);
+        if (FAILED(hr))
+        {
+            assert(false);
+            return false;
+        }
+
         return true;
     }
     bool ModelSharedComponent_D3D11::createState()
@@ -626,6 +635,7 @@ namespace core::Graphics
         cbo_caminfo.Reset();
         cbo_alpha.Reset();
         cbo_light.Reset();
+        cbo_uv.Reset();
     }
 
     ModelSharedComponent_D3D11::ModelSharedComponent_D3D11(Direct3D11::Device* p_device)
@@ -1256,6 +1266,12 @@ namespace core::Graphics
                     mblock.alpha = material.alphaCutoff;
                 #pragma warning(default:4244)
                     mblock.double_side = material.doubleSided;
+                    mblock.material_name = material.name;
+                }
+                mblock.node_name = node.name;
+                if (node.mesh >= 0 && node.mesh < static_cast<int>(model.meshes.size()))
+                {
+                    mblock.mesh_name = model.meshes[node.mesh].name;
                 }
                 map_primitive_topology_to_d3d11(prim, mblock.primitive_topology);
                 model_block.emplace_back(mblock);
@@ -1619,7 +1635,8 @@ namespace core::Graphics
                 shared_->cbo_light.Get(),
             };
             context->PSSetConstantBuffers(2, 2, ps_cbo);
-            if (mblock.image)
+            ID3D11ShaderResourceView* active_image = mblock.override_image ? mblock.override_image.Get() : mblock.image.Get();
+            if (active_image)
             {
                 if (mblock.color_buffer)
                     context->PSSetShader(shared_->shader_pixel_alpha_vc[IDX(fog)].Get(), NULL, 0);
@@ -1658,7 +1675,8 @@ namespace core::Graphics
             };
             context->PSSetConstantBuffers(2, 2, ps_cbo);
 
-            if (mblock.image)
+            ID3D11ShaderResourceView* active_image = mblock.override_image ? mblock.override_image.Get() : mblock.image.Get();
+            if (active_image)
             {
                 if (mblock.color_buffer)
                     context->PSSetShader(shared_->shader_pixel_vc[IDX(fog)].Get(), NULL, 0);
@@ -1697,7 +1715,8 @@ namespace core::Graphics
                 shared_->cbo_light.Get(),
             };
             context->PSSetConstantBuffers(2, 2, ps_cbo);
-            if (mblock.image)
+            ID3D11ShaderResourceView* active_image = mblock.override_image ? mblock.override_image.Get() : mblock.image.Get();
+            if (active_image)
             {
                 if (mblock.color_buffer)
                     context->PSSetShader(shared_->shader_pixel_inv_alpha_vc[IDX(fog)].Get(), NULL, 0);
@@ -1735,7 +1754,8 @@ namespace core::Graphics
                 shared_->cbo_light.Get(),
             };
             context->PSSetConstantBuffers(2, 2, ps_cbo);
-            if (mblock.image)
+            ID3D11ShaderResourceView* active_image = mblock.override_image ? mblock.override_image.Get() : mblock.image.Get();
+            if (active_image)
             {
                 if (mblock.color_buffer)
                     context->PSSetShader(shared_->shader_pixel_sd_vc[IDX(fog)].Get(), NULL, 0);
@@ -1771,11 +1791,14 @@ namespace core::Graphics
             // VS
 
             upload_local_world_matrix(mblock);
-            ID3D11Buffer* vs_cbo[1] = {
+            DirectX::XMFLOAT4 uv_cb[2] = { mblock.uv_transform, mblock.uv_rotation };
+            context->UpdateSubresource(shared_->cbo_uv.Get(), 0, NULL, uv_cb, 0, 0);
+            ID3D11Buffer* vs_cbo[2] = {
                 // view-projection matrix setup by Renderer at register(b0)
                 shared_->cbo_mlw.Get(),
+                shared_->cbo_uv.Get(),
             };
-            context->VSSetConstantBuffers(1, 1, vs_cbo);
+            context->VSSetConstantBuffers(1, 2, vs_cbo);
 
             // RS
 
@@ -1792,12 +1815,12 @@ namespace core::Graphics
 
             ID3D11SamplerState* ps_samp[1] = { mblock.sampler.Get() };
             context->PSSetSamplers(0, 1, ps_samp);
-            ID3D11ShaderResourceView* ps_srv[1] = { mblock.image.Get() };
+            ID3D11ShaderResourceView* ps_srv[1] = { mblock.override_image ? mblock.override_image.Get() : mblock.image.Get() };
             context->PSSetShaderResources(0, 1, ps_srv);
 
             // OM & blend mode decision
             bool const is_blend = mblock.alpha_blend || (model_color_.w < 0.999f) ||
-                (blend_mode_ == ModelBlendMode::Alpha) || (blend_mode_ == ModelBlendMode::Add) || (blend_mode_ == ModelBlendMode::ScreenDoor);
+                (blend_mode_ != ModelBlendMode::Auto);
 
             if (is_blend) {
                 if (blend_mode_ == ModelBlendMode::ScreenDoor) {
@@ -1832,8 +1855,8 @@ namespace core::Graphics
 
             // VS
 
-            ID3D11Buffer* vs_cbo[1] = { NULL };
-            context->VSSetConstantBuffers(1, 1, vs_cbo);
+            ID3D11Buffer* vs_cbo[2] = { NULL, NULL };
+            context->VSSetConstantBuffers(1, 2, vs_cbo);
 
             // PS
 
@@ -1924,6 +1947,114 @@ namespace core::Graphics
     ModelBlendMode Model_D3D11::getBlendMode() const
     {
         return blend_mode_;
+    }
+
+    uint32_t Model_D3D11::getSubmeshCount() const
+    {
+        return static_cast<uint32_t>(model_block.size());
+    }
+    StringView Model_D3D11::getSubmeshNodeName(uint32_t index) const
+    {
+        if (index < model_block.size())
+            return model_block[index].node_name;
+        return "";
+    }
+    StringView Model_D3D11::getSubmeshMeshName(uint32_t index) const
+    {
+        if (index < model_block.size())
+            return model_block[index].mesh_name;
+        return "";
+    }
+    StringView Model_D3D11::getSubmeshMaterialName(uint32_t index) const
+    {
+        if (index < model_block.size())
+            return model_block[index].material_name;
+        return "";
+    }
+
+    void Model_D3D11::setTexture(ITexture2D* p_texture, uint32_t submesh_index)
+    {
+        ID3D11ShaderResourceView* srv = p_texture ? static_cast<ID3D11ShaderResourceView*>(p_texture->getNativeHandle()) : nullptr;
+        if (submesh_index == 0)
+        {
+            for (auto& block : model_block)
+            {
+                block.override_image = srv;
+            }
+        }
+        else if (submesh_index <= model_block.size())
+        {
+            model_block[submesh_index - 1].override_image = srv;
+        }
+    }
+
+    void Model_D3D11::setTextureByName(ITexture2D* p_texture, StringView name)
+    {
+        ID3D11ShaderResourceView* srv = p_texture ? static_cast<ID3D11ShaderResourceView*>(p_texture->getNativeHandle()) : nullptr;
+        for (auto& block : model_block)
+        {
+            if (block.material_name == name || block.mesh_name == name || block.node_name == name)
+            {
+                block.override_image = srv;
+            }
+        }
+    }
+
+    void Model_D3D11::resetTexture(uint32_t submesh_index)
+    {
+        setTexture(nullptr, submesh_index);
+    }
+
+    void Model_D3D11::resetTextureByName(StringView name)
+    {
+        setTextureByName(nullptr, name);
+    }
+
+    void Model_D3D11::setUVTransform(float u_offset, float v_offset, float u_scale, float v_scale, float angle, uint32_t submesh_index)
+    {
+        float rad = DirectX::XMConvertToRadians(angle);
+        DirectX::XMFLOAT4 uv_t(u_offset, v_offset, u_scale, v_scale);
+        DirectX::XMFLOAT4 uv_r(std::cosf(rad), std::sinf(rad), 0.0f, 0.0f);
+
+        if (submesh_index == 0)
+        {
+            for (auto& block : model_block)
+            {
+                block.uv_transform = uv_t;
+                block.uv_rotation = uv_r;
+            }
+        }
+        else if (submesh_index <= model_block.size())
+        {
+            model_block[submesh_index - 1].uv_transform = uv_t;
+            model_block[submesh_index - 1].uv_rotation = uv_r;
+        }
+    }
+
+    void Model_D3D11::setUVTransformByName(float u_offset, float v_offset, float u_scale, float v_scale, float angle, StringView name)
+    {
+        float rad = DirectX::XMConvertToRadians(angle);
+        DirectX::XMFLOAT4 uv_t(u_offset, v_offset, u_scale, v_scale);
+        DirectX::XMFLOAT4 uv_r(std::cosf(rad), std::sinf(rad), 0.0f, 0.0f);
+
+        for (auto& block : model_block)
+        {
+            if (block.material_name == name || block.mesh_name == name || block.node_name == name)
+            {
+                block.uv_transform = uv_t;
+                block.uv_rotation = uv_r;
+            }
+        }
+    }
+
+    void Model_D3D11::resetUVTransform(uint32_t submesh_index)
+    {
+        setUVTransform(0.0f, 0.0f, 1.0f, 1.0f, 0.0f, submesh_index);
+    }
+
+    void Model_D3D11::resetUVTransformByName(StringView name)
+    {
+        setUVTransformByName(0.0f, 0.0f, 1.0f, 1.0f, 0.0f, name);
     }
 
     Model_D3D11::Model_D3D11(Direct3D11::Device* p_device, ModelSharedComponent_D3D11* p_model_shared, StringView path)

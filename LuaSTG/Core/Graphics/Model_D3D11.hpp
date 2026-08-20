@@ -94,6 +94,7 @@ namespace core::Graphics
         Microsoft::WRL::ComPtr<ID3D11Buffer> cbo_caminfo;
         Microsoft::WRL::ComPtr<ID3D11Buffer> cbo_alpha;
         Microsoft::WRL::ComPtr<ID3D11Buffer> cbo_light;
+        Microsoft::WRL::ComPtr<ID3D11Buffer> cbo_uv;
 
     private:
         bool createImage();
@@ -127,6 +128,10 @@ namespace core::Graphics
 
         struct ModelBlock
         {
+            std::string node_name;
+            std::string mesh_name;
+            std::string material_name;
+
             Microsoft::WRL::ComPtr<ID3D11Buffer> vertex_buffer;
             Microsoft::WRL::ComPtr<ID3D11Buffer> uv_buffer;
             Microsoft::WRL::ComPtr<ID3D11Buffer> normal_buffer;
@@ -134,6 +139,9 @@ namespace core::Graphics
             Microsoft::WRL::ComPtr<ID3D11Buffer> index_buffer;
             Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler;
             Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> image;
+            Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> override_image;
+            DirectX::XMFLOAT4 uv_transform = { 0.0f, 0.0f, 1.0f, 1.0f };
+            DirectX::XMFLOAT4 uv_rotation = { 1.0f, 0.0f, 0.0f, 0.0f };
             DirectX::XMFLOAT4X4 local_matrix;
             DirectX::XMFLOAT4X4 local_matrix_normal; // notice: pair with local_matrix
             DirectX::XMFLOAT4 base_color;
@@ -228,11 +236,26 @@ namespace core::Graphics
         void setRotationRollPitchYaw(float roll, float pitch, float yaw);
         void setRotationQuaternion(Vector4F const& quat);
 
-        void setColor(Vector4F const& color);
-        void setAlpha(float alpha);
-        void setBlendMode(ModelBlendMode mode);
-        Vector4F getColor() const;
-        ModelBlendMode getBlendMode() const;
+        void setColor(Vector4F const& color) override;
+        void setAlpha(float alpha) override;
+        void setBlendMode(ModelBlendMode mode) override;
+        Vector4F getColor() const override;
+        ModelBlendMode getBlendMode() const override;
+
+        uint32_t getSubmeshCount() const override;
+        StringView getSubmeshNodeName(uint32_t index) const override;
+        StringView getSubmeshMeshName(uint32_t index) const override;
+        StringView getSubmeshMaterialName(uint32_t index) const override;
+
+        void setTexture(ITexture2D* p_texture, uint32_t submesh_index = 0) override;
+        void setTextureByName(ITexture2D* p_texture, StringView name) override;
+        void resetTexture(uint32_t submesh_index = 0) override;
+        void resetTextureByName(StringView name) override;
+
+        void setUVTransform(float u_offset, float v_offset, float u_scale = 1.0f, float v_scale = 1.0f, float angle = 0.0f, uint32_t submesh_index = 0) override;
+        void setUVTransformByName(float u_offset, float v_offset, float u_scale, float v_scale, float angle, StringView name) override;
+        void resetUVTransform(uint32_t submesh_index = 0) override;
+        void resetUVTransformByName(StringView name) override;
 
         void draw(IRenderer::FogState fog, std::span<PointLight const> scene_lights);
 

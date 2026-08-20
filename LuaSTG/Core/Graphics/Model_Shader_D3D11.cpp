@@ -48,6 +48,20 @@ cbuffer constantBuffer1 : register(b1)
     float4x4 LocalWorldMatrix;
     float4x4 NormalLocalWorldMatrix;
 };
+cbuffer uvTransform : register(b2)
+{
+    float4 UVTransform; // (offset_x, offset_y, scale_x, scale_y)
+    float4 UVRotation;  // (cos_angle, sin_angle, 0, 0)
+};
+
+float2 transformUV(float2 in_uv)
+{
+    float2 scaled_uv = in_uv * UVTransform.zw;
+    float c = UVRotation.x;
+    float s = UVRotation.y;
+    float2 rot_uv = float2(scaled_uv.x * c - scaled_uv.y * s, scaled_uv.x * s + scaled_uv.y * c);
+    return rot_uv + UVTransform.xy;
+}
 
 PS_INPUT VS_Main(VS_INPUT input)
 {
@@ -56,7 +70,7 @@ PS_INPUT VS_Main(VS_INPUT input)
     output.pos = mul(ProjectionMatrix, wpos);
     output.wpos = wpos;
     output.norm = mul(NormalLocalWorldMatrix, float4(input.norm, 0.0f)); // no move
-    output.uv = input.uv;
+    output.uv = transformUV(input.uv);
     return output;
 };
 
@@ -68,7 +82,7 @@ PS_S4F_P4F_N4F_C4F_T2F VS_Main_VertexColor(VS_P3F_N3F_C4F_T2F input)
     output.wpos = wpos;
     output.norm = mul(NormalLocalWorldMatrix, float4(input.norm, 0.0f)); // no move
     output.col = input.col;
-    output.uv = input.uv;
+    output.uv = transformUV(input.uv);
     return output;
 };
 

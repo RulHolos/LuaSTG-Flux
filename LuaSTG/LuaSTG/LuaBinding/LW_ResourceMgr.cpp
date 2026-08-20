@@ -405,6 +405,178 @@ void luastg::binding::ResourceManager::Register(lua_State* L) noexcept
 			}
 			return 0;
 		}
+		static int GetModelSubmeshCount(lua_State* L) noexcept
+		{
+			const char* name = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceModel> p = LRES.FindModel(name);
+			if (!p)
+				return luaL_error(L, "model '%s' not found.", name);
+			lua_pushinteger(L, static_cast<lua_Integer>(p->GetModel()->getSubmeshCount()));
+			return 1;
+		}
+		static int GetModelSubmeshList(lua_State* L) noexcept
+		{
+			const char* name = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceModel> p = LRES.FindModel(name);
+			if (!p)
+				return luaL_error(L, "model '%s' not found.", name);
+			auto* model = p->GetModel();
+			uint32_t count = model->getSubmeshCount();
+			lua_createtable(L, count, 0);
+			for (uint32_t i = 0; i < count; ++i)
+			{
+				lua_createtable(L, 0, 4);
+				lua_pushinteger(L, i + 1);
+				lua_setfield(L, -2, "index");
+				auto node_name = model->getSubmeshNodeName(i);
+				lua_pushlstring(L, node_name.data(), node_name.size());
+				lua_setfield(L, -2, "node");
+				auto mesh_name = model->getSubmeshMeshName(i);
+				lua_pushlstring(L, mesh_name.data(), mesh_name.size());
+				lua_setfield(L, -2, "mesh");
+				auto mat_name = model->getSubmeshMaterialName(i);
+				lua_pushlstring(L, mat_name.data(), mat_name.size());
+				lua_setfield(L, -2, "material");
+				lua_rawseti(L, -2, i + 1);
+			}
+			return 1;
+		}
+		static int SetModelTexture(lua_State* L) noexcept
+		{
+			const char* name = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceModel> p = LRES.FindModel(name);
+			if (!p)
+				return luaL_error(L, "model '%s' not found.", name);
+
+			core::Graphics::ITexture2D* tex = nullptr;
+			if (lua_gettop(L) >= 2 && !lua_isnoneornil(L, 2))
+			{
+				const char* tex_name = luaL_checkstring(L, 2);
+				if (std::strlen(tex_name) > 0)
+				{
+					core::SmartReference<IResourceTexture> pTex = LRES.FindTexture(tex_name);
+					if (pTex)
+					{
+						tex = pTex->GetTexture();
+					}
+					else
+					{
+						core::SmartReference<IResourceSprite> pSprite = LRES.FindSprite(tex_name);
+						if (pSprite && pSprite->GetSprite())
+						{
+							tex = pSprite->GetSprite()->getTexture();
+						}
+						else
+						{
+							return luaL_error(L, "texture '%s' not found.", tex_name);
+						}
+					}
+				}
+			}
+
+			if (lua_gettop(L) >= 3 && !lua_isnoneornil(L, 3))
+			{
+				if (lua_isnumber(L, 3))
+				{
+					uint32_t idx = static_cast<uint32_t>(lua_tointeger(L, 3));
+					p->GetModel()->setTexture(tex, idx);
+				}
+				else
+				{
+					const char* submesh_name = luaL_checkstring(L, 3);
+					p->GetModel()->setTextureByName(tex, submesh_name);
+				}
+			}
+			else
+			{
+				p->GetModel()->setTexture(tex, 0); // all
+			}
+			return 0;
+		}
+		static int ResetModelTexture(lua_State* L) noexcept
+		{
+			const char* name = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceModel> p = LRES.FindModel(name);
+			if (!p)
+				return luaL_error(L, "model '%s' not found.", name);
+
+			if (lua_gettop(L) >= 2 && !lua_isnoneornil(L, 2))
+			{
+				if (lua_isnumber(L, 2))
+				{
+					uint32_t idx = static_cast<uint32_t>(lua_tointeger(L, 2));
+					p->GetModel()->resetTexture(idx);
+				}
+				else
+				{
+					const char* submesh_name = luaL_checkstring(L, 2);
+					p->GetModel()->resetTextureByName(submesh_name);
+				}
+			}
+			else
+			{
+				p->GetModel()->resetTexture(0);
+			}
+			return 0;
+		}
+		static int SetModelUV(lua_State* L) noexcept
+		{
+			const char* name = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceModel> p = LRES.FindModel(name);
+			if (!p)
+				return luaL_error(L, "model '%s' not found.", name);
+
+			float u_offset = static_cast<float>(luaL_checknumber(L, 2));
+			float v_offset = static_cast<float>(luaL_checknumber(L, 3));
+			float u_scale = static_cast<float>(luaL_optnumber(L, 4, 1.0));
+			float v_scale = static_cast<float>(luaL_optnumber(L, 5, 1.0));
+			float angle = static_cast<float>(luaL_optnumber(L, 6, 0.0));
+
+			if (lua_gettop(L) >= 7 && !lua_isnoneornil(L, 7))
+			{
+				if (lua_isnumber(L, 7))
+				{
+					uint32_t idx = static_cast<uint32_t>(lua_tointeger(L, 7));
+					p->GetModel()->setUVTransform(u_offset, v_offset, u_scale, v_scale, angle, idx);
+				}
+				else
+				{
+					const char* submesh_name = luaL_checkstring(L, 7);
+					p->GetModel()->setUVTransformByName(u_offset, v_offset, u_scale, v_scale, angle, submesh_name);
+				}
+			}
+			else
+			{
+				p->GetModel()->setUVTransform(u_offset, v_offset, u_scale, v_scale, angle, 0);
+			}
+			return 0;
+		}
+		static int ResetModelUV(lua_State* L) noexcept
+		{
+			const char* name = luaL_checkstring(L, 1);
+			core::SmartReference<IResourceModel> p = LRES.FindModel(name);
+			if (!p)
+				return luaL_error(L, "model '%s' not found.", name);
+
+			if (lua_gettop(L) >= 2 && !lua_isnoneornil(L, 2))
+			{
+				if (lua_isnumber(L, 2))
+				{
+					uint32_t idx = static_cast<uint32_t>(lua_tointeger(L, 2));
+					p->GetModel()->resetUVTransform(idx);
+				}
+				else
+				{
+					const char* submesh_name = luaL_checkstring(L, 2);
+					p->GetModel()->resetUVTransformByName(submesh_name);
+				}
+			}
+			else
+			{
+				p->GetModel()->resetUVTransform(0);
+			}
+			return 0;
+		}
 		static int SetVideoState(lua_State* L) noexcept
 		{
 			core::SmartReference<IResourceVideo> p = LRES.FindVideo(luaL_checkstring(L, 1));
@@ -774,6 +946,12 @@ void luastg::binding::ResourceManager::Register(lua_State* L) noexcept
 		{ "LoadFX", &Wrapper::LoadFX },
 		{ "LoadModel", &Wrapper::LoadModel },
 		{ "SetModelState", &Wrapper::SetModelState },
+		{ "GetModelSubmeshCount", &Wrapper::GetModelSubmeshCount },
+		{ "GetModelSubmeshList", &Wrapper::GetModelSubmeshList },
+		{ "SetModelTexture", &Wrapper::SetModelTexture },
+		{ "ResetModelTexture", &Wrapper::ResetModelTexture },
+		{ "SetModelUV", &Wrapper::SetModelUV },
+		{ "ResetModelUV", &Wrapper::ResetModelUV },
 		{ "LoadVideo", &Wrapper::LoadVideo },
 		{ "SetVideoState", &Wrapper::SetVideoState },
 		{ "CreateRenderTarget", &Wrapper::CreateRenderTarget },
