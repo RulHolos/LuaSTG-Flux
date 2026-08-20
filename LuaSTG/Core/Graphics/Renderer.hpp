@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "Core/Type.hpp"
 #include "core/ReferenceCounted.hpp"
 #include "Core/Graphics/Device.hpp"
@@ -25,6 +25,14 @@ namespace core::Graphics
 		virtual bool apply(IRenderer* p_renderer) = 0;
 	};
 
+	enum class ModelBlendMode : uint8_t
+	{
+		Auto = 0,
+		Alpha,
+		Add,
+		ScreenDoor,
+	};
+
 	struct IModel : public IReferenceCounted
 	{
 		virtual void setAmbient(Vector3F const& color, float brightness) = 0;
@@ -37,6 +45,12 @@ namespace core::Graphics
 		virtual void setPosition(Vector3F const& pos) = 0;
 		virtual void setRotationRollPitchYaw(float roll, float pitch, float yaw) = 0;
 		virtual void setRotationQuaternion(Vector4F const& quat) = 0;
+
+		virtual void setColor(Vector4F const& color) = 0;
+		virtual void setAlpha(float alpha) = 0;
+		virtual void setBlendMode(ModelBlendMode mode) = 0;
+		virtual Vector4F getColor() const = 0;
+		virtual ModelBlendMode getBlendMode() const = 0;
 	};
 
 	struct IRenderer : public IReferenceCounted
