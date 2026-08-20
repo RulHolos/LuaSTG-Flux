@@ -117,28 +117,62 @@ namespace core::Graphics
 
         HRESULT hr = S_OK;
 
-        // default: create
-
-        D3D11_SAMPLER_DESC def_samp_def = {
-            .Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR,
-            .AddressU = D3D11_TEXTURE_ADDRESS_WRAP,
-            .AddressV = D3D11_TEXTURE_ADDRESS_WRAP,
-            .AddressW = D3D11_TEXTURE_ADDRESS_WRAP,
-            .MipLODBias = D3D11_DEFAULT_MIP_LOD_BIAS,
-            .MaxAnisotropy = D3D11_DEFAULT_MAX_ANISOTROPY,
-            .ComparisonFunc = D3D11_COMPARISON_ALWAYS,
-            .BorderColor = {},
-            .MinLOD = 0.0f,
-            .MaxLOD = D3D11_FLOAT32_MAX,
-        };
-        hr = device->CreateSamplerState(&def_samp_def, &default_sampler);
-        if (FAILED(hr))
+        auto create_sampler = [&](D3D11_FILTER filter, D3D11_TEXTURE_ADDRESS_MODE address, UINT max_aniso, Microsoft::WRL::ComPtr<ID3D11SamplerState>& out_sampler) -> bool
         {
-            assert(false);
-            return false;
-        }
+            D3D11_SAMPLER_DESC samp_def = {
+                .Filter = filter,
+                .AddressU = address,
+                .AddressV = address,
+                .AddressW = address,
+                .MipLODBias = D3D11_DEFAULT_MIP_LOD_BIAS,
+                .MaxAnisotropy = max_aniso,
+                .ComparisonFunc = D3D11_COMPARISON_ALWAYS,
+                .BorderColor = {},
+                .MinLOD = 0.0f,
+                .MaxLOD = D3D11_FLOAT32_MAX,
+            };
+            hr = device->CreateSamplerState(&samp_def, &out_sampler);
+            return SUCCEEDED(hr);
+        };
+
+        if (!create_sampler(D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_WRAP, 1, default_sampler)) return false;
+        sampler_linear_wrap = default_sampler;
+
+        if (!create_sampler(D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_CLAMP, 1, sampler_linear_clamp)) return false;
+        if (!create_sampler(D3D11_FILTER_MIN_MAG_MIP_POINT, D3D11_TEXTURE_ADDRESS_WRAP, 1, sampler_point_wrap)) return false;
+        if (!create_sampler(D3D11_FILTER_MIN_MAG_MIP_POINT, D3D11_TEXTURE_ADDRESS_CLAMP, 1, sampler_point_clamp)) return false;
+        if (!create_sampler(D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_MIRROR, 1, sampler_linear_mirror)) return false;
+        if (!create_sampler(D3D11_FILTER_MIN_MAG_MIP_POINT, D3D11_TEXTURE_ADDRESS_MIRROR, 1, sampler_point_mirror)) return false;
+        if (!create_sampler(D3D11_FILTER_ANISOTROPIC, D3D11_TEXTURE_ADDRESS_WRAP, 16, sampler_aniso_wrap)) return false;
+        if (!create_sampler(D3D11_FILTER_ANISOTROPIC, D3D11_TEXTURE_ADDRESS_CLAMP, 16, sampler_aniso_clamp)) return false;
 
         return true;
+    }
+
+    ID3D11SamplerState* ModelSharedComponent_D3D11::getSampler(StringView name) const noexcept
+    {
+        std::string s(name);
+        for (auto& c : s) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+
+        bool is_point = s.find("point") != std::string::npos || s.find("nearest") != std::string::npos;
+        bool is_aniso = s.find("aniso") != std::string::npos;
+        bool is_clamp = s.find("clamp") != std::string::npos;
+        bool is_mirror = s.find("mirror") != std::string::npos;
+
+        if (is_aniso)
+        {
+            return is_clamp ? sampler_aniso_clamp.Get() : sampler_aniso_wrap.Get();
+        }
+        if (is_point)
+        {
+            if (is_clamp) return sampler_point_clamp.Get();
+            if (is_mirror) return sampler_point_mirror.Get();
+            return sampler_point_wrap.Get();
+        }
+        // linear
+        if (is_clamp) return sampler_linear_clamp.Get();
+        if (is_mirror) return sampler_linear_mirror.Get();
+        return sampler_linear_wrap.Get();
     }
     bool ModelSharedComponent_D3D11::createConstantBuffer()
     {
@@ -597,6 +631,14 @@ namespace core::Graphics
     {
         default_image.Reset();
         default_sampler.Reset();
+        sampler_linear_wrap.Reset();
+        sampler_linear_clamp.Reset();
+        sampler_point_wrap.Reset();
+        sampler_point_clamp.Reset();
+        sampler_linear_mirror.Reset();
+        sampler_point_mirror.Reset();
+        sampler_aniso_wrap.Reset();
+        sampler_aniso_clamp.Reset();
 
         input_layout.Reset();
         input_layout_vc.Reset();
@@ -1598,10 +1640,10 @@ namespace core::Graphics
             // PS
 
             FLOAT const alpha[8] = {
-                    mblock.base_color.x * model_color_.x,
-                    mblock.base_color.y * model_color_.y,
-                    mblock.base_color.z * model_color_.z,
-                    mblock.base_color.w * model_color_.w,
+                    mblock.base_color.x * mblock.override_color.x * model_color_.x,
+                    mblock.base_color.y * mblock.override_color.y * model_color_.y,
+                    mblock.base_color.z * mblock.override_color.z * model_color_.z,
+                    mblock.base_color.w * mblock.override_color.w * model_color_.w,
                     mblock.alpha, 0.0f, 0.0f, 0.0f,
             };
             context->UpdateSubresource(shared_->cbo_alpha.Get(), 0, NULL, alpha, 0, 0);
@@ -1622,10 +1664,10 @@ namespace core::Graphics
             // PS
 
             FLOAT const alpha[8] = {
-                    mblock.base_color.x * model_color_.x,
-                    mblock.base_color.y * model_color_.y,
-                    mblock.base_color.z * model_color_.z,
-                    mblock.base_color.w * model_color_.w,
+                    mblock.base_color.x * mblock.override_color.x * model_color_.x,
+                    mblock.base_color.y * mblock.override_color.y * model_color_.y,
+                    mblock.base_color.z * mblock.override_color.z * model_color_.z,
+                    mblock.base_color.w * mblock.override_color.w * model_color_.w,
                     value, 0.0f, 0.0f, 0.0f,
             };
             context->UpdateSubresource(shared_->cbo_alpha.Get(), 0, NULL, alpha, 0, 0);
@@ -1661,10 +1703,10 @@ namespace core::Graphics
             // PS
 
             FLOAT const alpha[8] = {
-                    mblock.base_color.x * model_color_.x,
-                    mblock.base_color.y * model_color_.y,
-                    mblock.base_color.z * model_color_.z,
-                    mblock.base_color.w * model_color_.w,
+                    mblock.base_color.x * mblock.override_color.x * model_color_.x,
+                    mblock.base_color.y * mblock.override_color.y * model_color_.y,
+                    mblock.base_color.z * mblock.override_color.z * model_color_.z,
+                    mblock.base_color.w * mblock.override_color.w * model_color_.w,
                     0.5f, 0.0f, 0.0f, 0.0f,
             };
             context->UpdateSubresource(shared_->cbo_alpha.Get(), 0, NULL, alpha, 0, 0);
@@ -1702,10 +1744,10 @@ namespace core::Graphics
             // PS
 
             FLOAT const alpha[8] = {
-                    mblock.base_color.x * model_color_.x,
-                    mblock.base_color.y * model_color_.y,
-                    mblock.base_color.z * model_color_.z,
-                    mblock.base_color.w * model_color_.w,
+                    mblock.base_color.x * mblock.override_color.x * model_color_.x,
+                    mblock.base_color.y * mblock.override_color.y * model_color_.y,
+                    mblock.base_color.z * mblock.override_color.z * model_color_.z,
+                    mblock.base_color.w * mblock.override_color.w * model_color_.w,
                     exclude_value, 0.0f, 0.0f, 0.0f,
             };
             context->UpdateSubresource(shared_->cbo_alpha.Get(), 0, NULL, alpha, 0, 0);
@@ -1741,10 +1783,10 @@ namespace core::Graphics
             // PS
 
             FLOAT const alpha[8] = {
-                    mblock.base_color.x * model_color_.x,
-                    mblock.base_color.y * model_color_.y,
-                    mblock.base_color.z * model_color_.z,
-                    mblock.base_color.w * model_color_.w,
+                    mblock.base_color.x * mblock.override_color.x * model_color_.x,
+                    mblock.base_color.y * mblock.override_color.y * model_color_.y,
+                    mblock.base_color.z * mblock.override_color.z * model_color_.z,
+                    mblock.base_color.w * mblock.override_color.w * model_color_.w,
                     0.5f, 0.0f, 0.0f, 0.0f,
             };
             context->UpdateSubresource(shared_->cbo_alpha.Get(), 0, NULL, alpha, 0, 0);
@@ -1813,13 +1855,14 @@ namespace core::Graphics
 
             // PS
 
-            ID3D11SamplerState* ps_samp[1] = { mblock.sampler.Get() };
+            ID3D11SamplerState* active_sampler = mblock.override_sampler ? mblock.override_sampler.Get() : mblock.sampler.Get();
+            ID3D11SamplerState* ps_samp[1] = { active_sampler };
             context->PSSetSamplers(0, 1, ps_samp);
             ID3D11ShaderResourceView* ps_srv[1] = { mblock.override_image ? mblock.override_image.Get() : mblock.image.Get() };
             context->PSSetShaderResources(0, 1, ps_srv);
 
             // OM & blend mode decision
-            bool const is_blend = mblock.alpha_blend || (model_color_.w < 0.999f) ||
+            bool const is_blend = mblock.alpha_blend || (model_color_.w < 0.999f) || (mblock.override_color.w < 0.999f) ||
                 (blend_mode_ != ModelBlendMode::Auto);
 
             if (is_blend) {
@@ -1877,7 +1920,9 @@ namespace core::Graphics
         {
             for (auto& mblock : model_block)
             {
-                if (!mblock.alpha_mask && !mblock.alpha_blend)
+                if (!mblock.visible)
+                    continue;
+                if (!mblock.alpha_mask && !mblock.alpha_blend && mblock.override_color.w >= 0.999f)
                 {
                     set_state_from_block(mblock);
                     draw_block(mblock);
@@ -1891,7 +1936,9 @@ namespace core::Graphics
         {
             for (auto& mblock : model_block)
             {
-                if (mblock.alpha_mask)
+                if (!mblock.visible)
+                    continue;
+                if (mblock.alpha_mask && mblock.override_color.w >= 0.999f)
                 {
                     set_state_from_block(mblock);
                     draw_block(mblock);
@@ -1903,7 +1950,9 @@ namespace core::Graphics
 
         for (auto& mblock : model_block)
         {
-            if (force_blend_all || mblock.alpha_blend)
+            if (!mblock.visible)
+                continue;
+            if (force_blend_all || mblock.alpha_blend || mblock.override_color.w < 0.999f)
             {
                 if (mblock.double_side && blend_mode_ != ModelBlendMode::ScreenDoor)
                 {
@@ -2055,6 +2104,133 @@ namespace core::Graphics
     void Model_D3D11::resetUVTransformByName(StringView name)
     {
         setUVTransformByName(0.0f, 0.0f, 1.0f, 1.0f, 0.0f, name);
+    }
+
+    void Model_D3D11::setSubmeshColor(Vector4F const& color, uint32_t submesh_index)
+    {
+        DirectX::XMFLOAT4 c(color.x, color.y, color.z, color.w);
+        if (submesh_index == 0)
+        {
+            for (auto& block : model_block)
+            {
+                block.override_color = c;
+            }
+        }
+        else if (submesh_index <= model_block.size())
+        {
+            model_block[submesh_index - 1].override_color = c;
+        }
+    }
+
+    void Model_D3D11::setSubmeshColorByName(Vector4F const& color, StringView name)
+    {
+        DirectX::XMFLOAT4 c(color.x, color.y, color.z, color.w);
+        for (auto& block : model_block)
+        {
+            if (block.material_name == name || block.mesh_name == name || block.node_name == name)
+            {
+                block.override_color = c;
+            }
+        }
+    }
+
+    void Model_D3D11::resetSubmeshColor(uint32_t submesh_index)
+    {
+        setSubmeshColor(Vector4F(1.0f, 1.0f, 1.0f, 1.0f), submesh_index);
+    }
+
+    void Model_D3D11::resetSubmeshColorByName(StringView name)
+    {
+        setSubmeshColorByName(Vector4F(1.0f, 1.0f, 1.0f, 1.0f), name);
+    }
+
+    void Model_D3D11::setSubmeshSampler(StringView sampler_name, uint32_t submesh_index)
+    {
+        ID3D11SamplerState* s = shared_->getSampler(sampler_name);
+        if (submesh_index == 0)
+        {
+            for (auto& block : model_block)
+            {
+                block.override_sampler = s;
+            }
+        }
+        else if (submesh_index <= model_block.size())
+        {
+            model_block[submesh_index - 1].override_sampler = s;
+        }
+    }
+
+    void Model_D3D11::setSubmeshSamplerByName(StringView sampler_name, StringView name)
+    {
+        ID3D11SamplerState* s = shared_->getSampler(sampler_name);
+        for (auto& block : model_block)
+        {
+            if (block.material_name == name || block.mesh_name == name || block.node_name == name)
+            {
+                block.override_sampler = s;
+            }
+        }
+    }
+
+    void Model_D3D11::resetSubmeshSampler(uint32_t submesh_index)
+    {
+        if (submesh_index == 0)
+        {
+            for (auto& block : model_block)
+            {
+                block.override_sampler.Reset();
+            }
+        }
+        else if (submesh_index <= model_block.size())
+        {
+            model_block[submesh_index - 1].override_sampler.Reset();
+        }
+    }
+
+    void Model_D3D11::resetSubmeshSamplerByName(StringView name)
+    {
+        for (auto& block : model_block)
+        {
+            if (block.material_name == name || block.mesh_name == name || block.node_name == name)
+            {
+                block.override_sampler.Reset();
+            }
+        }
+    }
+
+    void Model_D3D11::setSubmeshVisible(bool visible, uint32_t submesh_index)
+    {
+        if (submesh_index == 0)
+        {
+            for (auto& block : model_block)
+            {
+                block.visible = visible ? TRUE : FALSE;
+            }
+        }
+        else if (submesh_index <= model_block.size())
+        {
+            model_block[submesh_index - 1].visible = visible ? TRUE : FALSE;
+        }
+    }
+
+    void Model_D3D11::setSubmeshVisibleByName(bool visible, StringView name)
+    {
+        for (auto& block : model_block)
+        {
+            if (block.material_name == name || block.mesh_name == name || block.node_name == name)
+            {
+                block.visible = visible ? TRUE : FALSE;
+            }
+        }
+    }
+
+    bool Model_D3D11::getSubmeshVisible(uint32_t submesh_index) const
+    {
+        if (submesh_index > 0 && submesh_index <= model_block.size())
+        {
+            return model_block[submesh_index - 1].visible != FALSE;
+        }
+        return false;
     }
 
     Model_D3D11::Model_D3D11(Direct3D11::Device* p_device, ModelSharedComponent_D3D11* p_model_shared, StringView path)
