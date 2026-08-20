@@ -52,6 +52,42 @@ namespace core::Graphics
         Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend;
         Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend_alpha;
         Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend_add;
+        Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend_sub;
+        Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend_revsub;
+        Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend_mul;
+        Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend_screen;
+        Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend_min;
+        Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend_max;
+        Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend_inv;
+        Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend_one;
+
+        ID3D11BlendState* getBlendState(ModelBlendMode mode) const noexcept
+        {
+            switch (mode)
+            {
+            case ModelBlendMode::Add:
+                return state_blend_add.Get();
+            case ModelBlendMode::Sub:
+                return state_blend_sub.Get();
+            case ModelBlendMode::RevSub:
+                return state_blend_revsub.Get();
+            case ModelBlendMode::Mul:
+                return state_blend_mul.Get();
+            case ModelBlendMode::Screen:
+                return state_blend_screen.Get();
+            case ModelBlendMode::Min:
+                return state_blend_min.Get();
+            case ModelBlendMode::Max:
+                return state_blend_max.Get();
+            case ModelBlendMode::Inv:
+                return state_blend_inv.Get();
+            case ModelBlendMode::One:
+                return state_blend_one.Get();
+            case ModelBlendMode::Alpha:
+            default:
+                return state_blend_alpha.Get();
+            }
+        }
 
         Microsoft::WRL::ComPtr<ID3D11Buffer> cbo_mvp;
         Microsoft::WRL::ComPtr<ID3D11Buffer> cbo_mlw;

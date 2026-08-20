@@ -577,25 +577,7 @@ namespace luastg {
 
 		if (lua_gettop(L) >= 2)
 		{
-			size_t len = 0;
-			const char* mode_str = luaL_checklstring(L, 2, &len);
-			core::Graphics::ModelBlendMode mode = core::Graphics::ModelBlendMode::Auto;
-			if (len == 0 || std::strcmp(mode_str, "auto") == 0 || std::strcmp(mode_str, "default") == 0) {
-				mode = core::Graphics::ModelBlendMode::Auto;
-			}
-			else if (std::strcmp(mode_str, "alpha") == 0 || std::strcmp(mode_str, "mul+alpha") == 0 || std::strcmp(mode_str, "blend") == 0 || std::strcmp(mode_str, "alpha+bal") == 0) {
-				mode = core::Graphics::ModelBlendMode::Alpha;
-			}
-			else if (std::strcmp(mode_str, "add") == 0 || std::strcmp(mode_str, "mul+add") == 0 || std::strcmp(mode_str, "add+add") == 0 || std::strcmp(mode_str, "add+alpha") == 0 || std::strcmp(mode_str, "additive") == 0) {
-				mode = core::Graphics::ModelBlendMode::Add;
-			}
-			else if (std::strcmp(mode_str, "dither") == 0 || std::strcmp(mode_str, "screendoor") == 0 || std::strcmp(mode_str, "screen_door") == 0) {
-				mode = core::Graphics::ModelBlendMode::ScreenDoor;
-			}
-			else {
-				return luaL_error(L, "invalid blend mode '%s' for model (expected '', 'alpha', 'add', or 'dither').", mode_str);
-			}
-			pmodres->GetModel()->setBlendMode(mode);
+			pmodres->GetModel()->setBlendMode(TranslateModelBlendMode(L, 2));
 		}
 		if (lua_gettop(L) >= 3)
 		{
