@@ -87,6 +87,18 @@ namespace {
 		return (float)(u & 0xFFFFu) / 32767.5f - 1.f;
 	}
 
+	inline Microsoft::WRL::ComPtr<IDWriteFactory> const& getSharedDWriteFactory() {
+		static Microsoft::WRL::ComPtr<IDWriteFactory> factory = [] {
+			Microsoft::WRL::ComPtr<IDWriteFactory> f;
+			if (g_dll.DWriteCreateFactory)
+				g_dll.DWriteCreateFactory(
+					DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory),
+					reinterpret_cast<IUnknown**>(f.GetAddressOf()));
+			return f;
+		}();
+		return factory;
+	}
+
 	class FontFileStream;
 	class FontFileLoader;
 	class FontFileEnumerator;
@@ -285,6 +297,40 @@ namespace {
 			} catch (...) { return E_OUTOFMEMORY; }
 		}
 	};
+
+	struct FontCollectionCacheEntry {
+		Microsoft::WRL::ComPtr<IDWriteFontCollection> collection;
+		Microsoft::WRL::ComPtr<FontFileLoader> fileLoader;
+		Microsoft::WRL::ComPtr<FontCollectionLoader> colLoader;
+	};
+
+	inline std::unordered_map<std::string, FontCollectionCacheEntry>& getFontCollectionCache() {
+		static std::unordered_map<std::string, FontCollectionCacheEntry> cache;
+		return cache;
+	}
+
+	struct GlyphGeoKey {
+		IDWriteFontFace* face{};
+		UINT16 glyphIndex{};
+		float emSize{};
+		bool sideways{};
+
+		bool operator==(GlyphGeoKey const& o) const {
+			return face == o.face && glyphIndex == o.glyphIndex && emSize == o.emSize && sideways == o.sideways;
+		}
+	};
+
+	struct GlyphGeoKeyHash {
+		size_t operator()(GlyphGeoKey const& k) const noexcept {
+			size_t h = std::hash<void const*>{}(k.face);
+			h ^= std::hash<UINT16>{}(k.glyphIndex) + 0x9e3779b9u + (h << 6) + (h >> 2);
+			h ^= std::hash<float>{}(k.emSize) + 0x9e3779b9u + (h << 6) + (h >> 2);
+			h ^= std::hash<bool>{}(k.sideways) + 0x9e3779b9u + (h << 6) + (h >> 2);
+			return h;
+		}
+	};
+
+	using GlyphGeometryCache = std::unordered_map<GlyphGeoKey, Microsoft::WRL::ComPtr<ID2D1PathGeometry>, GlyphGeoKeyHash>;
 
 	struct DrawingEffect final : IUnknown {
 		std::atomic<ULONG> m_ref{ 1 };
@@ -637,6 +683,9 @@ namespace {
 		bool renderOutlinePass{ false };
 		float layoutOriginX{ 0.f };
 		float layoutOriginY{ 0.f };
+
+		ID2D1SolidColorBrush* reusableBrush{ nullptr };
+		GlyphGeometryCache* geometryCache{ nullptr };
 	};
 
 	class RichTextGlyphRenderer final : public IDWriteTextRenderer {
@@ -823,12 +872,18 @@ namespace {
 			Microsoft::WRL::ComPtr<ID2D1TransformedGeometry> tg;
 			m_factory->CreateRectangleGeometry(r, &rg);
 			m_factory->CreateTransformedGeometry(rg.Get(), mat, &tg);
-			Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> brush;
-			m_rt->CreateSolidColorBrush(toD2D1Color(c), &brush);
+			ID2D1SolidColorBrush* brush = m_ctx->reusableBrush;
+			Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> localBrush;
+			if (brush) {
+				brush->SetColor(toD2D1Color(c));
+			} else {
+				m_rt->CreateSolidColorBrush(toD2D1Color(c), &localBrush);
+				brush = localBrush.Get();
+			}
 			if (m_ctx->renderOutlinePass && m_ctx->outlineWidth > 0.f)
-				m_rt->DrawGeometry(tg.Get(), brush.Get(), m_ctx->outlineWidth, m_strokeStyle.Get());
+				m_rt->DrawGeometry(tg.Get(), brush, m_ctx->outlineWidth, m_strokeStyle.Get());
 			else if (!m_ctx->renderOutlinePass)
-				m_rt->FillGeometry(tg.Get(), brush.Get());
+				m_rt->FillGeometry(tg.Get(), brush);
 			return S_OK;
 		}
 
@@ -842,12 +897,18 @@ namespace {
 			Microsoft::WRL::ComPtr<ID2D1TransformedGeometry> tg;
 			m_factory->CreateRectangleGeometry(r, &rg);
 			m_factory->CreateTransformedGeometry(rg.Get(), mat, &tg);
-			Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> brush;
-			m_rt->CreateSolidColorBrush(toD2D1Color(c), &brush);
+			ID2D1SolidColorBrush* brush = m_ctx->reusableBrush;
+			Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> localBrush;
+			if (brush) {
+				brush->SetColor(toD2D1Color(c));
+			} else {
+				m_rt->CreateSolidColorBrush(toD2D1Color(c), &localBrush);
+				brush = localBrush.Get();
+			}
 			if (m_ctx->renderOutlinePass && m_ctx->outlineWidth > 0.f)
-				m_rt->DrawGeometry(tg.Get(), brush.Get(), m_ctx->outlineWidth, m_strokeStyle.Get());
+				m_rt->DrawGeometry(tg.Get(), brush, m_ctx->outlineWidth, m_strokeStyle.Get());
 			else if (!m_ctx->renderOutlinePass)
-				m_rt->FillGeometry(tg.Get(), brush.Get());
+				m_rt->FillGeometry(tg.Get(), brush);
 			return S_OK;
 		}
 
@@ -859,9 +920,35 @@ namespace {
 		}
 
 	private:
-		HRESULT drawSingleRunWithBrush(DWRITE_GLYPH_RUN const* run, FLOAT x, FLOAT y, ID2D1Brush* brush) {
-			if (!run || !run->fontFace || !brush)
+		HRESULT getOrBuildGlyphGeometry(DWRITE_GLYPH_RUN const* run, ID2D1PathGeometry** outGeom) {
+			if (m_ctx->geometryCache && run->glyphCount == 1 && run->glyphIndices) {
+				GlyphGeoKey key{ run->fontFace, run->glyphIndices[0], run->fontEmSize, run->isSideways != 0 };
+				auto it = m_ctx->geometryCache->find(key);
+				if (it != m_ctx->geometryCache->end()) {
+					*outGeom = it->second.Get();
+					return S_OK;
+				}
+
+				Microsoft::WRL::ComPtr<ID2D1PathGeometry> pg;
+				HRESULT hr = m_factory->CreatePathGeometry(&pg);
+				if (FAILED(hr))
+					return hr;
+				Microsoft::WRL::ComPtr<ID2D1GeometrySink> sink;
+				hr = pg->Open(&sink);
+				if (FAILED(hr))
+					return hr;
+				hr = run->fontFace->GetGlyphRunOutline(
+					run->fontEmSize, run->glyphIndices, nullptr,
+					nullptr, 1,
+					run->isSideways, (run->bidiLevel & 1), sink.Get());
+				if (FAILED(hr))
+					return hr;
+				sink->Close();
+				*outGeom = pg.Get();
+				(*m_ctx->geometryCache)[key] = std::move(pg);
 				return S_OK;
+			}
+
 			Microsoft::WRL::ComPtr<ID2D1PathGeometry> pg;
 			HRESULT hr = m_factory->CreatePathGeometry(&pg);
 			if (FAILED(hr))
@@ -877,9 +964,23 @@ namespace {
 			if (FAILED(hr))
 				return hr;
 			sink->Close();
+			m_scratchGeom = pg;
+			*outGeom = pg.Get();
+			return S_OK;
+		}
+
+		HRESULT drawSingleRunWithBrush(DWRITE_GLYPH_RUN const* run, FLOAT x, FLOAT y, ID2D1Brush* brush) {
+			if (!run || !run->fontFace || !brush)
+				return S_OK;
+
+			ID2D1PathGeometry* geom = nullptr;
+			HRESULT hr = getOrBuildGlyphGeometry(run, &geom);
+			if (FAILED(hr))
+				return hr;
+
 			Microsoft::WRL::ComPtr<ID2D1TransformedGeometry> tg;
 			D2D1::Matrix3x2F mat = D2D1::Matrix3x2F::Translation(x, y);
-			hr = m_factory->CreateTransformedGeometry(pg.Get(), mat, &tg);
+			hr = m_factory->CreateTransformedGeometry(geom, mat, &tg);
 			if (FAILED(hr))
 				return hr;
 			if (!m_ctx->renderOutlinePass)
@@ -890,34 +991,35 @@ namespace {
 		HRESULT drawSingleRun(DWRITE_GLYPH_RUN const* run, FLOAT x, FLOAT y, core::Color4B color) {
 			if (!run || !run->fontFace)
 				return S_OK;
-			Microsoft::WRL::ComPtr<ID2D1PathGeometry> pg;
-			HRESULT hr = m_factory->CreatePathGeometry(&pg);
+
+			ID2D1PathGeometry* geom = nullptr;
+			HRESULT hr = getOrBuildGlyphGeometry(run, &geom);
 			if (FAILED(hr))
 				return hr;
-			Microsoft::WRL::ComPtr<ID2D1GeometrySink> sink;
-			hr = pg->Open(&sink);
-			if (FAILED(hr))
-				return hr;
-			hr = run->fontFace->GetGlyphRunOutline(
-				run->fontEmSize, run->glyphIndices, run->glyphAdvances,
-				run->glyphOffsets, run->glyphCount,
-				run->isSideways, (run->bidiLevel & 1), sink.Get());
-			if (FAILED(hr))
-				return hr;
-			sink->Close();
+
 			Microsoft::WRL::ComPtr<ID2D1TransformedGeometry> tg;
 			D2D1::Matrix3x2F mat = D2D1::Matrix3x2F::Translation(x, y);
-			hr = m_factory->CreateTransformedGeometry(pg.Get(), mat, &tg);
+			hr = m_factory->CreateTransformedGeometry(geom, mat, &tg);
 			if (FAILED(hr))
 				return hr;
-			Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> brush;
-			m_rt->CreateSolidColorBrush(toD2D1Color(color), &brush);
+
+			ID2D1SolidColorBrush* brush = m_ctx->reusableBrush;
+			Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> localBrush;
+			if (brush) {
+				brush->SetColor(toD2D1Color(color));
+			} else {
+				m_rt->CreateSolidColorBrush(toD2D1Color(color), &localBrush);
+				brush = localBrush.Get();
+			}
+
 			if (m_ctx->renderOutlinePass && m_ctx->outlineWidth > 0.f)
-				m_rt->DrawGeometry(tg.Get(), brush.Get(), m_ctx->outlineWidth, m_strokeStyle.Get());
+				m_rt->DrawGeometry(tg.Get(), brush, m_ctx->outlineWidth, m_strokeStyle.Get());
 			else if (!m_ctx->renderOutlinePass)
-				m_rt->FillGeometry(tg.Get(), brush.Get());
+				m_rt->FillGeometry(tg.Get(), brush);
 			return S_OK;
 		}
+
+		Microsoft::WRL::ComPtr<ID2D1PathGeometry> m_scratchGeom;
 	};
 
 }
@@ -926,12 +1028,12 @@ namespace luastg::binding {
 
 	struct RichText::Impl {
 		Microsoft::WRL::ComPtr<IDWriteFactory> dwriteFactory;
-		Microsoft::WRL::ComPtr<FontFileLoader> fileLoader;
-		Microsoft::WRL::ComPtr<FontCollectionLoader> colLoader;
 		Microsoft::WRL::ComPtr<IDWriteFontCollection> fontCollection;
 		std::wstring fontFamily;
 		Microsoft::WRL::ComPtr<IDWriteTextFormat> textFormat;
 		Microsoft::WRL::ComPtr<IDWriteTextLayout> textLayout;
+
+		GlyphGeometryCache glyphGeometryCache;
 
 		core::SmartReference<core::Graphics::IRenderTarget> renderTarget;
 		core::SmartReference<core::Graphics::ISprite> sprite;
@@ -980,19 +1082,7 @@ namespace luastg::binding {
 			if (!createDWriteFactory())
 				return false;
 
-			fileLoader.Attach(new FontFileLoader());
-			if (FAILED(dwriteFactory->RegisterFontFileLoader(fileLoader.Get())))
-				return false;
-
-			colLoader.Attach(new FontCollectionLoader());
-			colLoader->init(dwriteFactory.Get(), fileLoader.Get(), { std::string(fontFilePath) });
-			if (FAILED(dwriteFactory->RegisterFontCollectionLoader(colLoader.Get())))
-				return false;
-
-			std::string key(fontFilePath);
-			HRESULT hr = dwriteFactory->CreateCustomFontCollection(
-				colLoader.Get(), key.data(), (UINT32)key.size(), &fontCollection);
-			if (FAILED(hr))
+			if (!loadFileFontCollection(fontFilePath))
 				return false;
 
 			if (!detectFontFamily())
@@ -1013,46 +1103,10 @@ namespace luastg::binding {
 		bool initFromPool(std::string_view resName, float size) {
 			fontSize = size;
 
-			auto res = LRES.FindTTFFont(std::string(resName).c_str());
-			if (!res)
-				return false;
-
-			auto* mgr = res->GetGlyphManager();
-			if (!mgr)
-				return false;
-
-			uint32_t fontDataCount = mgr->getFontDataCount();
-			if (fontDataCount == 0)
-				return false;
-
 			if (!createDWriteFactory())
 				return false;
 
-			fileLoader.Attach(new FontFileLoader());
-			if (FAILED(dwriteFactory->RegisterFontFileLoader(fileLoader.Get())))
-				return false;
-
-			std::vector<std::string> keys;
-			for (uint32_t i = 0; i < fontDataCount; ++i) {
-				auto* data = mgr->getFontData(i);
-				if (!data)
-					continue;
-				std::string key = "@pool:" + std::string(resName) + ":" + std::to_string(i);
-				fileLoader->preload(key, data);
-				keys.push_back(std::move(key));
-			}
-			if (keys.empty())
-				return false;
-
-			colLoader.Attach(new FontCollectionLoader());
-			colLoader->init(dwriteFactory.Get(), fileLoader.Get(), std::move(keys));
-			if (FAILED(dwriteFactory->RegisterFontCollectionLoader(colLoader.Get())))
-				return false;
-
-			std::string collKey = "@pool:" + std::string(resName);
-			HRESULT hr = dwriteFactory->CreateCustomFontCollection(
-				colLoader.Get(), collKey.data(), (UINT32)collKey.size(), &fontCollection);
-			if (FAILED(hr))
+			if (!loadPoolFontCollection(resName))
 				return false;
 
 			if (!detectFontFamily())
@@ -1161,51 +1215,121 @@ namespace luastg::binding {
 
 		bool hasAnimation() const { return parsed.hasAnimation; }
 
-		~Impl() {
-			if (dwriteFactory) {
-				if (colLoader)
-					dwriteFactory->UnregisterFontCollectionLoader(colLoader.Get());
-				if (fileLoader)
-					dwriteFactory->UnregisterFontFileLoader(fileLoader.Get());
-			}
-		}
+		~Impl() = default;
 
 	private:
 		bool createDWriteFactory() {
-			if (!g_dll.DWriteCreateFactory)
+			dwriteFactory = getSharedDWriteFactory();
+			return dwriteFactory != nullptr;
+		}
+
+		bool loadFileFontCollection(std::string_view path) {
+			std::string cacheKey(path);
+			auto& cache = getFontCollectionCache();
+			auto it = cache.find(cacheKey);
+			if (it != cache.end()) {
+				fontCollection = it->second.collection;
+				return true;
+			}
+
+			Microsoft::WRL::ComPtr<FontFileLoader> newFileLoader;
+			newFileLoader.Attach(new FontFileLoader());
+			if (FAILED(dwriteFactory->RegisterFontFileLoader(newFileLoader.Get())))
 				return false;
-			return SUCCEEDED(g_dll.DWriteCreateFactory(
-				DWRITE_FACTORY_TYPE_ISOLATED, __uuidof(IDWriteFactory),
-				reinterpret_cast<IUnknown**>(dwriteFactory.GetAddressOf())));
+
+			Microsoft::WRL::ComPtr<FontCollectionLoader> newColLoader;
+			newColLoader.Attach(new FontCollectionLoader());
+			newColLoader->init(dwriteFactory.Get(), newFileLoader.Get(), { cacheKey });
+			if (FAILED(dwriteFactory->RegisterFontCollectionLoader(newColLoader.Get())))
+				return false;
+
+			Microsoft::WRL::ComPtr<IDWriteFontCollection> newCollection;
+			HRESULT hr = dwriteFactory->CreateCustomFontCollection(
+				newColLoader.Get(), cacheKey.data(), (UINT32)cacheKey.size(), &newCollection);
+			if (FAILED(hr))
+				return false;
+
+			FontCollectionCacheEntry entry;
+			entry.collection = newCollection;
+			entry.fileLoader = newFileLoader;
+			entry.colLoader = newColLoader;
+			cache.emplace(std::move(cacheKey), std::move(entry));
+
+			fontCollection = newCollection;
+			return true;
+		}
+
+		bool loadPoolFontCollection(std::string_view resName) {
+			std::string cacheKey = "@pool:" + std::string(resName);
+			auto& cache = getFontCollectionCache();
+			auto it = cache.find(cacheKey);
+			if (it != cache.end()) {
+				fontCollection = it->second.collection;
+				return true;
+			}
+
+			auto res = LRES.FindTTFFont(std::string(resName).c_str());
+			if (!res)
+				return false;
+
+			auto* mgr = res->GetGlyphManager();
+			if (!mgr)
+				return false;
+
+			uint32_t fontDataCount = mgr->getFontDataCount();
+			if (fontDataCount == 0)
+				return false;
+
+			Microsoft::WRL::ComPtr<FontFileLoader> newFileLoader;
+			newFileLoader.Attach(new FontFileLoader());
+			if (FAILED(dwriteFactory->RegisterFontFileLoader(newFileLoader.Get())))
+				return false;
+
+			std::vector<std::string> keys;
+			for (uint32_t i = 0; i < fontDataCount; ++i) {
+				auto* data = mgr->getFontData(i);
+				if (!data)
+					continue;
+				std::string key = cacheKey + ":" + std::to_string(i);
+				newFileLoader->preload(key, data);
+				keys.push_back(std::move(key));
+			}
+			if (keys.empty())
+				return false;
+
+			Microsoft::WRL::ComPtr<FontCollectionLoader> newColLoader;
+			newColLoader.Attach(new FontCollectionLoader());
+			newColLoader->init(dwriteFactory.Get(), newFileLoader.Get(), keys);
+			if (FAILED(dwriteFactory->RegisterFontCollectionLoader(newColLoader.Get())))
+				return false;
+
+			Microsoft::WRL::ComPtr<IDWriteFontCollection> newCollection;
+			HRESULT hr = dwriteFactory->CreateCustomFontCollection(
+				newColLoader.Get(), cacheKey.data(), (UINT32)cacheKey.size(), &newCollection);
+			if (FAILED(hr))
+				return false;
+
+			FontCollectionCacheEntry entry;
+			entry.collection = newCollection;
+			entry.fileLoader = newFileLoader;
+			entry.colLoader = newColLoader;
+			cache.emplace(std::move(cacheKey), std::move(entry));
+
+			fontCollection = newCollection;
+			return true;
 		}
 
 	public:
 		void tearDownFontLoaders() {
-			if (colLoader) {
-				dwriteFactory->UnregisterFontCollectionLoader(colLoader.Get());
-				colLoader.Reset();
-			}
-			if (fileLoader) {
-				dwriteFactory->UnregisterFontFileLoader(fileLoader.Get());
-				fileLoader.Reset();
-			}
 			fontCollection.Reset();
 			textFormat.Reset();
 			textLayout.Reset();
+			glyphGeometryCache.clear();
 		}
 
 		bool changeFontFromFile(std::string_view fontFilePath) {
 			tearDownFontLoaders();
-			fileLoader.Attach(new FontFileLoader());
-			if (FAILED(dwriteFactory->RegisterFontFileLoader(fileLoader.Get())))
-				return false;
-			colLoader.Attach(new FontCollectionLoader());
-			colLoader->init(dwriteFactory.Get(), fileLoader.Get(), { std::string(fontFilePath) });
-			if (FAILED(dwriteFactory->RegisterFontCollectionLoader(colLoader.Get())))
-				return false;
-			std::string key(fontFilePath);
-			if (FAILED(dwriteFactory->CreateCustomFontCollection(
-					colLoader.Get(), key.data(), (UINT32)key.size(), &fontCollection)))
+			if (!loadFileFontCollection(fontFilePath))
 				return false;
 			if (!detectFontFamily())
 				return false;
@@ -1219,32 +1343,8 @@ namespace luastg::binding {
 		}
 
 		bool changeFontFromPool(std::string_view resName) {
-			auto res = LRES.FindTTFFont(std::string(resName).c_str());
-			if (!res) return false;
-			auto* mgr = res->GetGlyphManager();
-			if (!mgr) return false;
-			uint32_t fontDataCount = mgr->getFontDataCount();
-			if (fontDataCount == 0) return false;
 			tearDownFontLoaders();
-			fileLoader.Attach(new FontFileLoader());
-			if (FAILED(dwriteFactory->RegisterFontFileLoader(fileLoader.Get())))
-				return false;
-			std::vector<std::string> keys;
-			for (uint32_t i = 0; i < fontDataCount; ++i) {
-				auto* fontData = mgr->getFontData(i);
-				if (!fontData) continue;
-				std::string key = "@pool:" + std::string(resName) + ":" + std::to_string(i);
-				fileLoader->preload(key, fontData);
-				keys.push_back(std::move(key));
-			}
-			if (keys.empty()) return false;
-			colLoader.Attach(new FontCollectionLoader());
-			colLoader->init(dwriteFactory.Get(), fileLoader.Get(), std::move(keys));
-			if (FAILED(dwriteFactory->RegisterFontCollectionLoader(colLoader.Get())))
-				return false;
-			std::string collKey = "@pool:" + std::string(resName);
-			if (FAILED(dwriteFactory->CreateCustomFontCollection(
-					colLoader.Get(), collKey.data(), (UINT32)collKey.size(), &fontCollection)))
+			if (!loadPoolFontCollection(resName))
 				return false;
 			if (!detectFontFamily())
 				return false;
@@ -1293,6 +1393,8 @@ namespace luastg::binding {
 			if (!textFormat || parsed.plainText.empty())
 				return false;
 
+			glyphGeometryCache.clear();
+
 			float const fontSizePx = std::max(1.f, fontSize / unitPerPixel);
 
 			Microsoft::WRL::ComPtr<IDWriteTextFormat> pixelFmt;
@@ -1311,76 +1413,56 @@ namespace luastg::binding {
 			float maxW = layoutWidthPx > 0.f ? std::max(1.f, layoutWidthPx - padL - padR) : 100000.f;
 			float maxH = layoutHeightPx > 0.f ? std::max(1.f, layoutHeightPx - padT - padB) : 100000.f;
 
+			DWRITE_TEXT_RANGE const wholeRange{ 0, (UINT32)parsed.plainText.size() };
 			float sizeScale = 1.f;
-			Microsoft::WRL::ComPtr<IDWriteTextFormat> scaledFmt;
-			IDWriteTextFormat* fmtToUse = pixelFmt.Get();
+
+			auto applyRunSizes = [&](IDWriteTextLayout* layout, float scale) {
+				if (scale != 1.f)
+					layout->SetFontSize(std::max(1.f, fontSizePx * scale), wholeRange);
+				for (auto const& run : parsed.runs)
+					if (run.style.size.has_value())
+						layout->SetFontSize(run.style.size.value() / unitPerPixel * scale, { run.start, run.length });
+			};
+
 			if (maxFitWidthPx > 0.f) {
 				Microsoft::WRL::ComPtr<IDWriteTextLayout> measureLayout;
 				if (SUCCEEDED(dwriteFactory->CreateTextLayout(
 						parsed.plainText.c_str(), (UINT32)parsed.plainText.size(),
 						pixelFmt.Get(), 100000.f, 100000.f, &measureLayout))) {
-					for (auto const& run : parsed.runs)
-						if (run.style.size.has_value())
-							measureLayout->SetFontSize(run.style.size.value() / unitPerPixel, { run.start, run.length });
+					applyRunSizes(measureLayout.Get(), sizeScale);
 					DWRITE_TEXT_METRICS m{};
 					measureLayout->GetMetrics(&m);
 					float totalW = m.width + padL + padR;
-					if (totalW > maxFitWidthPx && m.width > 0.f) {
+					if (totalW > maxFitWidthPx && m.width > 0.f)
 						sizeScale = std::max((maxFitWidthPx - padL - padR) / m.width, 1.f / fontSizePx);
-						float scaledSize = std::max(1.f, fontSizePx * sizeScale);
-						if (SUCCEEDED(dwriteFactory->CreateTextFormat(
-								fontFamily.c_str(), fontCollection.Get(),
-								DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
-								DWRITE_FONT_STRETCH_NORMAL, scaledSize, L"", &scaledFmt)))
-							fmtToUse = scaledFmt.Get();
-						else
-							sizeScale = 1.f;
-					}
 				}
 			}
+
 			if (maxFitHeightPx > 0.f) {
 				Microsoft::WRL::ComPtr<IDWriteTextLayout> hMeasureLayout;
 				if (SUCCEEDED(dwriteFactory->CreateTextLayout(
 						parsed.plainText.c_str(), (UINT32)parsed.plainText.size(),
-						fmtToUse, maxW, 100000.f, &hMeasureLayout))) {
-					for (auto const& run : parsed.runs)
-						if (run.style.size.has_value())
-							hMeasureLayout->SetFontSize(run.style.size.value() / unitPerPixel * sizeScale, { run.start, run.length });
+						pixelFmt.Get(), maxW, 100000.f, &hMeasureLayout))) {
+					applyRunSizes(hMeasureLayout.Get(), sizeScale);
 					DWRITE_TEXT_METRICS m{};
 					hMeasureLayout->GetMetrics(&m);
 					float totalH = m.height + padT + padB;
 					if (totalH > maxFitHeightPx && m.height > 0.f) {
 						float newScale = std::max(sizeScale * std::max(1.f, maxFitHeightPx - padT - padB) / m.height, 1.f / fontSizePx);
-						if (newScale < sizeScale) {
+						if (newScale < sizeScale)
 							sizeScale = newScale;
-							float scaledSize = std::max(1.f, fontSizePx * sizeScale);
-							scaledFmt.Reset();
-							if (SUCCEEDED(dwriteFactory->CreateTextFormat(
-									fontFamily.c_str(), fontCollection.Get(),
-									DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
-									DWRITE_FONT_STRETCH_NORMAL, scaledSize, L"", &scaledFmt)))
-								fmtToUse = scaledFmt.Get();
-							else
-								sizeScale = 1.f;
-						}
 					}
 				}
 			}
 
 			if (layoutWidthPx <= 0.f) {
 				Microsoft::WRL::ComPtr<IDWriteTextLayout> naturalLayout;
-				HRESULT nhr = dwriteFactory->CreateTextLayout(
-					parsed.plainText.c_str(), (UINT32)parsed.plainText.size(),
-					fmtToUse, 100000.f, 100000.f, &naturalLayout);
-
-				if (SUCCEEDED(nhr)) {
-					for (auto const& run : parsed.runs)
-						if (run.style.size.has_value())
-							naturalLayout->SetFontSize(run.style.size.value() / unitPerPixel * sizeScale, { run.start, run.length });
-
+				if (SUCCEEDED(dwriteFactory->CreateTextLayout(
+						parsed.plainText.c_str(), (UINT32)parsed.plainText.size(),
+						pixelFmt.Get(), 100000.f, 100000.f, &naturalLayout))) {
+					applyRunSizes(naturalLayout.Get(), sizeScale);
 					DWRITE_TEXT_METRICS naturalMetrics{};
 					naturalLayout->GetMetrics(&naturalMetrics);
-
 					if (naturalMetrics.width > 0.f)
 						maxW = naturalMetrics.width;
 				}
@@ -1388,9 +1470,11 @@ namespace luastg::binding {
 
 			HRESULT hr = dwriteFactory->CreateTextLayout(
 				parsed.plainText.c_str(), (UINT32)parsed.plainText.size(),
-				fmtToUse, maxW, maxH, &textLayout);
+				pixelFmt.Get(), maxW, maxH, &textLayout);
 			if (FAILED(hr))
 				return false;
+
+			applyRunSizes(textLayout.Get(), sizeScale);
 
 			textLayout->SetTextAlignment(hAlign);
 			textLayout->SetParagraphAlignment(layoutHeightPx > 0.f ? vAlign : DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
@@ -1405,8 +1489,6 @@ namespace luastg::binding {
 					textLayout->SetUnderline(TRUE, range);
 				if (run.style.strikethrough)
 					textLayout->SetStrikethrough(TRUE, range);
-				if (run.style.size.has_value())
-					textLayout->SetFontSize(run.style.size.value() / unitPerPixel * sizeScale, range);
 				if (fontCollection)
 					textLayout->SetFontCollection(fontCollection.Get(), range);
 
@@ -1537,6 +1619,9 @@ namespace luastg::binding {
 			d2d1Ctx->GetDpi(&savedDpiX, &savedDpiY);
 			d2d1Ctx->SetDpi(96.f, 96.f);
 
+			Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> sharedBrush;
+			d2d1Ctx->CreateSolidColorBrush(D2D1::ColorF(0, 0, 0, 0), &sharedBrush);
+
 			d2d1Ctx->BeginDraw();
 			d2d1Ctx->SetTarget(d2d1Bitmap);
 			d2d1Ctx->Clear(D2D1::ColorF(0.f, 0.f, 0.f, 0.f));
@@ -1560,6 +1645,8 @@ namespace luastg::binding {
 						GlyphRendererContext gctx{};
 						gctx.defaultFillColor = shadowColor;
 						gctx.renderOutlinePass = false;
+						gctx.reusableBrush = sharedBrush.Get();
+						gctx.geometryCache = &glyphGeometryCache;
 						drawLayout(d2d1Factory.Get(), (ID2D1RenderTarget*)d2d1Ctx, gctx, originX, originY);
 
 						d2d1Ctx->SetTarget(d2d1Bitmap);
@@ -1576,6 +1663,8 @@ namespace luastg::binding {
 					GlyphRendererContext gctx{};
 					gctx.defaultFillColor = shadowColor;
 					gctx.renderOutlinePass = false;
+					gctx.reusableBrush = sharedBrush.Get();
+					gctx.geometryCache = &glyphGeometryCache;
 					drawLayout(d2d1Factory.Get(), (ID2D1RenderTarget*)d2d1Ctx, gctx, originX + shadowOffsetX, originY + shadowOffsetY);
 				}
 			}
@@ -1586,6 +1675,8 @@ namespace luastg::binding {
 				gctx.outlineWidth = outlineWidth * 2.f;
 				gctx.outlineColor = outlineColor;
 				gctx.renderOutlinePass = true;
+				gctx.reusableBrush = sharedBrush.Get();
+				gctx.geometryCache = &glyphGeometryCache;
 				drawLayout(d2d1Factory.Get(), (ID2D1RenderTarget*)d2d1Ctx, gctx, originX, originY);
 			}
 
@@ -1593,11 +1684,13 @@ namespace luastg::binding {
 				GlyphRendererContext gctx{};
 				gctx.defaultFillColor = fillColor;
 				gctx.renderOutlinePass = false;
+				gctx.reusableBrush = sharedBrush.Get();
+				gctx.geometryCache = &glyphGeometryCache;
 				drawLayout(d2d1Factory.Get(), (ID2D1RenderTarget*)d2d1Ctx, gctx, originX, originY);
 			}
 
 			if (!parsed.rubies.empty()) {
-				drawRubyAnnotations(d2d1Ctx, d2d1Factory.Get(), originX, originY);
+				drawRubyAnnotations(d2d1Ctx, d2d1Factory.Get(), sharedBrush.Get(), originX, originY);
 			}
 
 			d2d1Ctx->SetTarget(nullptr);
@@ -1622,7 +1715,7 @@ namespace luastg::binding {
 			textLayout->Draw(nullptr, &renderer, x, y);
 		}
 
-		void drawRubyAnnotations(ID2D1DeviceContext* ctx, ID2D1Factory* factory, float originX, float originY) {
+		void drawRubyAnnotations(ID2D1DeviceContext* ctx, ID2D1Factory* factory, ID2D1SolidColorBrush* sharedBrush, float originX, float originY) {
 			float rubySize = (fontSize / unitPerPixel) * effectiveSizeScale * 0.5f;
 
 			Microsoft::WRL::ComPtr<IDWriteTextFormat> rubyFormat;
@@ -1669,6 +1762,7 @@ namespace luastg::binding {
 				GlyphRendererContext gctx{};
 				gctx.defaultFillColor = fillColor;
 				gctx.renderOutlinePass = false;
+				gctx.reusableBrush = sharedBrush;
 
 				RichTextGlyphRenderer renderer;
 				renderer.init(factory, (ID2D1RenderTarget*)ctx, &gctx);
@@ -1679,6 +1773,7 @@ namespace luastg::binding {
 					ogctx.outlineWidth = outlineWidth;
 					ogctx.outlineColor = outlineColor;
 					ogctx.renderOutlinePass = true;
+					ogctx.reusableBrush = sharedBrush;
 					RichTextGlyphRenderer oRenderer;
 					oRenderer.init(factory, (ID2D1RenderTarget*)ctx, &ogctx);
 					rubyLayout->Draw(nullptr, &oRenderer, rx, ry);
