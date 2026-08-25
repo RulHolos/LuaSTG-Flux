@@ -44,18 +44,68 @@ namespace core::Graphics
 
         Microsoft::WRL::ComPtr<ID3D11RasterizerState> state_rs_cull_none;
         Microsoft::WRL::ComPtr<ID3D11RasterizerState> state_rs_cull_back;
+        Microsoft::WRL::ComPtr<ID3D11RasterizerState> state_rs_cull_front;
         Microsoft::WRL::ComPtr<ID3D11DepthStencilState> state_ds_disable;
         Microsoft::WRL::ComPtr<ID3D11DepthStencilState> state_ds;
         Microsoft::WRL::ComPtr<ID3D11DepthStencilState> state_ds_no_write;
         Microsoft::WRL::ComPtr<ID3D11DepthStencilState> state_ds_dl;
         Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend;
         Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend_alpha;
+        Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend_add;
+        Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend_sub;
+        Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend_revsub;
+        Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend_mul;
+        Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend_screen;
+        Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend_min;
+        Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend_max;
+        Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend_inv;
+        Microsoft::WRL::ComPtr<ID3D11BlendState> state_blend_one;
+
+        Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler_linear_wrap;
+        Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler_linear_clamp;
+        Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler_point_wrap;
+        Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler_point_clamp;
+        Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler_linear_mirror;
+        Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler_point_mirror;
+        Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler_aniso_wrap;
+        Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler_aniso_clamp;
+
+        ID3D11SamplerState* getSampler(StringView name) const noexcept;
+
+        ID3D11BlendState* getBlendState(ModelBlendMode mode) const noexcept
+        {
+            switch (mode)
+            {
+            case ModelBlendMode::Add:
+                return state_blend_add.Get();
+            case ModelBlendMode::Sub:
+                return state_blend_sub.Get();
+            case ModelBlendMode::RevSub:
+                return state_blend_revsub.Get();
+            case ModelBlendMode::Mul:
+                return state_blend_mul.Get();
+            case ModelBlendMode::Screen:
+                return state_blend_screen.Get();
+            case ModelBlendMode::Min:
+                return state_blend_min.Get();
+            case ModelBlendMode::Max:
+                return state_blend_max.Get();
+            case ModelBlendMode::Inv:
+                return state_blend_inv.Get();
+            case ModelBlendMode::One:
+                return state_blend_one.Get();
+            case ModelBlendMode::Alpha:
+            default:
+                return state_blend_alpha.Get();
+            }
+        }
 
         Microsoft::WRL::ComPtr<ID3D11Buffer> cbo_mvp;
         Microsoft::WRL::ComPtr<ID3D11Buffer> cbo_mlw;
         Microsoft::WRL::ComPtr<ID3D11Buffer> cbo_caminfo;
         Microsoft::WRL::ComPtr<ID3D11Buffer> cbo_alpha;
         Microsoft::WRL::ComPtr<ID3D11Buffer> cbo_light;
+        Microsoft::WRL::ComPtr<ID3D11Buffer> cbo_uv;
 
     private:
         bool createImage();
@@ -89,19 +139,29 @@ namespace core::Graphics
 
         struct ModelBlock
         {
+            std::string node_name;
+            std::string mesh_name;
+            std::string material_name;
+
             Microsoft::WRL::ComPtr<ID3D11Buffer> vertex_buffer;
             Microsoft::WRL::ComPtr<ID3D11Buffer> uv_buffer;
             Microsoft::WRL::ComPtr<ID3D11Buffer> normal_buffer;
             Microsoft::WRL::ComPtr<ID3D11Buffer> color_buffer;
             Microsoft::WRL::ComPtr<ID3D11Buffer> index_buffer;
             Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler;
+            Microsoft::WRL::ComPtr<ID3D11SamplerState> override_sampler;
             Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> image;
+            Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> override_image;
+            DirectX::XMFLOAT4 uv_transform = { 0.0f, 0.0f, 1.0f, 1.0f };
+            DirectX::XMFLOAT4 uv_rotation = { 1.0f, 0.0f, 0.0f, 0.0f };
             DirectX::XMFLOAT4X4 local_matrix;
             DirectX::XMFLOAT4X4 local_matrix_normal; // notice: pair with local_matrix
             DirectX::XMFLOAT4 base_color;
+            DirectX::XMFLOAT4 override_color = { 1.0f, 1.0f, 1.0f, 1.0f };
             BOOL double_side = FALSE;
             BOOL alpha_blend = FALSE;
             BOOL alpha_mask = FALSE;
+            BOOL visible = TRUE;
             FLOAT alpha = 0.5f;
             UINT draw_count = 0;
             DXGI_FORMAT index_format = DXGI_FORMAT_R16_UINT;
@@ -161,6 +221,9 @@ namespace core::Graphics
         std::vector<PointLight> point_lights;
         std::vector<PointLight> embedded_lights_;
 
+        DirectX::XMFLOAT4 model_color_{ 1.0f, 1.0f, 1.0f, 1.0f };
+        ModelBlendMode blend_mode_{ ModelBlendMode::Auto };
+
         std::vector<DirectX::XMMATRIX> mTRS_stack;
 
         bool processNode(tinygltf::Model& model, tinygltf::Node& node);
@@ -186,6 +249,41 @@ namespace core::Graphics
         void setPosition(Vector3F const& pos);
         void setRotationRollPitchYaw(float roll, float pitch, float yaw);
         void setRotationQuaternion(Vector4F const& quat);
+
+        void setColor(Vector4F const& color) override;
+        void setAlpha(float alpha) override;
+        void setBlendMode(ModelBlendMode mode) override;
+        Vector4F getColor() const override;
+        ModelBlendMode getBlendMode() const override;
+
+        uint32_t getSubmeshCount() const override;
+        StringView getSubmeshNodeName(uint32_t index) const override;
+        StringView getSubmeshMeshName(uint32_t index) const override;
+        StringView getSubmeshMaterialName(uint32_t index) const override;
+
+        void setTexture(ITexture2D* p_texture, uint32_t submesh_index = 0) override;
+        void setTextureByName(ITexture2D* p_texture, StringView name) override;
+        void resetTexture(uint32_t submesh_index = 0) override;
+        void resetTextureByName(StringView name) override;
+
+        void setUVTransform(float u_offset, float v_offset, float u_scale = 1.0f, float v_scale = 1.0f, float angle = 0.0f, uint32_t submesh_index = 0) override;
+        void setUVTransformByName(float u_offset, float v_offset, float u_scale, float v_scale, float angle, StringView name) override;
+        void resetUVTransform(uint32_t submesh_index = 0) override;
+        void resetUVTransformByName(StringView name) override;
+
+        void setSubmeshColor(Vector4F const& color, uint32_t submesh_index = 0) override;
+        void setSubmeshColorByName(Vector4F const& color, StringView name) override;
+        void resetSubmeshColor(uint32_t submesh_index = 0) override;
+        void resetSubmeshColorByName(StringView name) override;
+
+        void setSubmeshSampler(StringView sampler_name, uint32_t submesh_index = 0) override;
+        void setSubmeshSamplerByName(StringView sampler_name, StringView name) override;
+        void resetSubmeshSampler(uint32_t submesh_index = 0) override;
+        void resetSubmeshSamplerByName(StringView name) override;
+
+        void setSubmeshVisible(bool visible, uint32_t submesh_index = 0) override;
+        void setSubmeshVisibleByName(bool visible, StringView name) override;
+        bool getSubmeshVisible(uint32_t submesh_index) const override;
 
         void draw(IRenderer::FogState fog, std::span<PointLight const> scene_lights);
 
