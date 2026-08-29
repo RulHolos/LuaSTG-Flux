@@ -302,6 +302,8 @@ namespace {
 		Microsoft::WRL::ComPtr<IDWriteFontCollection> collection;
 		Microsoft::WRL::ComPtr<FontFileLoader> fileLoader;
 		Microsoft::WRL::ComPtr<FontCollectionLoader> colLoader;
+		Microsoft::WRL::ComPtr<IDWriteFactory> factory;
+		int refCount{ 0 };
 	};
 
 	inline std::unordered_map<std::string, FontCollectionCacheEntry>& getFontCollectionCache() {
@@ -1040,6 +1042,7 @@ namespace luastg::binding {
 		core::SmartReference<core::Graphics::ISpriteRenderer> spriteRenderer;
 
 		std::string rawText;
+		std::string fontCollectionCacheKey;
 		ParseResult parsed;
 		float fontSize{ 24.f };
 		float layoutWidth{ 0.f };
@@ -1215,7 +1218,9 @@ namespace luastg::binding {
 
 		bool hasAnimation() const { return parsed.hasAnimation; }
 
-		~Impl() = default;
+		~Impl() {
+			releaseFontCollectionCache();
+		}
 
 	private:
 		bool createDWriteFactory() {
@@ -1228,7 +1233,9 @@ namespace luastg::binding {
 			auto& cache = getFontCollectionCache();
 			auto it = cache.find(cacheKey);
 			if (it != cache.end()) {
+				++it->second.refCount;
 				fontCollection = it->second.collection;
+				fontCollectionCacheKey = cacheKey;
 				return true;
 			}
 
@@ -1253,9 +1260,12 @@ namespace luastg::binding {
 			entry.collection = newCollection;
 			entry.fileLoader = newFileLoader;
 			entry.colLoader = newColLoader;
-			cache.emplace(std::move(cacheKey), std::move(entry));
+			entry.factory = dwriteFactory;
+			entry.refCount = 1;
+			cache.emplace(cacheKey, std::move(entry));
 
 			fontCollection = newCollection;
+			fontCollectionCacheKey = cacheKey;
 			return true;
 		}
 
@@ -1264,7 +1274,9 @@ namespace luastg::binding {
 			auto& cache = getFontCollectionCache();
 			auto it = cache.find(cacheKey);
 			if (it != cache.end()) {
+				++it->second.refCount;
 				fontCollection = it->second.collection;
+				fontCollectionCacheKey = cacheKey;
 				return true;
 			}
 
@@ -1313,14 +1325,34 @@ namespace luastg::binding {
 			entry.collection = newCollection;
 			entry.fileLoader = newFileLoader;
 			entry.colLoader = newColLoader;
-			cache.emplace(std::move(cacheKey), std::move(entry));
+			entry.factory = dwriteFactory;
+			entry.refCount = 1;
+			cache.emplace(cacheKey, std::move(entry));
 
 			fontCollection = newCollection;
+			fontCollectionCacheKey = cacheKey;
 			return true;
+		}
+
+		void releaseFontCollectionCache() {
+			if (fontCollectionCacheKey.empty())
+				return;
+
+			auto& cache = getFontCollectionCache();
+			auto it = cache.find(fontCollectionCacheKey);
+			if (it != cache.end()) {
+				if (--it->second.refCount <= 0) {
+					it->second.factory->UnregisterFontCollectionLoader(it->second.colLoader.Get());
+					it->second.factory->UnregisterFontFileLoader(it->second.fileLoader.Get());
+					cache.erase(it);
+				}
+			}
+			fontCollectionCacheKey.clear();
 		}
 
 	public:
 		void tearDownFontLoaders() {
+			releaseFontCollectionCache();
 			fontCollection.Reset();
 			textFormat.Reset();
 			textLayout.Reset();
