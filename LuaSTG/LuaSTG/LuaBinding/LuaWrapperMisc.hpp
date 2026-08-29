@@ -103,6 +103,86 @@ namespace luastg
 		return 1;
 	}
 
+	inline core::Graphics::ModelBlendMode TranslateModelBlendMode(lua_State* L, int argnum)
+	{
+		size_t len = 0;
+		const char* key = luaL_checklstring(L, argnum, &len);
+		if (len == 0 || strcmp(key, "auto") == 0 || strcmp(key, "default") == 0) {
+			return core::Graphics::ModelBlendMode::Auto;
+		}
+		if (strcmp(key, "dither") == 0 || strcmp(key, "screendoor") == 0 || strcmp(key, "screen_door") == 0) {
+			return core::Graphics::ModelBlendMode::ScreenDoor;
+		}
+		if (strcmp(key, "alpha") == 0 || strcmp(key, "blend") == 0) {
+			return core::Graphics::ModelBlendMode::Alpha;
+		}
+		if (strcmp(key, "add") == 0 || strcmp(key, "additive") == 0) {
+			return core::Graphics::ModelBlendMode::Add;
+		}
+		if (strcmp(key, "sub") == 0 || strcmp(key, "subtract") == 0) {
+			return core::Graphics::ModelBlendMode::Sub;
+		}
+		if (strcmp(key, "rev") == 0 || strcmp(key, "revsub") == 0 || strcmp(key, "rev_sub") == 0) {
+			return core::Graphics::ModelBlendMode::RevSub;
+		}
+		if (strcmp(key, "mul") == 0 || strcmp(key, "multiply") == 0) {
+			return core::Graphics::ModelBlendMode::Mul;
+		}
+		if (strcmp(key, "screen") == 0) {
+			return core::Graphics::ModelBlendMode::Screen;
+		}
+		if (strcmp(key, "min") == 0) {
+			return core::Graphics::ModelBlendMode::Min;
+		}
+		if (strcmp(key, "max") == 0) {
+			return core::Graphics::ModelBlendMode::Max;
+		}
+		if (strcmp(key, "inv") == 0 || strcmp(key, "invert") == 0) {
+			return core::Graphics::ModelBlendMode::Inv;
+		}
+		if (strcmp(key, "one") == 0) {
+			return core::Graphics::ModelBlendMode::One;
+		}
+
+		BlendMode mode = static_cast<BlendMode>(LuaSTG::MapBlendModeX(key, len));
+		if (mode == BlendMode::_KEY_NOT_FOUND) {
+			luaL_error(L, "invalid blend mode '%s'.", key);
+			return core::Graphics::ModelBlendMode::Auto;
+		}
+		switch (mode)
+		{
+		case BlendMode::MulAdd:
+		case BlendMode::AddAdd:
+			return core::Graphics::ModelBlendMode::Add;
+		case BlendMode::MulRev:
+		case BlendMode::AddRev:
+			return core::Graphics::ModelBlendMode::RevSub;
+		case BlendMode::MulSub:
+		case BlendMode::AddSub:
+			return core::Graphics::ModelBlendMode::Sub;
+		case BlendMode::AlphaBal:
+			return core::Graphics::ModelBlendMode::Inv;
+		case BlendMode::MulMin:
+		case BlendMode::AddMin:
+			return core::Graphics::ModelBlendMode::Min;
+		case BlendMode::MulMax:
+		case BlendMode::AddMax:
+			return core::Graphics::ModelBlendMode::Max;
+		case BlendMode::MulMutiply:
+		case BlendMode::AddMutiply:
+			return core::Graphics::ModelBlendMode::Mul;
+		case BlendMode::MulScreen:
+		case BlendMode::AddScreen:
+			return core::Graphics::ModelBlendMode::Screen;
+		case BlendMode::One:
+			return core::Graphics::ModelBlendMode::One;
+		case BlendMode::MulAlpha:
+		case BlendMode::AddAlpha:
+		default:
+			return core::Graphics::ModelBlendMode::Alpha;
+		}
+	}
+
 	static inline void TranslateAlignMode(lua_State* L, int argnum, FontAlignHorizontal& halign, FontAlignVertical& valign)
 	{
 		int e = (int)luaL_checkinteger(L, argnum);

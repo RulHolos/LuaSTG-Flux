@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "Core/Type.hpp"
 #include "core/ReferenceCounted.hpp"
 #include "Core/Graphics/Device.hpp"
@@ -25,6 +25,22 @@ namespace core::Graphics
 		virtual bool apply(IRenderer* p_renderer) = 0;
 	};
 
+	enum class ModelBlendMode : uint8_t
+	{
+		Auto = 0,
+		Alpha,
+		Add,
+		Sub,
+		RevSub,
+		Mul,
+		Screen,
+		Min,
+		Max,
+		Inv,
+		One,
+		ScreenDoor,
+	};
+
 	struct IModel : public IReferenceCounted
 	{
 		virtual void setAmbient(Vector3F const& color, float brightness) = 0;
@@ -37,6 +53,41 @@ namespace core::Graphics
 		virtual void setPosition(Vector3F const& pos) = 0;
 		virtual void setRotationRollPitchYaw(float roll, float pitch, float yaw) = 0;
 		virtual void setRotationQuaternion(Vector4F const& quat) = 0;
+
+		virtual void setColor(Vector4F const& color) = 0;
+		virtual void setAlpha(float alpha) = 0;
+		virtual void setBlendMode(ModelBlendMode mode) = 0;
+		virtual Vector4F getColor() const = 0;
+		virtual ModelBlendMode getBlendMode() const = 0;
+
+		virtual uint32_t getSubmeshCount() const = 0;
+		virtual StringView getSubmeshNodeName(uint32_t index) const = 0;
+		virtual StringView getSubmeshMeshName(uint32_t index) const = 0;
+		virtual StringView getSubmeshMaterialName(uint32_t index) const = 0;
+
+		virtual void setTexture(ITexture2D* p_texture, uint32_t submesh_index = 0) = 0;
+		virtual void setTextureByName(ITexture2D* p_texture, StringView name) = 0;
+		virtual void resetTexture(uint32_t submesh_index = 0) = 0;
+		virtual void resetTextureByName(StringView name) = 0;
+
+		virtual void setUVTransform(float u_offset, float v_offset, float u_scale = 1.0f, float v_scale = 1.0f, float angle = 0.0f, uint32_t submesh_index = 0) = 0;
+		virtual void setUVTransformByName(float u_offset, float v_offset, float u_scale, float v_scale, float angle, StringView name) = 0;
+		virtual void resetUVTransform(uint32_t submesh_index = 0) = 0;
+		virtual void resetUVTransformByName(StringView name) = 0;
+
+		virtual void setSubmeshColor(Vector4F const& color, uint32_t submesh_index = 0) = 0;
+		virtual void setSubmeshColorByName(Vector4F const& color, StringView name) = 0;
+		virtual void resetSubmeshColor(uint32_t submesh_index = 0) = 0;
+		virtual void resetSubmeshColorByName(StringView name) = 0;
+
+		virtual void setSubmeshSampler(StringView sampler_name, uint32_t submesh_index = 0) = 0;
+		virtual void setSubmeshSamplerByName(StringView sampler_name, StringView name) = 0;
+		virtual void resetSubmeshSampler(uint32_t submesh_index = 0) = 0;
+		virtual void resetSubmeshSamplerByName(StringView name) = 0;
+
+		virtual void setSubmeshVisible(bool visible, uint32_t submesh_index = 0) = 0;
+		virtual void setSubmeshVisibleByName(bool visible, StringView name) = 0;
+		virtual bool getSubmeshVisible(uint32_t submesh_index) const = 0;
 	};
 
 	struct IRenderer : public IReferenceCounted

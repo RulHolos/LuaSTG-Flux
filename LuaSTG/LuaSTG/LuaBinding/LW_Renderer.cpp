@@ -557,12 +557,364 @@ namespace luastg {
 			return false;
 		}
 
+		if (lua_gettop(L) >= 11 && !lua_isnil(L, 11)) {
+			pmodres->GetModel()->setAlpha((float)lua_tonumber(L, 11));
+		}
+
 		pmodres->GetModel()->setScaling(core::Vector3F(sx, sy, sz));
 		pmodres->GetModel()->setRotationRollPitchYaw(roll, pitch, yaw);
 		pmodres->GetModel()->setPosition(core::Vector3F(x, y, z));
 		LR2D()->drawModel(pmodres->GetModel());
 
 		return 0;
+	}
+
+	static int lib_setModelState(lua_State* L) {
+		const char* name = luaL_checkstring(L, 1);
+		core::SmartReference<IResourceModel> pmodres = LRESMGR().FindModel(name);
+		if (!pmodres)
+			return luaL_error(L, "lstg.Renderer.setModelState: can't find model '%s'", name);
+
+		if (lua_gettop(L) >= 2)
+		{
+			pmodres->GetModel()->setBlendMode(TranslateModelBlendMode(L, 2));
+		}
+		if (lua_gettop(L) >= 3)
+		{
+			core::Color4B const* col = binding::Color::Cast(L, 3);
+			pmodres->GetModel()->setColor(core::Vector4F(
+				col->r / 255.0f,
+				col->g / 255.0f,
+				col->b / 255.0f,
+				col->a / 255.0f
+			));
+		}
+		return 0;
+	}
+
+	static int lib_getModelSubmeshCount(lua_State* L) {
+		const char* name = luaL_checkstring(L, 1);
+		core::SmartReference<IResourceModel> pmodres = LRESMGR().FindModel(name);
+		if (!pmodres)
+			return luaL_error(L, "lstg.Renderer.getModelSubmeshCount: can't find model '%s'", name);
+		lua_pushinteger(L, static_cast<lua_Integer>(pmodres->GetModel()->getSubmeshCount()));
+		return 1;
+	}
+
+	static int lib_getModelSubmeshList(lua_State* L) {
+		const char* name = luaL_checkstring(L, 1);
+		core::SmartReference<IResourceModel> pmodres = LRESMGR().FindModel(name);
+		if (!pmodres)
+			return luaL_error(L, "lstg.Renderer.getModelSubmeshList: can't find model '%s'", name);
+		auto* model = pmodres->GetModel();
+		uint32_t count = model->getSubmeshCount();
+		lua_createtable(L, count, 0);
+		for (uint32_t i = 0; i < count; ++i)
+		{
+			lua_createtable(L, 0, 4);
+			lua_pushinteger(L, i + 1);
+			lua_setfield(L, -2, "index");
+			auto node_name = model->getSubmeshNodeName(i);
+			lua_pushlstring(L, node_name.data(), node_name.size());
+			lua_setfield(L, -2, "node");
+			auto mesh_name = model->getSubmeshMeshName(i);
+			lua_pushlstring(L, mesh_name.data(), mesh_name.size());
+			lua_setfield(L, -2, "mesh");
+			auto mat_name = model->getSubmeshMaterialName(i);
+			lua_pushlstring(L, mat_name.data(), mat_name.size());
+			lua_setfield(L, -2, "material");
+			lua_rawseti(L, -2, i + 1);
+		}
+		return 1;
+	}
+
+	static int lib_setModelTexture(lua_State* L) {
+		const char* name = luaL_checkstring(L, 1);
+		core::SmartReference<IResourceModel> pmodres = LRESMGR().FindModel(name);
+		if (!pmodres)
+			return luaL_error(L, "lstg.Renderer.setModelTexture: can't find model '%s'", name);
+
+		core::Graphics::ITexture2D* tex = nullptr;
+		if (lua_gettop(L) >= 2 && !lua_isnoneornil(L, 2))
+		{
+			const char* tex_name = luaL_checkstring(L, 2);
+			if (std::strlen(tex_name) > 0)
+			{
+				core::SmartReference<IResourceTexture> pTex = LRESMGR().FindTexture(tex_name);
+				if (pTex)
+				{
+					tex = pTex->GetTexture();
+				}
+				else
+				{
+					core::SmartReference<IResourceSprite> pSprite = LRESMGR().FindSprite(tex_name);
+					if (pSprite && pSprite->GetSprite())
+					{
+						tex = pSprite->GetSprite()->getTexture();
+					}
+					else
+					{
+						return luaL_error(L, "lstg.Renderer.setModelTexture: texture '%s' not found", tex_name);
+					}
+				}
+			}
+		}
+
+		if (lua_gettop(L) >= 3 && !lua_isnoneornil(L, 3))
+		{
+			if (lua_isnumber(L, 3))
+			{
+				uint32_t idx = static_cast<uint32_t>(lua_tointeger(L, 3));
+				pmodres->GetModel()->setTexture(tex, idx);
+			}
+			else
+			{
+				const char* submesh_name = luaL_checkstring(L, 3);
+				pmodres->GetModel()->setTextureByName(tex, submesh_name);
+			}
+		}
+		else
+		{
+			pmodres->GetModel()->setTexture(tex, 0);
+		}
+		return 0;
+	}
+
+	static int lib_resetModelTexture(lua_State* L) {
+		const char* name = luaL_checkstring(L, 1);
+		core::SmartReference<IResourceModel> pmodres = LRESMGR().FindModel(name);
+		if (!pmodres)
+			return luaL_error(L, "lstg.Renderer.resetModelTexture: can't find model '%s'", name);
+
+		if (lua_gettop(L) >= 2 && !lua_isnoneornil(L, 2))
+		{
+			if (lua_isnumber(L, 2))
+			{
+				uint32_t idx = static_cast<uint32_t>(lua_tointeger(L, 2));
+				pmodres->GetModel()->resetTexture(idx);
+			}
+			else
+			{
+				const char* submesh_name = luaL_checkstring(L, 2);
+				pmodres->GetModel()->resetTextureByName(submesh_name);
+			}
+		}
+		else
+		{
+			pmodres->GetModel()->resetTexture(0);
+		}
+		return 0;
+	}
+
+	static int lib_setModelUV(lua_State* L) {
+		const char* name = luaL_checkstring(L, 1);
+		core::SmartReference<IResourceModel> pmodres = LRESMGR().FindModel(name);
+		if (!pmodres)
+			return luaL_error(L, "lstg.Renderer.setModelUV: can't find model '%s'", name);
+
+		float u_offset = static_cast<float>(luaL_checknumber(L, 2));
+		float v_offset = static_cast<float>(luaL_checknumber(L, 3));
+		float u_scale = static_cast<float>(luaL_optnumber(L, 4, 1.0));
+		float v_scale = static_cast<float>(luaL_optnumber(L, 5, 1.0));
+		float angle = static_cast<float>(luaL_optnumber(L, 6, 0.0));
+
+		if (lua_gettop(L) >= 7 && !lua_isnoneornil(L, 7))
+		{
+			if (lua_isnumber(L, 7))
+			{
+				uint32_t idx = static_cast<uint32_t>(lua_tointeger(L, 7));
+				pmodres->GetModel()->setUVTransform(u_offset, v_offset, u_scale, v_scale, angle, idx);
+			}
+			else
+			{
+				const char* submesh_name = luaL_checkstring(L, 7);
+				pmodres->GetModel()->setUVTransformByName(u_offset, v_offset, u_scale, v_scale, angle, submesh_name);
+			}
+		}
+		else
+		{
+			pmodres->GetModel()->setUVTransform(u_offset, v_offset, u_scale, v_scale, angle, 0);
+		}
+		return 0;
+	}
+
+	static int lib_resetModelUV(lua_State* L) {
+		const char* name = luaL_checkstring(L, 1);
+		core::SmartReference<IResourceModel> pmodres = LRESMGR().FindModel(name);
+		if (!pmodres)
+			return luaL_error(L, "lstg.Renderer.resetModelUV: can't find model '%s'", name);
+
+		if (lua_gettop(L) >= 2 && !lua_isnoneornil(L, 2))
+		{
+			if (lua_isnumber(L, 2))
+			{
+				uint32_t idx = static_cast<uint32_t>(lua_tointeger(L, 2));
+				pmodres->GetModel()->resetUVTransform(idx);
+			}
+			else
+			{
+				const char* submesh_name = luaL_checkstring(L, 2);
+				pmodres->GetModel()->resetUVTransformByName(submesh_name);
+			}
+		}
+		else
+		{
+			pmodres->GetModel()->resetUVTransform(0);
+		}
+		return 0;
+	}
+
+	static int lib_setModelSubmeshColor(lua_State* L) {
+		const char* name = luaL_checkstring(L, 1);
+		core::SmartReference<IResourceModel> pmodres = LRESMGR().FindModel(name);
+		if (!pmodres)
+			return luaL_error(L, "lstg.Renderer.setModelSubmeshColor: can't find model '%s'", name);
+
+		core::Color4B const* col = binding::Color::Cast(L, 2);
+		core::Vector4F vcol(
+			col->r / 255.0f,
+			col->g / 255.0f,
+			col->b / 255.0f,
+			col->a / 255.0f
+		);
+
+		if (lua_gettop(L) >= 3 && !lua_isnoneornil(L, 3))
+		{
+			if (lua_isnumber(L, 3))
+			{
+				uint32_t idx = static_cast<uint32_t>(lua_tointeger(L, 3));
+				pmodres->GetModel()->setSubmeshColor(vcol, idx);
+			}
+			else
+			{
+				const char* submesh_name = luaL_checkstring(L, 3);
+				pmodres->GetModel()->setSubmeshColorByName(vcol, submesh_name);
+			}
+		}
+		else
+		{
+			pmodres->GetModel()->setSubmeshColor(vcol, 0);
+		}
+		return 0;
+	}
+
+	static int lib_resetModelSubmeshColor(lua_State* L) {
+		const char* name = luaL_checkstring(L, 1);
+		core::SmartReference<IResourceModel> pmodres = LRESMGR().FindModel(name);
+		if (!pmodres)
+			return luaL_error(L, "lstg.Renderer.resetModelSubmeshColor: can't find model '%s'", name);
+
+		if (lua_gettop(L) >= 2 && !lua_isnoneornil(L, 2))
+		{
+			if (lua_isnumber(L, 2))
+			{
+				uint32_t idx = static_cast<uint32_t>(lua_tointeger(L, 2));
+				pmodres->GetModel()->resetSubmeshColor(idx);
+			}
+			else
+			{
+				const char* submesh_name = luaL_checkstring(L, 2);
+				pmodres->GetModel()->resetSubmeshColorByName(submesh_name);
+			}
+		}
+		else
+		{
+			pmodres->GetModel()->resetSubmeshColor(0);
+		}
+		return 0;
+	}
+
+	static int lib_setModelSampler(lua_State* L) {
+		const char* name = luaL_checkstring(L, 1);
+		core::SmartReference<IResourceModel> pmodres = LRESMGR().FindModel(name);
+		if (!pmodres)
+			return luaL_error(L, "lstg.Renderer.setModelSampler: can't find model '%s'", name);
+
+		const char* sampler_name = luaL_checkstring(L, 2);
+
+		if (lua_gettop(L) >= 3 && !lua_isnoneornil(L, 3))
+		{
+			if (lua_isnumber(L, 3))
+			{
+				uint32_t idx = static_cast<uint32_t>(lua_tointeger(L, 3));
+				pmodres->GetModel()->setSubmeshSampler(sampler_name, idx);
+			}
+			else
+			{
+				const char* submesh_name = luaL_checkstring(L, 3);
+				pmodres->GetModel()->setSubmeshSamplerByName(sampler_name, submesh_name);
+			}
+		}
+		else
+		{
+			pmodres->GetModel()->setSubmeshSampler(sampler_name, 0);
+		}
+		return 0;
+	}
+
+	static int lib_resetModelSampler(lua_State* L) {
+		const char* name = luaL_checkstring(L, 1);
+		core::SmartReference<IResourceModel> pmodres = LRESMGR().FindModel(name);
+		if (!pmodres)
+			return luaL_error(L, "lstg.Renderer.resetModelSampler: can't find model '%s'", name);
+
+		if (lua_gettop(L) >= 2 && !lua_isnoneornil(L, 2))
+		{
+			if (lua_isnumber(L, 2))
+			{
+				uint32_t idx = static_cast<uint32_t>(lua_tointeger(L, 2));
+				pmodres->GetModel()->resetSubmeshSampler(idx);
+			}
+			else
+			{
+				const char* submesh_name = luaL_checkstring(L, 2);
+				pmodres->GetModel()->resetSubmeshSamplerByName(submesh_name);
+			}
+		}
+		else
+		{
+			pmodres->GetModel()->resetSubmeshSampler(0);
+		}
+		return 0;
+	}
+
+	static int lib_setModelSubmeshVisible(lua_State* L) {
+		const char* name = luaL_checkstring(L, 1);
+		core::SmartReference<IResourceModel> pmodres = LRESMGR().FindModel(name);
+		if (!pmodres)
+			return luaL_error(L, "lstg.Renderer.setModelSubmeshVisible: can't find model '%s'", name);
+
+		bool visible = lua_toboolean(L, 2) != 0;
+
+		if (lua_gettop(L) >= 3 && !lua_isnoneornil(L, 3))
+		{
+			if (lua_isnumber(L, 3))
+			{
+				uint32_t idx = static_cast<uint32_t>(lua_tointeger(L, 3));
+				pmodres->GetModel()->setSubmeshVisible(visible, idx);
+			}
+			else
+			{
+				const char* submesh_name = luaL_checkstring(L, 3);
+				pmodres->GetModel()->setSubmeshVisibleByName(visible, submesh_name);
+			}
+		}
+		else
+		{
+			pmodres->GetModel()->setSubmeshVisible(visible, 0);
+		}
+		return 0;
+	}
+
+	static int lib_getModelSubmeshVisible(lua_State* L) {
+		const char* name = luaL_checkstring(L, 1);
+		core::SmartReference<IResourceModel> pmodres = LRESMGR().FindModel(name);
+		if (!pmodres)
+			return luaL_error(L, "lstg.Renderer.getModelSubmeshVisible: can't find model '%s'", name);
+
+		uint32_t idx = static_cast<uint32_t>(luaL_checkinteger(L, 2));
+		lua_pushboolean(L, pmodres->GetModel()->getSubmeshVisible(idx) ? 1 : 0);
+		return 1;
 	}
 
 	static int lib_setModelAmbient(lua_State* L) {
@@ -746,6 +1098,19 @@ namespace luastg {
 		MKFUNC(drawVideo4V),
 
 		MKFUNC(drawModel),
+		MKFUNC(setModelState),
+		MKFUNC(getModelSubmeshCount),
+		MKFUNC(getModelSubmeshList),
+		MKFUNC(setModelTexture),
+		MKFUNC(resetModelTexture),
+		MKFUNC(setModelUV),
+		MKFUNC(resetModelUV),
+		MKFUNC(setModelSubmeshColor),
+		MKFUNC(resetModelSubmeshColor),
+		MKFUNC(setModelSampler),
+		MKFUNC(resetModelSampler),
+		MKFUNC(setModelSubmeshVisible),
+		MKFUNC(getModelSubmeshVisible),
 		MKFUNC(setModelAmbient),
 		MKFUNC(setModelDirectionalLight),
 		MKFUNC(addModelPointLight),
@@ -994,6 +1359,19 @@ namespace luastg {
 		{ "RenderAnimation", &lib_drawSpriteSequence },
 		{ "RenderTexture", &lib_drawTexture },
 		{ "RenderModel", &lib_drawModel },
+		{ "SetModelState", &lib_setModelState },
+		{ "GetModelSubmeshCount", &lib_getModelSubmeshCount },
+		{ "GetModelSubmeshList", &lib_getModelSubmeshList },
+		{ "SetModelTexture", &lib_setModelTexture },
+		{ "ResetModelTexture", &lib_resetModelTexture },
+		{ "SetModelUV", &lib_setModelUV },
+		{ "ResetModelUV", &lib_resetModelUV },
+		{ "SetModelSubmeshColor", &lib_setModelSubmeshColor },
+		{ "ResetModelSubmeshColor", &lib_resetModelSubmeshColor },
+		{ "SetModelSampler", &lib_setModelSampler },
+		{ "ResetModelSampler", &lib_resetModelSampler },
+		{ "SetModelSubmeshVisible", &lib_setModelSubmeshVisible },
+		{ "GetModelSubmeshVisible", &lib_getModelSubmeshVisible },
 		{ "SetModelAmbient", &lib_setModelAmbient },
 		{ "SetModelDirectionalLight", &lib_setModelDirectionalLight },
 		{ "AddModelPointLight", &lib_addModelPointLight },

@@ -1,4 +1,4 @@
-﻿#include "Core/Graphics/Model_D3D11.hpp"
+#include "Core/Graphics/Model_D3D11.hpp"
 #include "Platform/RuntimeLoader/Direct3DCompiler.hpp"
 
 static std::string_view const built_in_shader(R"(
@@ -48,6 +48,20 @@ cbuffer constantBuffer1 : register(b1)
     float4x4 LocalWorldMatrix;
     float4x4 NormalLocalWorldMatrix;
 };
+cbuffer uvTransform : register(b2)
+{
+    float4 UVTransform; // (offset_x, offset_y, scale_x, scale_y)
+    float4 UVRotation;  // (cos_angle, sin_angle, 0, 0)
+};
+
+float2 transformUV(float2 in_uv)
+{
+    float2 scaled_uv = in_uv * UVTransform.zw;
+    float c = UVRotation.x;
+    float s = UVRotation.y;
+    float2 rot_uv = float2(scaled_uv.x * c - scaled_uv.y * s, scaled_uv.x * s + scaled_uv.y * c);
+    return rot_uv + UVTransform.xy;
+}
 
 PS_INPUT VS_Main(VS_INPUT input)
 {
@@ -56,7 +70,7 @@ PS_INPUT VS_Main(VS_INPUT input)
     output.pos = mul(ProjectionMatrix, wpos);
     output.wpos = wpos;
     output.norm = mul(NormalLocalWorldMatrix, float4(input.norm, 0.0f)); // no move
-    output.uv = input.uv;
+    output.uv = transformUV(input.uv);
     return output;
 };
 
@@ -68,7 +82,7 @@ PS_S4F_P4F_N4F_C4F_T2F VS_Main_VertexColor(VS_P3F_N3F_C4F_T2F input)
     output.wpos = wpos;
     output.norm = mul(NormalLocalWorldMatrix, float4(input.norm, 0.0f)); // no move
     output.col = input.col;
-    output.uv = input.uv;
+    output.uv = transformUV(input.uv);
     return output;
 };
 
@@ -152,7 +166,7 @@ OM_INPUT PS_Main(PS_INPUT input)
     solid_color = ApplySimpleLight(input.norm, input.wpos, solid_color);
     solid_color = ApplyFog(input.wpos, solid_color);
     OM_INPUT output;
-    output.col = pow(solid_color, 1.0f / 2.2f);
+    output.col = float4(pow(solid_color.rgb, 1.0f / 2.2f), solid_color.a);
     return output; 
 }
 
@@ -167,7 +181,7 @@ OM_INPUT PS_Main_AlphaMask(PS_INPUT input)
     solid_color = ApplySimpleLight(input.norm, input.wpos, solid_color);
     solid_color = ApplyFog(input.wpos, solid_color);
     OM_INPUT output;
-    output.col = pow(solid_color, 1.0f / 2.2f);
+    output.col = float4(pow(solid_color.rgb, 1.0f / 2.2f), solid_color.a);
     return output; 
 }
 
@@ -177,7 +191,7 @@ OM_INPUT PS_Main_NoBaseTexture(PS_INPUT input)
     solid_color = ApplySimpleLight(input.norm, input.wpos, solid_color);
     solid_color = ApplyFog(input.wpos, solid_color);
     OM_INPUT output;
-    output.col = pow(solid_color, 1.0f / 2.2f);
+    output.col = float4(pow(solid_color.rgb, 1.0f / 2.2f), solid_color.a);
     return output; 
 }
 
@@ -191,7 +205,7 @@ OM_INPUT PS_Main_NoBaseTexture_AlphaMask(PS_INPUT input)
     solid_color = ApplySimpleLight(input.norm, input.wpos, solid_color);
     solid_color = ApplyFog(input.wpos, solid_color);
     OM_INPUT output;
-    output.col = pow(solid_color, 1.0f / 2.2f);
+    output.col = float4(pow(solid_color.rgb, 1.0f / 2.2f), solid_color.a);
     return output; 
 }
 
@@ -204,7 +218,7 @@ OM_INPUT PS_Main_VertexColor(PS_S4F_P4F_N4F_C4F_T2F input)
     solid_color = ApplySimpleLight(input.norm, input.wpos, solid_color);
     solid_color = ApplyFog(input.wpos, solid_color);
     OM_INPUT output;
-    output.col = pow(solid_color, 1.0f / 2.2f);
+    output.col = float4(pow(solid_color.rgb, 1.0f / 2.2f), solid_color.a);
     return output; 
 }
 
@@ -219,7 +233,7 @@ OM_INPUT PS_Main_AlphaMask_VertexColor(PS_S4F_P4F_N4F_C4F_T2F input)
     solid_color = ApplySimpleLight(input.norm, input.wpos, solid_color);
     solid_color = ApplyFog(input.wpos, solid_color);
     OM_INPUT output;
-    output.col = pow(solid_color, 1.0f / 2.2f);
+    output.col = float4(pow(solid_color.rgb, 1.0f / 2.2f), solid_color.a);
     return output; 
 }
 
@@ -229,7 +243,7 @@ OM_INPUT PS_Main_NoBaseTexture_VertexColor(PS_S4F_P4F_N4F_C4F_T2F input)
     solid_color = ApplySimpleLight(input.norm, input.wpos, solid_color);
     solid_color = ApplyFog(input.wpos, solid_color);
     OM_INPUT output;
-    output.col = pow(solid_color, 1.0f / 2.2f);
+    output.col = float4(pow(solid_color.rgb, 1.0f / 2.2f), solid_color.a);
     return output; 
 }
 
@@ -243,7 +257,7 @@ OM_INPUT PS_Main_NoBaseTexture_AlphaMask_VertexColor(PS_S4F_P4F_N4F_C4F_T2F inpu
     solid_color = ApplySimpleLight(input.norm, input.wpos, solid_color);
     solid_color = ApplyFog(input.wpos, solid_color);
     OM_INPUT output;
-    output.col = pow(solid_color, 1.0f / 2.2f);
+    output.col = float4(pow(solid_color.rgb, 1.0f / 2.2f), solid_color.a);
     return output; 
 }
 
@@ -260,7 +274,7 @@ OM_INPUT PS_Main_InvAlphaMask(PS_INPUT input)
     solid_color = ApplySimpleLight(input.norm, input.wpos, solid_color);
     solid_color = ApplyFog(input.wpos, solid_color);
     OM_INPUT output;
-    output.col = pow(solid_color, 1.0f / 2.2f);
+    output.col = float4(pow(solid_color.rgb, 1.0f / 2.2f), solid_color.a);
     return output; 
 }
 
@@ -274,7 +288,7 @@ OM_INPUT PS_Main_NoBaseTexture_InvAlphaMask(PS_INPUT input)
     solid_color = ApplySimpleLight(input.norm, input.wpos, solid_color);
     solid_color = ApplyFog(input.wpos, solid_color);
     OM_INPUT output;
-    output.col = pow(solid_color, 1.0f / 2.2f);
+    output.col = float4(pow(solid_color.rgb, 1.0f / 2.2f), solid_color.a);
     return output; 
 }
 
@@ -289,7 +303,7 @@ OM_INPUT PS_Main_InvAlphaMask_VertexColor(PS_S4F_P4F_N4F_C4F_T2F input)
     solid_color = ApplySimpleLight(input.norm, input.wpos, solid_color);
     solid_color = ApplyFog(input.wpos, solid_color);
     OM_INPUT output;
-    output.col = pow(solid_color, 1.0f / 2.2f);
+    output.col = float4(pow(solid_color.rgb, 1.0f / 2.2f), solid_color.a);
     return output; 
 }
 
@@ -303,7 +317,7 @@ OM_INPUT PS_Main_NoBaseTexture_InvAlphaMask_VertexColor(PS_S4F_P4F_N4F_C4F_T2F i
     solid_color = ApplySimpleLight(input.norm, input.wpos, solid_color);
     solid_color = ApplyFog(input.wpos, solid_color);
     OM_INPUT output;
-    output.col = pow(solid_color, 1.0f / 2.2f);
+    output.col = float4(pow(solid_color.rgb, 1.0f / 2.2f), solid_color.a);
     return output; 
 }
 
@@ -415,7 +429,7 @@ OM_INPUT PS_Main_ScreenDoor(PS_INPUT input)
     solid_color = ApplySimpleLight(input.norm, input.wpos, solid_color);
     solid_color = ApplyFog(input.wpos, solid_color);
     OM_INPUT output;
-    output.col = pow(solid_color, 1.0f / 2.2f);
+    output.col = float4(pow(solid_color.rgb, 1.0f / 2.2f), solid_color.a);
     return output; 
 }
 
@@ -429,7 +443,7 @@ OM_INPUT PS_Main_NoBaseTexture_ScreenDoor(PS_INPUT input)
     solid_color = ApplySimpleLight(input.norm, input.wpos, solid_color);
     solid_color = ApplyFog(input.wpos, solid_color);
     OM_INPUT output;
-    output.col = pow(solid_color, 1.0f / 2.2f);
+    output.col = float4(pow(solid_color.rgb, 1.0f / 2.2f), solid_color.a);
     return output; 
 }
 
@@ -444,7 +458,7 @@ OM_INPUT PS_Main_ScreenDoor_VertexColor(PS_S4F_P4F_N4F_C4F_T2F input)
     solid_color = ApplySimpleLight(input.norm, input.wpos, solid_color);
     solid_color = ApplyFog(input.wpos, solid_color);
     OM_INPUT output;
-    output.col = pow(solid_color, 1.0f / 2.2f);
+    output.col = float4(pow(solid_color.rgb, 1.0f / 2.2f), solid_color.a);
     return output; 
 }
 
@@ -458,7 +472,7 @@ OM_INPUT PS_Main_NoBaseTexture_ScreenDoor_VertexColor(PS_S4F_P4F_N4F_C4F_T2F inp
     solid_color = ApplySimpleLight(input.norm, input.wpos, solid_color);
     solid_color = ApplyFog(input.wpos, solid_color);
     OM_INPUT output;
-    output.col = pow(solid_color, 1.0f / 2.2f);
+    output.col = float4(pow(solid_color.rgb, 1.0f / 2.2f), solid_color.a);
     return output; 
 }
 
