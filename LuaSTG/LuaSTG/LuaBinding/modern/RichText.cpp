@@ -12,7 +12,7 @@
 // [shake i=N]...[/shake]
 // [gradient=#RRGGBB,#RRGGBB]text[/gradient]  (also: [gradiant=...])
 
-// If anyone looks at that file. I'm sorry. It's....it was pain.
+// If anyone looks at that file. I'm sorry. It's....it was pain. (and still is to this day)
 
 #include "RichText.hpp"
 #include <cassert>

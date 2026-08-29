@@ -126,6 +126,20 @@ namespace imgui::binding {
 		static void registerClass(lua_State* vm);
 	};
 
+	struct ImDrawListBinding {
+		static std::string_view const class_name;
+
+		ImDrawList* data{};
+
+		void set(ImDrawList* ptr);
+		ImDrawList* get();
+
+		static bool is(lua_State* vm, int index);
+		static ImDrawList* as(lua_State* vm, int index);
+		static ImDrawList* reference(lua_State* vm, ImDrawList* value);
+		static void registerClass(lua_State* vm);
+	};
+
 	struct ImGuiTextBufferBinding {
 		static std::string_view const class_name;
 

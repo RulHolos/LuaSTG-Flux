@@ -84,6 +84,7 @@ namespace imgui::binding {
 		registerImGuiMemoryAllocators(vm);
 
 		ImGuiStyleBinding::registerClass(vm);
+		ImDrawListBinding::registerClass(vm);
 
 		ImGuiTextBufferBinding::registerClass(vm);
 	}

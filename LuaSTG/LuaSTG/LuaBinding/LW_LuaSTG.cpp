@@ -1,7 +1,10 @@
 #include "LuaBinding/LuaWrapper.hpp"
+#include "Platform/CleanWindows.hpp"
 #include "lua/plus.hpp"
 #include "AppFrame.h"
-#include "core/Configuration.hpp"
+//#include "core/Configuration.hpp"
+#include <psapi.h>
+#include <dxgi1_4.h>
 
 inline core::RectI lua_to_Core_RectI(lua_State* L, int idx)
 {
@@ -98,7 +101,7 @@ void luastg::binding::BuiltInFunction::Register(lua_State* L)noexcept
 		}
 		static int SetFPS(lua_State* L)noexcept
 		{
-			int v = luaL_checkinteger(L, 1);
+			int v = (int)luaL_checkinteger(L, 1);
 			if (v <= 0)
 				v = 60;
 			LAPP.SetFPS((uint32_t)v);
@@ -251,6 +254,94 @@ void luastg::binding::BuiltInFunction::Register(lua_State* L)noexcept
 			return 0;
 		}
 		#pragma endregion
+
+		#pragma region Profiling
+		static int CurrentTick(lua_State* L)
+		{
+			LARGE_INTEGER counter;
+			QueryPerformanceCounter(&counter);
+
+			lua::stack_t S(L);
+			S.push_value(counter.QuadPart);
+			return 1;
+		}
+
+		static int TimeElapsedMs(lua_State* L)
+		{
+			LARGE_INTEGER counter;
+			QueryPerformanceCounter(&counter);
+
+			lua::stack_t S(L);
+			const int64_t startTick = S.get_value<int64_t>(1);
+			S.push_value(1000 * (double)(counter.QuadPart - startTick) / (double)LAPP.GetAppModel()->getQPF());
+			return 1;
+		}
+
+		static int GetMemoryUsage(lua_State* L)
+		{
+			PROCESS_MEMORY_COUNTERS_EX info = {};
+			info.cb = sizeof(info);
+
+			if (GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&info, sizeof(info))) {
+				lua_newtable(L);
+
+				lua_pushinteger(L, info.WorkingSetSize);
+				lua_setfield(L, -2, "activeMemoryUsage");
+
+				lua_pushinteger(L, info.PrivateUsage);
+				lua_setfield(L, -2, "privMemoryUsage");
+
+				MEMORYSTATUSEX systemInfo = { sizeof(MEMORYSTATUSEX) };
+				if (GlobalMemoryStatusEx(&systemInfo)) {
+					lua_pushinteger(L, systemInfo.dwMemoryLoad);
+					lua_setfield(L, -2, "systemMemoryLoad");
+
+					lua_pushnumber(L, 100.0 * info.WorkingSetSize / systemInfo.ullTotalPhys);
+					lua_setfield(L, -2, "ramUsagePercent");
+				}
+
+				return 1;
+			}
+
+			return 0;
+		}
+
+		static int GetGameObjectStats(lua_State* L)
+		{
+			auto objInfo = LPOOL.DebugGetFrameStatistics();
+
+			lua_newtable(L);
+			lua_pushinteger(L, objInfo.object_alloc);
+			lua_setfield(L, -2, "allocated");
+			lua_pushinteger(L, objInfo.object_free);
+			lua_setfield(L, -2, "freed");
+			lua_pushinteger(L, objInfo.object_alive);
+			lua_setfield(L, -2, "active");
+			lua_pushinteger(L, objInfo.object_colli_check);
+			lua_setfield(L, -2, "collisionChecks");
+			lua_pushinteger(L, objInfo.object_colli_callback);
+			lua_setfield(L, -2, "collisionCallbacks");
+
+			return 1;
+		}
+
+		static int GetGPUStats(lua_State* L)
+		{
+			core::Graphics::DeviceMemoryUsageStatistics stats = LAPP.GetAppModel()->getDevice()->getMemoryUsageStatistics();
+			
+			lua_newtable(L);
+			lua_pushinteger(L, stats.local.current_usage);
+			lua_setfield(L, -2, "localUsage");
+			lua_pushinteger(L, stats.local.budget);
+			lua_setfield(L, -2, "localBudget");
+			lua_pushinteger(L, stats.non_local.current_usage);
+			lua_setfield(L, -2, "nonLocalUsage");
+			lua_pushinteger(L, stats.non_local.budget);
+			lua_setfield(L, -2, "nonLocalBudget");
+
+			return 1;
+		}
+		#pragma endregion
 	};
 	
 	luaL_Reg tFunctions[] = {
@@ -280,6 +371,14 @@ void luastg::binding::BuiltInFunction::Register(lua_State* L)noexcept
 		{ "ChangeGPU", &Wrapper::ChangeGPU },
 		{ "GetCurrentGpuName", &Wrapper::GetCurrentGpuName },
 		{ "SetSwapChainScalingMode", &Wrapper::SetSwapChainScalingMode },
+		#pragma endregion
+
+		#pragma region Profiling
+		{ "CurrentTick", &Wrapper::CurrentTick },
+		{ "TimeElapsedMs", &Wrapper::TimeElapsedMs },
+		{ "GetMemoryUsage", &Wrapper::GetMemoryUsage },
+		{ "GetGameObjectStats", &Wrapper::GetGameObjectStats },
+		{ "GetGPUStats", &Wrapper::GetGPUStats },
 		#pragma endregion
 		
 		{ NULL, NULL },

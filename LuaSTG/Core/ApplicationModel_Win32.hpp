@@ -79,6 +79,7 @@ namespace core
 		double const m_update_avg_fps_delta{ 0.25 }; // 每 0.25s 更新一次平均帧率
 		wil::unique_event_nothrow m_event;
 		LARGE_INTEGER m_freq{};
+		int64_t m_freq_int;
 		LARGE_INTEGER m_last{};
 		LARGE_INTEGER m_target_time{}; // 下一个期望的时间戳
 		LARGE_INTEGER m_target_delta{}; // 期望的时间戳间隔
@@ -191,12 +192,14 @@ namespace core
 		double getAvgFPS() { return m_last_avg_fps; }
 		double getMinFPS() { return m_last_min_fps; }
 		double getMaxFPS() { return m_last_max_fps; }
+		int64_t getQPF() { return m_freq_int; }
 	public:
 		bool available() { return !!m_event; }
 	public:
 		SteadyFrameRateController()
 		{
 			QueryPerformanceFrequency(&m_freq);
+			m_freq_int = (int64_t)m_freq.QuadPart;
 			QueryPerformanceCounter(&m_last);
 			recreateResource();
 			setTargetFPS(60);
@@ -398,6 +401,7 @@ namespace core
 		// 仅限工作线程
 
 		IFrameRateController* getFrameRateController() { return m_p_frame_rate_controller; };
+		int64_t getQPF() { return m_steady_frame_rate_controller.getQPF(); };
 		Graphics::IDevice* getDevice() { return *m_device; }
 		Graphics::ISwapChain* getSwapChain() { return *m_swapchain; }
 		Graphics::IRenderer* getRenderer() { return *m_renderer; }

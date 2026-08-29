@@ -55,6 +55,7 @@ namespace core
         virtual Graphics::ISwapChain* getSwapChain() = 0;
         // [工作线程]
         virtual Graphics::IRenderer* getRenderer() = 0;
+        virtual int64_t getQPF() = 0;
         // [工作线程]
         virtual FrameStatistics getFrameStatistics() = 0;
         // [工作线程]
