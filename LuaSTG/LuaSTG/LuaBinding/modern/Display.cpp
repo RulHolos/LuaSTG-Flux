@@ -215,6 +215,7 @@ namespace luastg::binding {
 		S.set_map_value(method_table, "getWorkAreaPosition", &DisplayBinding::getWorkAreaPosition);
 		S.set_map_value(method_table, "getWorkAreaRect", &DisplayBinding::getWorkAreaRect);
 		S.set_map_value(method_table, "isPrimary", &DisplayBinding::isPrimary);
+		
 		S.set_map_value(method_table, "getDisplayScale", &DisplayBinding::getDisplayScale);
 		S.set_map_value(method_table, "getAll", &DisplayBinding::getAll);
 		S.set_map_value(method_table, "getPrimary", &DisplayBinding::getPrimary);

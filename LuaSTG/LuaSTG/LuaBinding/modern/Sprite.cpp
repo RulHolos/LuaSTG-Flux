@@ -59,10 +59,10 @@ namespace luastg::binding {
 		static int setTextureRect(lua_State* vm) {
 			lua::stack_t const ctx(vm);
 			auto const self = as(vm, 1);
-			auto const x = ctx.get_value<float>(1 + 1);
-			auto const y = ctx.get_value<float>(1 + 2);
-			auto const width = ctx.get_value<float>(1 + 3);
-			auto const height = ctx.get_value<float>(1 + 4);
+			auto const x = ctx.get_value<float>(2);
+			auto const y = ctx.get_value<float>(3);
+			auto const width = ctx.get_value<float>(4);
+			auto const height = ctx.get_value<float>(5);
 			self->data->setTextureRect(core::RectF(x, y, x + width, x + height));
 			return 0;
 		}
@@ -79,8 +79,8 @@ namespace luastg::binding {
 		static int setCenter(lua_State* vm) {
 			lua::stack_t const ctx(vm);
 			auto const self = as(vm, 1);
-			auto const x = ctx.get_value<float>(1 + 1);
-			auto const y = ctx.get_value<float>(1 + 2);
+			auto const x = ctx.get_value<float>(2);
+			auto const y = ctx.get_value<float>(3);
 			self->data->setTextureCenter(core::Vector2F(x, y));
 			return 0;
 		}
@@ -95,7 +95,7 @@ namespace luastg::binding {
 		static int setUnitPerPixel(lua_State* vm) {
 			lua::stack_t const ctx(vm);
 			auto const self = as(vm, 1);
-			auto const unit_per_pixel = ctx.get_value<float>(1 + 1);
+			auto const unit_per_pixel = ctx.get_value<float>(2);
 			self->data->setUnitsPerPixel(unit_per_pixel);
 			return 0;
 		}
@@ -103,7 +103,7 @@ namespace luastg::binding {
 			lua::stack_t const ctx(vm);
 			auto const self = as(vm, 1);
 			ctx.push_value(self->data->getUnitsPerPixel());
-			return 0;
+			return 1;
 		}
 
 		// static method
