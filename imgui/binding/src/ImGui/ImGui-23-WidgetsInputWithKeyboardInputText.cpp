@@ -12,7 +12,9 @@ namespace {
 		auto const flags = ctx.get_value<ImGuiInputTextFlags>(4, 0);
 		// TODO: supports callback
 		auto const result = ImGui::InputText(label.data(), (char*)buf->c_str(), buf_size, flags);
-		if (result) buf->Buf.Size = strlen(buf->c_str()) + 1;
+		if (result)
+			buf->Buf.Size = strlen(buf->c_str()) + 1;
+		ctx.push_value(result);
 		return 1;
 	}
 	int InputTextMultiline(lua_State* const vm) {
