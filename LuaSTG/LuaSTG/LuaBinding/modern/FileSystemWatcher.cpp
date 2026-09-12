@@ -2,6 +2,7 @@
 #include "core/SmartReference.hpp"
 #include "core/FileSystemWatcher.hpp"
 #include "lua/plus.hpp"
+#include <vector>
 
 using std::string_view_literals::operator ""sv;
 
@@ -25,8 +26,13 @@ namespace luastg::binding {
 
 		static int __tostring(lua_State* const vm) {
 			lua::stack_t const ctx(vm);
-			[[maybe_unused]] auto const self = as(vm, 1);
-			ctx.push_value(class_name);
+			auto const self = as(vm, 1);
+			if (self->object != nullptr) {
+				ctx.push_value(std::string(class_name) + "(" + std::string(self->object->getPath()) + ")");
+			}
+			else {
+				ctx.push_value(class_name);
+			}
 			return 1;
 		}
 
@@ -71,6 +77,88 @@ namespace luastg::binding {
 
 			return 1;
 		}
+
+		static void pushNotificationTable(lua::stack_t const& ctx, core::FileNotifyInformation const& info) {
+			auto const item_table = ctx.create_map(3);
+			ctx.set_map_value(item_table, "file_name"sv, std::string_view(info.file_name->c_str(), info.file_name->length()));
+			ctx.set_map_value(item_table, "action"sv, static_cast<int32_t>(info.action));
+			if (info.old_file_name != nullptr) {
+				ctx.set_map_value(item_table, "old_file_name"sv, std::string_view(info.old_file_name->c_str(), info.old_file_name->length()));
+			}
+		}
+
+		static int poll(lua_State* const vm) {
+			lua::stack_t const ctx(vm);
+			auto const self = as(vm, 1);
+			auto const result_array = ctx.create_array();
+
+			if (self->object != nullptr) {
+				std::vector<core::FileNotifyInformation> batch;
+				self->object->drain(&batch);
+
+				int32_t index = 1;
+				for (auto const& info : batch) {
+					pushNotificationTable(ctx, info);
+					auto const item_table = ctx.index_of_top();
+					ctx.set_array_value(result_array, lua::stack_index_t(index), item_table);
+					ctx.pop_value();
+					index += 1;
+				}
+			}
+
+			return 1;
+		}
+
+		static int changesIterator(lua_State* const vm) {
+			lua::stack_t const ctx(vm);
+			auto const self = as(vm, 1);
+			if (self->object == nullptr) {
+				return 0;
+			}
+
+			core::FileNotifyInformation info;
+			if (!self->object->next(&info)) {
+				return 0;
+			}
+
+			ctx.push_value(std::string_view(info.file_name->c_str(), info.file_name->length()));
+			ctx.push_value(static_cast<int32_t>(info.action));
+			if (info.old_file_name != nullptr) {
+				ctx.push_value(std::string_view(info.old_file_name->c_str(), info.old_file_name->length()));
+			}
+			else {
+				ctx.push_value(std::nullopt);
+			}
+			return 3;
+		}
+
+		static int changes(lua_State* const vm) {
+			lua::stack_t const ctx(vm);
+			ctx.push_value(static_cast<lua_CFunction>(&changesIterator));
+			lua_pushvalue(vm, 1);
+			ctx.push_value(std::nullopt);
+			return 3;
+		}
+
+		static int getPath(lua_State* const vm) {
+			lua::stack_t const ctx(vm);
+			auto const self = as(vm, 1);
+			if (self->object == nullptr) {
+				ctx.push_value(std::nullopt);
+			}
+			else {
+				ctx.push_value(self->object->getPath());
+			}
+			return 1;
+		}
+
+		static int isValid(lua_State* const vm) {
+			lua::stack_t const ctx(vm);
+			auto const self = as(vm, 1);
+			ctx.push_value(self->object != nullptr);
+			return 1;
+		}
+
 		static int close(lua_State* const vm) {
 			if (auto const self = as(vm, 1); self->object != nullptr) {
 				self->object->release();
@@ -85,8 +173,19 @@ namespace luastg::binding {
 			lua::stack_t const ctx(vm);
 			auto const path = ctx.get_value<std::string_view>(1);
 
+			core::FileSystemWatcherOptions options;
+			if (ctx.has_value(2) && !ctx.is_nil(2)) {
+				if (!ctx.is_table(2)) {
+					return luaL_typerror(vm, 2, "table");
+				}
+				constexpr lua::stack_index_t options_table(2);
+				options.recursive = ctx.get_map_value(options_table, "recursive"sv, true);
+				auto const filter_bits = ctx.get_map_value(options_table, "filter"sv, static_cast<int32_t>(core::FileNotifyFilter::legacy_default));
+				options.filter = static_cast<core::FileNotifyFilter>(filter_bits);
+			}
+
 			core::SmartReference<core::IMessageQueueBasedFileSystemWatcher> object;
-			if (!core::IMessageQueueBasedFileSystemWatcher::create(path, object.put())) {
+			if (!core::IMessageQueueBasedFileSystemWatcher::create(path, options, object.put())) {
 				ctx.push_value(std::nullopt);
 				return 1;
 			}
@@ -127,10 +226,26 @@ namespace luastg::binding {
 		ctx.set_map_value(action_table, "renamed_old_name", static_cast<int32_t>(core::FileAction::renamed_old_name));
 		ctx.set_map_value(action_table, "renamed_new_name", static_cast<int32_t>(core::FileAction::renamed_new_name));
 
+		// lstg.FileSystemWatcher.NotifyFilter
+		auto const filter_table = ctx.create_module("lstg.FileSystemWatcher.NotifyFilter"sv);
+		ctx.set_map_value(filter_table, "file_name", static_cast<int32_t>(core::FileNotifyFilter::file_name));
+		ctx.set_map_value(filter_table, "dir_name", static_cast<int32_t>(core::FileNotifyFilter::dir_name));
+		ctx.set_map_value(filter_table, "attributes", static_cast<int32_t>(core::FileNotifyFilter::attributes));
+		ctx.set_map_value(filter_table, "size", static_cast<int32_t>(core::FileNotifyFilter::size));
+		ctx.set_map_value(filter_table, "last_write", static_cast<int32_t>(core::FileNotifyFilter::last_write));
+		ctx.set_map_value(filter_table, "last_access", static_cast<int32_t>(core::FileNotifyFilter::last_access));
+		ctx.set_map_value(filter_table, "creation", static_cast<int32_t>(core::FileNotifyFilter::creation));
+		ctx.set_map_value(filter_table, "security", static_cast<int32_t>(core::FileNotifyFilter::security));
+		ctx.set_map_value(filter_table, "all", static_cast<int32_t>(core::FileNotifyFilter::all));
+
 		// method
 
 		auto const method_table = ctx.create_module(class_name);
 		ctx.set_map_value(method_table, "read", &FileSystemWatcherBinding::next);
+		ctx.set_map_value(method_table, "poll", &FileSystemWatcherBinding::poll);
+		ctx.set_map_value(method_table, "changes", &FileSystemWatcherBinding::changes);
+		ctx.set_map_value(method_table, "getPath", &FileSystemWatcherBinding::getPath);
+		ctx.set_map_value(method_table, "isValid", &FileSystemWatcherBinding::isValid);
 		ctx.set_map_value(method_table, "close", &FileSystemWatcherBinding::close);
 		ctx.set_map_value(method_table, "create", &FileSystemWatcherBinding::create);
 

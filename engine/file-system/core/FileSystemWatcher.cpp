@@ -5,9 +5,12 @@
 #include "core/FileSystemCommon.hpp"
 #include "utf8.hpp"
 #include <cassert>
+#include <cstring>
+#include <memory>
 #include <mutex>
 #include <thread>
 #include <list>
+#include <vector>
 #include <windows.h>
 #include <wil/resource.h>
 
@@ -25,9 +28,31 @@ namespace core {
 			if (m_notify.empty()) {
 				return false;
 			}
-			*info = m_notify.front();
+			*info = std::move(m_notify.front());
 			m_notify.pop_front();
 			return true;
+		}
+
+		size_t drain(std::vector<FileNotifyInformation>* infos) override {
+			assert(infos != nullptr);
+			if (infos == nullptr) {
+				return 0;
+			}
+			std::lock_guard notify_lock(m_notify_mutex);
+			size_t const count = m_notify.size();
+			if (count == 0) {
+				return 0;
+			}
+			infos->reserve(infos->size() + count);
+			for (auto& info : m_notify) {
+				infos->emplace_back(std::move(info));
+			}
+			m_notify.clear();
+			return count;
+		}
+
+		std::string_view getPath() override {
+			return m_path;
 		}
 
 		// MessageQueueBasedFileSystemWatcher
@@ -45,13 +70,7 @@ namespace core {
 		MessageQueueBasedFileSystemWatcher& operator=(MessageQueueBasedFileSystemWatcher const&) = delete;
 		MessageQueueBasedFileSystemWatcher& operator=(MessageQueueBasedFileSystemWatcher&&) = delete;
 
-		static constexpr uint32_t default_filter = FILE_NOTIFY_CHANGE_FILE_NAME
-			| FILE_NOTIFY_CHANGE_DIR_NAME
-			| FILE_NOTIFY_CHANGE_SIZE
-			| FILE_NOTIFY_CHANGE_LAST_WRITE
-			| FILE_NOTIFY_CHANGE_CREATION;
-
-		bool open(std::string_view const& path, uint32_t const filter = default_filter) {
+		bool open(std::string_view const& path, FileSystemWatcherOptions const& options) {
 			m_exit_event.reset(CreateEventExW(nullptr, nullptr, CREATE_EVENT_MANUAL_RESET, EVENT_ALL_ACCESS));
 			if (!m_exit_event.is_valid()) {
 				return false;
@@ -76,19 +95,31 @@ namespace core {
 				return false;
 			}
 
-			m_notify_filter = filter;
+			m_path = getStringView(normalizePath(path));
+			m_notify_filter = static_cast<DWORD>(options.filter);
+			m_recursive = options.recursive;
 
 			m_worker = std::thread(&worker, this);
 			return true;
 		}
 
 		static void worker(MessageQueueBasedFileSystemWatcher* self) {
-			std::array<DWORD, 1024> buffer;
+			static constexpr size_t buffer_size = 65536;
+			auto const buffer = std::make_unique<uint8_t[]>(buffer_size);
+			IImmutableString* pending_old_name{};
+
+			auto const release_pending_old_name = [&pending_old_name] {
+				if (pending_old_name != nullptr) {
+					pending_old_name->release();
+					pending_old_name = nullptr;
+				}
+			};
 
 			for (;;) {
-				buffer.fill(0);
+				std::memset(buffer.get(), 0, buffer_size);
 				if (!ResetEvent(self->m_complete_event.get())) {
 					Logger::error("core::MessageQueueBasedFileSystemWatcher::worker (ResetEvent)");
+					release_pending_old_name();
 					return;
 				}
 
@@ -96,15 +127,16 @@ namespace core {
 				overlapped.hEvent = self->m_complete_event.get();
 				if (!ReadDirectoryChangesW(
 					self->m_file.get(),
-					buffer.data(),
-					sizeof(buffer),
-					TRUE,
+					buffer.get(),
+					static_cast<DWORD>(buffer_size),
+					self->m_recursive ? TRUE : FALSE,
 					self->m_notify_filter,
 					nullptr,
 					&overlapped,
 					nullptr
 				)) {
 					Logger::error("core::MessageQueueBasedFileSystemWatcher::worker (ReadDirectoryChangesW)");
+					release_pending_old_name();
 					return;
 				}
 
@@ -112,23 +144,29 @@ namespace core {
 				DWORD const wait_result = WaitForMultipleObjects(2, wait_events, FALSE, INFINITE);
 				if (wait_result == WAIT_FAILED || wait_result == WAIT_TIMEOUT || wait_result == WAIT_ABANDONED) {
 					Logger::error("core::MessageQueueBasedFileSystemWatcher::worker (WaitForMultipleObjects: WAIT_FAILED|WAIT_TIMEOUT|WAIT_ABANDONED)");
+					release_pending_old_name();
 					return;
 				}
 				if (wait_result == WAIT_OBJECT_0) {
+					release_pending_old_name();
 					return;
 				}
 				if (wait_result != (WAIT_OBJECT_0 + 1)) {
 					Logger::error("core::MessageQueueBasedFileSystemWatcher::worker (WaitForMultipleObjects: UNKNOWN)");
+					release_pending_old_name();
 					return;
 				}
 
 				DWORD transferred_bytes{};
 				if (!GetOverlappedResult(self->m_file.get(), &overlapped, &transferred_bytes, TRUE)) {
 					Logger::error("core::MessageQueueBasedFileSystemWatcher::worker (GetOverlappedResult)");
+					release_pending_old_name();
 					return;
 				}
 
-				auto const begin = reinterpret_cast<uint8_t*>(buffer.data());
+				std::vector<FileNotifyInformation> batch;
+
+				auto const begin = buffer.get();
 				auto const end = begin + transferred_bytes;
 				auto ptr = begin;
 				while (ptr < end) {
@@ -141,13 +179,27 @@ namespace core {
 					IImmutableString::create(getStringView(normalized), &info.file_name);
 					info.action = static_cast<FileAction>(cur->Action);
 
-					{
-						std::lock_guard notify_lock(self->m_notify_mutex);
-						self->m_notify.emplace_back(info);
+					if (info.action == FileAction::renamed_old_name) {
+						release_pending_old_name();
+						pending_old_name = info.file_name;
+						pending_old_name->retain();
 					}
+					else if (info.action == FileAction::renamed_new_name && pending_old_name != nullptr) {
+						info.assignOldFileName(pending_old_name);
+						release_pending_old_name();
+					}
+
+					batch.emplace_back(std::move(info));
 
 					if (cur->NextEntryOffset == 0) {
 						break;
+					}
+				}
+
+				if (!batch.empty()) {
+					std::lock_guard notify_lock(self->m_notify_mutex);
+					for (auto& info : batch) {
+						self->m_notify.emplace_back(std::move(info));
 					}
 				}
 			}
@@ -159,18 +211,24 @@ namespace core {
 		wil::unique_hfile m_file;
 		std::thread m_worker;
 		std::list<FileNotifyInformation> m_notify;
-		std::recursive_mutex m_notify_mutex;
+		std::mutex m_notify_mutex;
 		DWORD m_notify_filter{};
+		bool m_recursive{ true };
+		std::string m_path;
 	};
 
 	bool IMessageQueueBasedFileSystemWatcher::create(std::string_view const& path, IMessageQueueBasedFileSystemWatcher** const object) {
+		return create(path, FileSystemWatcherOptions{}, object);
+	}
+
+	bool IMessageQueueBasedFileSystemWatcher::create(std::string_view const& path, FileSystemWatcherOptions const& options, IMessageQueueBasedFileSystemWatcher** const object) {
 		assert(object != nullptr);
 		if (object == nullptr) {
 			return false;
 		}
 		SmartReference<MessageQueueBasedFileSystemWatcher> temp;
 		temp.attach(new MessageQueueBasedFileSystemWatcher);
-		if (!temp->open(path, MessageQueueBasedFileSystemWatcher::default_filter)) {
+		if (!temp->open(path, options)) {
 			return false;
 		}
 		*object = temp.detach();
