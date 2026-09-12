@@ -13,6 +13,7 @@
 #include "LuaBinding/modern/Vector2.hpp"
 #include "LuaBinding/modern/Vector3.hpp"
 #include "LuaBinding/modern/Vector4.hpp"
+#include "LuaBinding/modern/Matrix.hpp"
 #include "LuaBinding/modern/Sprite.hpp"
 #include "LuaBinding/modern/SpriteRenderer.hpp"
 #include "LuaBinding/modern/FileSystemWatcher.hpp"
@@ -93,6 +94,7 @@ namespace luastg::binding
 		Vector2::registerClass(L);
 		Vector3::registerClass(L);
 		Vector4::registerClass(L);
+		Matrix::registerClass(L);
 		Sprite::registerClass(L);
 		SpriteRenderer::registerClass(L);
 		SpriteRectRenderer::registerClass(L);

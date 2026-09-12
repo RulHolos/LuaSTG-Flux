@@ -144,6 +144,8 @@ set(LUASTG_ENGINE_SOURCES
     LuaSTG/LuaBinding/modern/Vector3.cpp
     LuaSTG/LuaBinding/modern/Vector4.hpp
     LuaSTG/LuaBinding/modern/Vector4.cpp
+    LuaSTG/LuaBinding/modern/Matrix.hpp
+    LuaSTG/LuaBinding/modern/Matrix.cpp
     LuaSTG/LuaBinding/modern/Sprite.hpp
     LuaSTG/LuaBinding/modern/Sprite.cpp
     LuaSTG/LuaBinding/modern/SpriteRenderer.hpp
