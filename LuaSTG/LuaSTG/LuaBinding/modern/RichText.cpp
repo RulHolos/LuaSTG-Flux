@@ -1413,10 +1413,16 @@ namespace luastg::binding {
 		}
 
 		void computePadding(float& padLeft, float& padTop, float& padRight, float& padBottom, float fontSizePx) const {
-			padLeft = outlineWidth + std::max(0.f, -shadowOffsetX) + shadowBlur * 2.f + 4.f;
-			padTop = outlineWidth + std::max(0.f, -shadowOffsetY) + shadowBlur * 2.f + 4.f;
-			padRight = outlineWidth + std::max(0.f, shadowOffsetX) + shadowBlur * 2.f + 4.f;
-			padBottom = outlineWidth + std::max(0.f, shadowOffsetY) + shadowBlur * 2.f + 4.f;
+			float const outlineWidthPx = outlineWidth / unitPerPixel;
+			float const shadowOffsetXPx = shadowOffsetX / unitPerPixel;
+			float const shadowOffsetYPx = shadowOffsetY / unitPerPixel;
+			float const shadowBlurPx = shadowBlur / unitPerPixel;
+
+			padLeft = outlineWidthPx + std::max(0.f, -shadowOffsetXPx) + shadowBlurPx * 2.f + 4.f;
+			padTop = outlineWidthPx + std::max(0.f, -shadowOffsetYPx) + shadowBlurPx * 2.f + 4.f;
+			padRight = outlineWidthPx + std::max(0.f, shadowOffsetXPx) + shadowBlurPx * 2.f + 4.f;
+			padBottom = outlineWidthPx + std::max(0.f, shadowOffsetYPx) + shadowBlurPx * 2.f + 4.f;
+
 			if (!parsed.rubies.empty())
 				padTop += fontSizePx * 0.5f + 3.f;
 		}
@@ -1604,8 +1610,8 @@ namespace luastg::binding {
 
 				core::Graphics::ISprite* sp = nullptr;
 				if (!core::Graphics::ISprite::create(
-					    LAPP.GetAppModel()->getRenderer(),
-					    renderTarget->getTexture(), &sp))
+						LAPP.GetAppModel()->getRenderer(),
+						renderTarget->getTexture(), &sp))
 					return false;
 				sprite.attach(sp);
 				sprite->setTextureRect(core::RectF(0.f, 0.f, (float)texWidth, (float)texHeight));
@@ -1664,6 +1670,11 @@ namespace luastg::binding {
 			(void)padRight;
 			(void)padBottom;
 
+			float const outlineWidthPx = outlineWidth / unitPerPixel;
+			float const shadowOffsetXPx = shadowOffsetX / unitPerPixel;
+			float const shadowOffsetYPx = shadowOffsetY / unitPerPixel;
+			float const shadowBlurPx = shadowBlur / unitPerPixel;
+
 			if (hasShadow) {
 				if (shadowBlur > 0.001f) {
 					Microsoft::WRL::ComPtr<ID2D1Bitmap1> tmpBitmap;
@@ -1685,10 +1696,10 @@ namespace luastg::binding {
 						Microsoft::WRL::ComPtr<ID2D1Effect> shadowFx;
 						if (SUCCEEDED(d2d1Ctx->CreateEffect(CLSID_D2D1Shadow, &shadowFx))) {
 							shadowFx->SetInput(0, tmpBitmap.Get());
-							shadowFx->SetValue(D2D1_SHADOW_PROP_BLUR_STANDARD_DEVIATION, shadowBlur / 3.f);
+							shadowFx->SetValue(D2D1_SHADOW_PROP_BLUR_STANDARD_DEVIATION, shadowBlurPx / 3.f);
 							shadowFx->SetValue(D2D1_SHADOW_PROP_COLOR, toD2D1Color(shadowColor));
 							d2d1Ctx->DrawImage(shadowFx.Get(),
-								D2D1::Point2F(shadowOffsetX, shadowOffsetY));
+								D2D1::Point2F(shadowOffsetXPx, shadowOffsetYPx));
 						}
 					}
 				} else {
@@ -1697,14 +1708,14 @@ namespace luastg::binding {
 					gctx.renderOutlinePass = false;
 					gctx.reusableBrush = sharedBrush.Get();
 					gctx.geometryCache = &glyphGeometryCache;
-					drawLayout(d2d1Factory.Get(), (ID2D1RenderTarget*)d2d1Ctx, gctx, originX + shadowOffsetX, originY + shadowOffsetY);
+					drawLayout(d2d1Factory.Get(), (ID2D1RenderTarget*)d2d1Ctx, gctx, originX + shadowOffsetXPx, originY + shadowOffsetYPx);
 				}
 			}
 
 			if (outlineWidth > 0.001f) {
 				GlyphRendererContext gctx{};
 				gctx.defaultFillColor = fillColor;
-				gctx.outlineWidth = outlineWidth * 2.f;
+				gctx.outlineWidth = outlineWidthPx * 2.f;
 				gctx.outlineColor = outlineColor;
 				gctx.renderOutlinePass = true;
 				gctx.reusableBrush = sharedBrush.Get();
@@ -1802,7 +1813,7 @@ namespace luastg::binding {
 				if (outlineWidth > 0.001f) {
 					GlyphRendererContext ogctx{};
 					ogctx.defaultFillColor = fillColor;
-					ogctx.outlineWidth = outlineWidth;
+					ogctx.outlineWidth = (outlineWidth / unitPerPixel) * 2.f;
 					ogctx.outlineColor = outlineColor;
 					ogctx.renderOutlinePass = true;
 					ogctx.reusableBrush = sharedBrush;

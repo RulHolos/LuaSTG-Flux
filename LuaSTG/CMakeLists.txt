@@ -156,6 +156,8 @@ set(LUASTG_ENGINE_SOURCES
     LuaSTG/LuaBinding/modern/Clipboard.cpp
     LuaSTG/LuaBinding/modern/FileSystemWatcher.hpp
     LuaSTG/LuaBinding/modern/FileSystemWatcher.cpp
+    LuaSTG/LuaBinding/modern/Ipc.hpp
+    LuaSTG/LuaBinding/modern/Ipc.cpp
     LuaSTG/LuaBinding/modern/GameObject.hpp
     LuaSTG/LuaBinding/modern/GameObject.cpp
     LuaSTG/LuaBinding/modern/Well512.hpp
@@ -175,6 +177,9 @@ set(LUASTG_ENGINE_SOURCES
 
     LuaSTG/DiscordRPC/DiscordRPCManager.hpp
     LuaSTG/DiscordRPC/DiscordRPCManager.cpp
+
+    LuaSTG/Ipc/IpcManager.hpp
+    LuaSTG/Ipc/IpcManager.cpp
 
     LuaSTG/Utility/Utility.h
     LuaSTG/Utility/ScopeObject.cpp

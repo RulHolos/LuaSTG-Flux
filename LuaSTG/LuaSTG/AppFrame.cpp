@@ -4,9 +4,11 @@
 #include "Utility/Utility.h"
 #include "Debugger/ImGuiExtension.h"
 #include "LuaBinding/LuaAppFrame.hpp"
+#include "LuaBinding/modern/Ipc.hpp"
 #include "utf8.hpp"
 #include "core/Configuration.hpp"
 #include "DiscordRPC/DiscordRPCManager.hpp"
+#include "Ipc/IpcManager.hpp"
 #include "stb_image.h"
 
 using namespace luastg;
@@ -321,6 +323,9 @@ bool AppFrame::Init()noexcept
 }
 void AppFrame::Shutdown()noexcept
 {
+	luastg::IpcManager::GetInstance().stop();
+	spdlog::info("[luastg] IPC server stopped");
+
 	if (L) {
 		SafeCallGlobalFunction(LuaEngine::G_CALLBACK_EngineStop);
 	}
@@ -475,6 +480,11 @@ bool AppFrame::onUpdate()
 	if (m_async_resource_loader) {
 		tracy_zone_scoped_with_name("AsyncResourceLoader-Update");
 		m_async_resource_loader->Update();
+	}
+
+	{
+		tracy_zone_scoped_with_name("Ipc-Update");
+		luastg::binding::Ipc::update(L);
 	}
 
 #if (defined(_DEBUG) && defined(LuaSTG_enable_GameObjectManager_Debug))

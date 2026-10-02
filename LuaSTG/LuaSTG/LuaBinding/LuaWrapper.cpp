@@ -17,6 +17,7 @@
 #include "LuaBinding/modern/Sprite.hpp"
 #include "LuaBinding/modern/SpriteRenderer.hpp"
 #include "LuaBinding/modern/FileSystemWatcher.hpp"
+#include "LuaBinding/modern/Ipc.hpp"
 #include "LuaBinding/modern/GameObject.hpp"
 #include "LuaBinding/modern/Well512.hpp"
 #include "LuaBinding/modern/RichText.hpp"
@@ -100,6 +101,7 @@ namespace luastg::binding
 		SpriteRectRenderer::registerClass(L);
 		SpriteQuadRenderer::registerClass(L);
 		FileSystemWatcher::registerClass(L);
+		Ipc::registerClass(L);
 		GameObject::registerClass(L);
 		Well512::registerClass(L);
 		RichText::registerClass(L);
