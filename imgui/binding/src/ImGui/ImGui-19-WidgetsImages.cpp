@@ -22,10 +22,10 @@ namespace {
 		lua::stack_t const ctx(vm);
 		auto const tex = imgui::binding::ImTextureRefBinding::as(vm, 1);
 		auto const image_size = imgui::binding::ImVec2Binding::as(vm, 2);
-		auto const uv0 = imgui::binding::ImVec2Binding::as(vm, 3, uv0_default);
-		auto const uv1 = imgui::binding::ImVec2Binding::as(vm, 4, uv1_default);
-		ImVec4 const& bg_col = ctx.is_non_or_nil(5) ? bg_col_default : *imgui::binding::ImVec4Binding::as(vm, 5);
-		ImVec4 const& tint_col = ctx.is_non_or_nil(6) ? tint_col_default : *imgui::binding::ImVec4Binding::as(vm, 6);
+		ImVec4 const& bg_col = ctx.is_non_or_nil(3) ? bg_col_default : *imgui::binding::ImVec4Binding::as(vm, 3);
+		ImVec4 const& tint_col = ctx.is_non_or_nil(4) ? tint_col_default : *imgui::binding::ImVec4Binding::as(vm, 4);
+		auto const uv0 = imgui::binding::ImVec2Binding::as(vm, 5, uv0_default);
+		auto const uv1 = imgui::binding::ImVec2Binding::as(vm, 6, uv1_default);
 		ImGui::ImageWithBg(*tex, *image_size, *uv0, *uv1, bg_col, tint_col);
 		return 0;
 	}
@@ -34,10 +34,10 @@ namespace {
 		auto const str_id = ctx.get_value<std::string_view>(1);
 		auto const tex = imgui::binding::ImTextureRefBinding::as(vm, 2);
 		auto const image_size = imgui::binding::ImVec2Binding::as(vm, 3);
-		auto const uv0 = imgui::binding::ImVec2Binding::as(vm, 4, uv0_default);
-		auto const uv1 = imgui::binding::ImVec2Binding::as(vm, 5, uv1_default);
-		ImVec4 const& bg_col = ctx.is_non_or_nil(6) ? bg_col_default : *imgui::binding::ImVec4Binding::as(vm, 6);
-		ImVec4 const& tint_col = ctx.is_non_or_nil(7) ? tint_col_default : *imgui::binding::ImVec4Binding::as(vm, 7);
+		ImVec4 const& bg_col = ctx.is_non_or_nil(4) ? bg_col_default : *imgui::binding::ImVec4Binding::as(vm, 4);
+		ImVec4 const& tint_col = ctx.is_non_or_nil(5) ? tint_col_default : *imgui::binding::ImVec4Binding::as(vm, 5);
+		auto const uv0 = imgui::binding::ImVec2Binding::as(vm, 6, uv0_default);
+		auto const uv1 = imgui::binding::ImVec2Binding::as(vm, 7, uv1_default);
 		auto const result = ImGui::ImageButton(str_id.data(), *tex, *image_size, *uv0, *uv1, bg_col, tint_col);
 		ctx.push_value(result);
 		return 1;

@@ -2,6 +2,7 @@
 #include "Platform/CleanWindows.hpp"
 #include "lua/plus.hpp"
 #include "AppFrame.h"
+#include "utf8.hpp"
 //#include "core/Configuration.hpp"
 #include <psapi.h>
 #include <dxgi1_4.h>
@@ -64,6 +65,21 @@ void luastg::binding::BuiltInFunction::Register(lua_State* L)noexcept
 		static int GetVersionName(lua_State* L)noexcept
 		{
 			lua_pushstring(L, LUASTG_INFO);
+			return 1;
+		}
+		static int GetSystemLanguage(lua_State* L)noexcept
+		{
+			wchar_t language[LOCALE_NAME_MAX_LENGTH] = {};
+			int const length = GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SISO639LANGNAME, language, ARRAYSIZE(language));
+			if (length <= 0)
+			{
+				lua_pushnil(L);
+				return 1;
+			}
+
+			std::string const language_utf8 = utf8::to_string(std::wstring_view(language, static_cast<size_t>(length - 1)));
+			lua::stack_t S(L);
+			S.push_value<std::string_view>(language_utf8);
 			return 1;
 		}
 		static int GetBranchName(lua_State* L)noexcept
@@ -350,6 +366,7 @@ void luastg::binding::BuiltInFunction::Register(lua_State* L)noexcept
 		#pragma region 框架函数
 		{ "GetVersionNumber", &Wrapper::GetVersionNumber },
 		{ "GetVersionName", &Wrapper::GetVersionName },
+		{ "GetSystemLanguage", &Wrapper::GetSystemLanguage },
 		{ "GetBranchName", &Wrapper::GetBranchName },
 		{ "SetWindowed", &Wrapper::SetWindowed },
 		{ "SetBorderless", &Wrapper::SetBorderless },

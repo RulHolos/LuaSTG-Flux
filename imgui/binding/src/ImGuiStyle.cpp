@@ -316,7 +316,14 @@ namespace imgui::binding {
 			SET_SCALAR(CircleTessellationMaxError);
 
 			if (key == "Colors"sv) {
-				return luaL_error(vm, "not supported");
+				if (!ImGuiStyleColorsBinding::is(vm, 3)) {
+					return luaL_typerror(vm, 3, "imgui.ImGuiStyle.Colors");
+				}
+				auto const source = ImGuiStyleColorsBinding::as(vm, 3);
+				for (int32_t i = 0; i < ImGuiCol_COUNT; ++i) {
+					self->Colors[i] = (*source)[i];
+				}
+				return 0;
 			}
 			SET_COLOR(Text);
 			SET_COLOR(TextDisabled);

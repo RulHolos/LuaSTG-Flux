@@ -11,6 +11,10 @@ namespace {
 		imgui::binding::ImGuiStyleBinding::reference(vm, &ImGui::GetStyle());
 		return 1;
 	}
+	int GetIO(lua_State* const vm) {
+		imgui::binding::ImGuiIOBinding::reference(vm, &ImGui::GetIO());
+		return 1;
+	}
 	int NewFrame(lua_State*) {
 		ImGui::NewFrame();
 		return 0;
@@ -31,7 +35,7 @@ namespace imgui::binding {
 		lua::stack_t const ctx(vm);
 
 		auto const m = ctx.push_module(module_ImGui_name);
-		ctx.set_map_value(m, "GetIO"sv, &notSupported);
+		ctx.set_map_value(m, "GetIO"sv, &GetIO);
 		ctx.set_map_value(m, "GetPlatformIO"sv, &notSupported);
 		ctx.set_map_value(m, "GetStyle"sv, &GetStyle);
 		ctx.set_map_value(m, "NewFrame"sv, &NewFrame);

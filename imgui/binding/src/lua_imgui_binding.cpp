@@ -83,6 +83,7 @@ namespace imgui::binding {
 		registerImGuiDebugUtilities(vm);
 		registerImGuiMemoryAllocators(vm);
 
+		ImGuiIOBinding::registerClass(vm);
 		ImGuiStyleBinding::registerClass(vm);
 		ImDrawListBinding::registerClass(vm);
 
