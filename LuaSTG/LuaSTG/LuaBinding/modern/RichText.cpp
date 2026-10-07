@@ -1171,8 +1171,9 @@ namespace luastg::binding {
 			sprite->setUnitsPerPixel(unitPerPixel);
 
 			float ax = 0.f, ay = 0.f;
-			float worldW = (float)texWidth * unitPerPixel;
-			float worldH = (float)texHeight * unitPerPixel;
+			// Use the exact layout size when set; ceil()'d texture size drifts the anchor as unitPerPixel changes.
+			float worldW = layoutWidth > 0.f ? layoutWidth : (float)texWidth * unitPerPixel;
+			float worldH = layoutHeight > 0.f ? layoutHeight : (float)texHeight * unitPerPixel;
 			if (hAlign == DWRITE_TEXT_ALIGNMENT_LEADING)
 				ax = worldW * 0.5f;
 			else if (hAlign == DWRITE_TEXT_ALIGNMENT_TRAILING)
@@ -1184,9 +1185,13 @@ namespace luastg::binding {
 					ay = worldH * 0.5f;
 			}
 
+			// Stretch the pixel-rounded texture back to the exact layout size so content isn't offset by the rounding.
+			float const fitX = layoutWidth > 0.f ? worldW / ((float)texWidth * unitPerPixel) : 1.f;
+			float const fitY = layoutHeight > 0.f ? worldH / ((float)texHeight * unitPerPixel) : 1.f;
+
 			spriteRenderer->setTransform(
 				core::Vector2F(wx + ax, wy + ay),
-				core::Vector2F(sx, sy),
+				core::Vector2F(sx * fitX, sy * fitY),
 				rot);
 			auto const bd = luastg::translateLegacyBlendState(blendMode);
 			spriteRenderer->setLegacyBlendState(bd.vertex_color_blend_state, bd.blend_state);
