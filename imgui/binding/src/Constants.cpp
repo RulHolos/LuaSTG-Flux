@@ -243,6 +243,18 @@ void imgui::binding::registerConstants(lua_State* const vm) {
 		ctx.set_map_value(e, "AcceptPeekOnly"sv, ImGuiDragDropFlags_AcceptPeekOnly);
 	}
 	{
+		auto const e = ctx.create_map(8);
+		ctx.set_map_value(m, "ImGuiDockNodeFlags"sv, e);
+		ctx.set_map_value(e, "None"sv, ImGuiDockNodeFlags_None);
+		ctx.set_map_value(e, "KeepAliveOnly"sv, ImGuiDockNodeFlags_KeepAliveOnly);
+		ctx.set_map_value(e, "NoDockingOverCentralNode"sv, ImGuiDockNodeFlags_NoDockingOverCentralNode);
+		ctx.set_map_value(e, "PassthruCentralNode"sv, ImGuiDockNodeFlags_PassthruCentralNode);
+		ctx.set_map_value(e, "NoDockingSplit"sv, ImGuiDockNodeFlags_NoDockingSplit);
+		ctx.set_map_value(e, "NoResize"sv, ImGuiDockNodeFlags_NoResize);
+		ctx.set_map_value(e, "AutoHideTabBar"sv, ImGuiDockNodeFlags_AutoHideTabBar);
+		ctx.set_map_value(e, "NoUndocking"sv, ImGuiDockNodeFlags_NoUndocking);
+	}
+	{
 		auto const e = ctx.create_map(13);
 		ctx.set_map_value(m, "ImGuiDataType"sv, e);
 		ctx.set_map_value(e, "S8"sv, ImGuiDataType_S8);
@@ -461,7 +473,7 @@ void imgui::binding::registerConstants(lua_State* const vm) {
 		ctx.set_map_value(e, "Tooltip"sv, ImGuiInputFlags_Tooltip);
 	}
 	{
-		auto const e = ctx.create_map(10);
+		auto const e = ctx.create_map(11);
 		ctx.set_map_value(m, "ImGuiConfigFlags"sv, e);
 		ctx.set_map_value(e, "None"sv, ImGuiConfigFlags_None);
 		ctx.set_map_value(e, "NavEnableKeyboard"sv, ImGuiConfigFlags_NavEnableKeyboard);
@@ -469,6 +481,7 @@ void imgui::binding::registerConstants(lua_State* const vm) {
 		ctx.set_map_value(e, "NoMouse"sv, ImGuiConfigFlags_NoMouse);
 		ctx.set_map_value(e, "NoMouseCursorChange"sv, ImGuiConfigFlags_NoMouseCursorChange);
 		ctx.set_map_value(e, "NoKeyboard"sv, ImGuiConfigFlags_NoKeyboard);
+		ctx.set_map_value(e, "DockingEnable"sv, ImGuiConfigFlags_DockingEnable);
 		ctx.set_map_value(e, "IsSRGB"sv, ImGuiConfigFlags_IsSRGB);
 		ctx.set_map_value(e, "IsTouchScreen"sv, ImGuiConfigFlags_IsTouchScreen);
 	}
